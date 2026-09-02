@@ -17,17 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/checkout@v6
-        with:
-          repository: radiusred/gh-codecrew
-          path: _sources/gh-codecrew
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - run: pip install zensical
-      - run: python3 sync_docs.py
-        env:
-          SYNC_SOURCE_BASE: _sources
       - run: python3 main.py
       - run: zensical build --clean
       - uses: actions/upload-pages-artifact@v4

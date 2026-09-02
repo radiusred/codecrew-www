@@ -27,12 +27,13 @@ You do not run the verbs. Your agent does. You are needed at three moments: when
 
 ## Read next
 
-- [Overview](docs/) — why you would want a crew, and how it works in four beats
-- [Introduction](docs/introduction.md) — the protocol, the contracts, the CLI and its refusal codes
-- [Your first milestone](docs/first-milestone.md) — the quickstart, one milestone end to end
-- [Identities](docs/identities.md) — running solo, minting App identities, dispatching a role session
-- [Platform interop](docs/platform-interop.md) — hosting the crew on an orchestration platform
-- [Specification](docs/spec.md) — the protocol itself
+The reference material lives with the code on GitHub:
+
+- [Overview](https://github.com/radiusred/gh-codecrew#readme) — why you would want a crew, and how it works in four beats
+- [Introduction](https://github.com/radiusred/gh-codecrew/blob/main/docs/introduction.md) — the protocol, the contracts, the CLI and its refusal codes
+- [Your first milestone](https://github.com/radiusred/gh-codecrew/blob/main/docs/first-milestone.md) — the quickstart, one milestone end to end
+- [Identities](https://github.com/radiusred/gh-codecrew/blob/main/docs/identities.md) — running solo, minting App identities, dispatching a role session
+- [Specification](https://github.com/radiusred/gh-codecrew/blob/main/SPEC.md) — the protocol itself
 
 ## Follow along
 

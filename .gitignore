@@ -4,9 +4,3 @@ __pycache__
 *.pyc
 .cache
 .pytest_cache
-
-# Synced reference docs (populated by sync_docs.py from radiusred/gh-codecrew)
-/docs/docs/
-
-# CI-only working dir for the checked-out source repo
-/_sources/

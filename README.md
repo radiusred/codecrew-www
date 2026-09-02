@@ -1,24 +1,22 @@
 # codecrew-www
 
 Source for [codecrew.works](https://codecrew.works), the CodeCrew website:
-a landing page, the reference docs synced from
-[radiusred/gh-codecrew](https://github.com/radiusred/gh-codecrew), and a
-blog for release notes and field reports.
+a landing page and a blog for release notes, design decisions and field
+reports. A lightweight marketing site, nothing more.
 
-The product and its docs live in `gh-codecrew`; that repo is the source of
-truth for everything under `/docs/`. Edit reference material there. This
-repo holds only what is specific to the site.
+The product, its reference docs and its specification live in
+[radiusred/gh-codecrew](https://github.com/radiusred/gh-codecrew); the site
+links there rather than mirroring them. Radius Red's own site,
+[www.radiusred.uk](https://www.radiusred.uk/), also carries a synced copy
+of the docs.
 
 ## Layout
 
 - `docs/index.md` — landing page
 - `docs/blog/posts/` — blog posts; `_drafts/` holds future-dated ones
-- `docs/docs/` — synced from `gh-codecrew` on every build, never committed
-- `sync_docs.py` — the sync (README, SPEC, CHANGELOG, ROADMAP,
-  CONTRIBUTING, SECURITY and `docs/`, minus `milestones/`), plus the Docs nav
 - `main.py` — draft promotion, blog nav, archive page and Atom feed
-- `zensical.toml` — site config; the nav blocks between `BEGIN_*`/`END_*`
-  markers are generated
+- `zensical.toml` — site config; the nav block between `BEGIN_BLOG_POSTS`
+  and `END_BLOG_POSTS` is generated
 
 ## Writing a post
 
@@ -44,9 +42,8 @@ internal issue trackers or private repositories.
 ## Local preview
 
 ```sh
-git clone https://github.com/radiusred/gh-codecrew ../gh-codecrew   # once
 uv sync
-uv run python sync_docs.py && uv run python main.py
+uv run python main.py
 uv run zensical serve        # http://localhost:8000
 uv run pytest
 ```
@@ -54,9 +51,8 @@ uv run pytest
 ## Deploys
 
 `.github/workflows/site.yml` runs on every push to `main`, daily at 00:05
-UTC, and on demand. It checks out `gh-codecrew`, syncs, builds with
-Zensical and publishes `site/` to GitHub Pages. `docs/CNAME` keeps the
-custom domain attached across deploys.
+UTC, and on demand. It builds with Zensical and publishes `site/` to
+GitHub Pages. `docs/CNAME` keeps the custom domain attached across deploys.
 
 DNS for `codecrew.works` (a proxied CNAME to `radiusred.github.io`) and
 the Cloudflare zone configuration live as code in

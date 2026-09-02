@@ -9,23 +9,6 @@ Copyright &copy; 2026 Radius Red Ltd.
 
 nav = [
   { "Home" = "index.md" },
-  { "Docs" = [
-    # BEGIN_DOCS_NAV
-    { "Overview" = "docs/index.md" },
-    { "CodeCrew, precisely" = "docs/introduction.md" },
-    { "Your first milestone" = "docs/first-milestone.md" },
-    { "Identities: running solo, staffing a crew" = "docs/identities.md" },
-    { "Platform interop: hosting a crew on an orchestration platform" = "docs/platform-interop.md" },
-    { "Local extensions — `roles/<role>.local.md`" = "docs/extensions.md" },
-    { "Founding decisions" = "docs/founding-decisions.md" },
-    { "GSD vs. \"just let the model orchestrate\": an assessment from inside the machine" = "docs/gsd-vs-frontier-orchestration.md" },
-    { "Specification" = "docs/spec.md" },
-    { "Changelog" = "docs/changelog.md" },
-    { "Roadmap" = "docs/roadmap.md" },
-    { "Contributing" = "docs/contributing.md" },
-    { "Security" = "docs/security.md" },
-    # END_DOCS_NAV
-  ] },
   { "Blog" = [
     { "Latest" = "blog/index.md" },
     # BEGIN_BLOG_POSTS
