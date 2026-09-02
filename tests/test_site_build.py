@@ -7,6 +7,8 @@ site source into a temp dir and builds there, in strict mode so any warning
 fails the build.
 """
 
+import html
+import re
 import shutil
 import subprocess
 import sys
@@ -15,6 +17,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Measured in headless Chromium at a 420px viewport (root font 20px, code
+# 12.8px JetBrains Mono, 16px of padding a side): the install block's code
+# column holds 43 characters before it scrolls sideways. The longest command
+# is 42. Longer lines scroll on a phone.
+INSTALL_LINE_MAX = 42
+INSTALL_COMMANDS = (
+    "gh extension install radiusred/gh-codecrew",
+    "cd my-project",
+    "gh codecrew init",
+    "claude",
+)
 
 
 @pytest.fixture(scope="module")
@@ -42,10 +56,17 @@ def blog(site: Path) -> str:
     return (site / "blog" / "index.html").read_text()
 
 
-def section(html: str, name: str) -> str:
+def section(page: str, name: str) -> str:
     """The markup of one home page section, by its `cc-*` class."""
-    start = html.index(f'<section class="cc-section {name}')
-    return html[start : html.index("</section>", start)]
+    start = page.index(f'<section class="cc-section {name}')
+    return page[start : page.index("</section>", start)]
+
+
+def code_lines(block: str) -> list[str]:
+    """The text lines of the first highlighted code block in `block`."""
+    code = re.search(r"<pre>.*?<code>(.*?)</code>", block, re.S).group(1)
+    lines = [html.unescape(re.sub(r"<[^>]+>", "", line)) for line in code.split("\n")]
+    return [line for line in lines if line.strip()]
 
 
 def test_home_uses_the_home_template(home: str):
@@ -91,6 +112,13 @@ def test_home_has_exactly_one_install_block(home: str):
     assert home.count("language-sh highlight") == 1
     assert "cc-install" not in section(home, "cc-hero")
     assert "cc-install" in section(home, "cc-start")
+
+
+def test_install_block_fits_a_phone_and_keeps_the_commands(home: str):
+    lines = code_lines(section(home, "cc-start"))
+    assert [line for line in lines if not line.startswith("#")] == list(INSTALL_COMMANDS)
+    too_long = [line for line in lines if len(line) > INSTALL_LINE_MAX]
+    assert not too_long, too_long
 
 
 def test_blog_keeps_the_default_layout(blog: str):
