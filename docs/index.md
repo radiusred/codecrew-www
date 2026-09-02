@@ -10,8 +10,12 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 <section class="cc-section cc-hero" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" markdown>
 <div class="cc-section__inner" markdown>
+<div class="cc-hero__logo" markdown>
 
 ![CodeCrew](assets/images/codecrew-logo.webp){ .cc-logo }
+
+</div>
+<div class="cc-hero__body" markdown>
 
 # Agent-driven software delivery, with the receipts kept in GitHub. { .cc-hero__headline }
 
@@ -19,6 +23,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 <p class="cc-cta" markdown="span">[Start now](#start-now){ .cc-button .cc-button--primary } [Read the docs](https://github.com/radiusred/gh-codecrew#readme){ .cc-button }</p>
 
+</div>
 </div>
 </section>
 
