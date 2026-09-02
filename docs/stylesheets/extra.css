@@ -330,7 +330,22 @@ h1,h2,h3 {
   margin: 0;
 }
 
-/* How it works: four numbered steps, left to right on desktop. */
+/* How it works: the lead under the title, then four numbered steps, two by
+   two from 45em up. (Four across a 56rem column gives each step 256px; the
+   44-character verb lines need 356px, so the numbers carry the order
+   instead of a row of arrows.) The lead names .cc-how for the same
+   specificity reason as the hero paragraphs. */
+.md-typeset .cc-how .cc-how__lead {
+  max-width: 40rem;
+  margin: -0.8rem auto 2rem;
+  text-align: center;
+}
+
+/* The verb each step turns on: one line of code that never breaks. */
+.md-typeset .cc-step__verb code {
+  white-space: nowrap;
+}
+
 .cc-steps {
   display: grid;
   grid-template-columns: 1fr;
@@ -339,7 +354,6 @@ h1,h2,h3 {
 }
 
 .cc-step {
-  position: relative;
   padding-top: 0.8rem;
   border-top: 0.15rem solid var(--md-accent-fg-color);
   counter-increment: cc-step;
@@ -359,16 +373,7 @@ h1,h2,h3 {
 
 @media screen and (min-width: 60em) {
   .cc-steps {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.6rem;
-  }
-  .cc-step:not(:last-child)::after {
-    content: "\2192";
-    position: absolute;
-    top: 0.7rem;
-    right: -1.15rem;
-    font-size: 0.9rem;
-    color: var(--md-default-fg-color--lighter);
+    gap: 1.6rem 2.4rem;
   }
 }
 
