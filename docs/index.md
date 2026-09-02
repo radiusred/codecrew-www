@@ -124,9 +124,12 @@ There is no server, no dashboard, no new place to look. It is `gh`, issues, PRs,
 
 ```sh
 gh extension install radiusred/gh-codecrew
-cd my-project            # any repo on GitHub, brand new or years old
-gh codecrew init         # writes and commits .codecrew.yml, roles/, AGENTS.md, CLAUDE.md, ROADMAP.md
-claude                   # or codex, or whichever coding agent you run
+# any repo on GitHub, new or years old
+cd my-project
+# writes and commits the CodeCrew files
+gh codecrew init
+# or codex, or whichever agent you run
+claude
 ```
 
 </div>
