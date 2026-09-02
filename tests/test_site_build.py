@@ -82,6 +82,7 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert 'class="cc-hero__body"' in hero
     assert "cc-hero__headline" in hero
     assert "Agent-driven software delivery" in hero
+    assert "CodeCrew is an engineering process framework, and a small one" in hero
     assert 'href="#start-now"' in hero  # primary call to action
     assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in hero
 
