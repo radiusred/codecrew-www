@@ -465,16 +465,20 @@ h1,h2,h3 {
   margin: 1rem auto 0;
 }
 
-/* The footer meta strip after the Start now band. Zensical paints the
-   strip with --md-footer-bg-color--dark, which is --cc-ink in both schemes
-   and the very colour the slate band fades to; the home footer takes the
-   brand purple there and a hairline in both schemes so the two part. */
+/* The footer meta strip after the Start now band. Zensical's modern
+   stylesheet paints .md-footer with --md-default-bg-color and the strip
+   with --md-default-fg-color--lightest (the --md-footer-bg-color values
+   above never apply), which made the footer the page ground plus the same
+   faint tint the old band had. The home footer takes the brand purple with
+   light type in both schemes, the header's own trick, and a hairline. */
 .cc-footer {
+  --md-default-bg-color: var(--cc-purple);
+  --md-default-fg-color: #ffffff;
+  --md-default-fg-color--light: #ffffffb3;
+  --md-default-fg-color--lighter: #ffffff4d;
+  --md-default-fg-color--lightest: #ffffff1f;
+  --md-accent-fg-color: var(--cc-cyan);
   border-top: 0.05rem solid var(--md-default-fg-color--lighter);
-}
-
-[data-md-color-scheme="slate"] .cc-footer {
-  --md-footer-bg-color--dark: var(--cc-purple);
 }
 
 @media screen and (max-width: 44.9375em) {
