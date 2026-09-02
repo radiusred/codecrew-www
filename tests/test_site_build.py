@@ -23,6 +23,9 @@ ROOT = Path(__file__).resolve().parent.parent
 # column holds 43 characters before it scrolls sideways. The longest command
 # is 42. Longer lines scroll on a phone.
 INSTALL_LINE_MAX = 42
+# The same measurement for an inline code element inside a How-it-works
+# step: about 46 characters at 420px. The longest verb line is 44.
+STEP_CODE_MAX = 44
 INSTALL_COMMANDS = (
     "gh extension install radiusred/gh-codecrew",
     "cd my-project",
@@ -121,9 +124,26 @@ def test_install_block_fits_a_phone_and_keeps_the_commands(home: str):
     assert not too_long, too_long
 
 
+def test_how_it_works_leads_with_the_three_moments_and_names_a_verb_per_step(home: str):
+    how = section(home, "cc-how")
+    lead = "You do not run the verbs. Your agent does."
+    assert lead in how
+    assert how.index('class="cc-how__lead"') < how.index('class="cc-steps"')
+    assert lead not in section(home, "cc-start")
+    steps = how.split('<div class="cc-step">')[1:]
+    assert len(steps) == 4
+    for step in steps:
+        snippets = [html.unescape(m) for m in re.findall(r"<code>(.*?)</code>", step)]
+        assert snippets and snippets[0].startswith("gh codecrew "), step
+        too_long = [snippet for snippet in snippets if len(snippet) > STEP_CODE_MAX]
+        assert not too_long, too_long
+
+
 def test_blog_keeps_the_default_layout(blog: str):
     assert "cc-home" not in blog
     assert "md-content__inner" in blog
     assert "md-sidebar--primary" in blog
     assert "md-sidebar--secondary" in blog
     assert "md-footer__inner" in blog
+    assert "cc-button" not in blog
+    assert "cc-section" not in blog

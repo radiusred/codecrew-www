@@ -32,12 +32,16 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 ## How it works
 
+<p class="cc-how__lead" markdown="span">You do not run the verbs. Your agent does. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.</p>
+
 <div class="cc-steps" markdown>
 <div class="cc-step" markdown>
 
 ### Milestone
 
 A GitHub issue, with its requirements written into it.
+
+<p class="cc-step__verb" markdown="span">`gh codecrew milestone new --title T --goal G`</p>
 
 </div>
 <div class="cc-step" markdown>
@@ -46,6 +50,8 @@ A GitHub issue, with its requirements written into it.
 
 An issue with a plan in it, hung off the milestone.
 
+<p class="cc-step__verb" markdown="span">`gh codecrew task new --milestone N --title T` then `task start`</p>
+
 </div>
 <div class="cc-step" markdown>
 
@@ -53,12 +59,16 @@ An issue with a plan in it, hung off the milestone.
 
 Gates on the way in: CI green, an independent approval, a human sign-off where one was asked for. Enforced by a CLI that refuses rather than reminds.
 
+<p class="cc-step__verb" markdown="span">`gh codecrew task finish <ref>`</p>
+
 </div>
 <div class="cc-step" markdown>
 
 ### Record
 
 At milestone close, one role compiles the comments into a document that goes through the same review as code.
+
+<p class="cc-step__verb" markdown="span">`gh codecrew milestone close N`</p>
 
 </div>
 </div>
@@ -135,8 +145,6 @@ claude
 </div>
 
 Then one sentence to your agent: *Let's build this project!*
-
-You do not run the verbs. Your agent does. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.
 
 </div>
 </section>
