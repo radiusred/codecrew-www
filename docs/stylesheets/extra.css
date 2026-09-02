@@ -5,23 +5,79 @@ h1,h2,h3 {
   font-family: "Oswald", sans-serif;
 }
 
-/* Light scheme: warm off-white body so bright white doesn't strain eyes. */
-[data-md-color-scheme="default"] {
-  --md-default-bg-color: #f5f3ee;
+/* CodeCrew palette, taken from the logo artwork: deep purple-black ground
+   (#0a0012 to #200040), cyan accent (#00d0f8), white type. Both palette
+   entries in zensical.toml use primary/accent "custom", which hands colour
+   control to the variables below. */
+:root {
+  --cc-ink: #0a0012;
+  --cc-purple: #1a0a3a;
+  --cc-purple-light: #2d1458;
+  --cc-cyan: #00d0f8;
+  --cc-cyan-deep: #0087a8;
 }
 
-/* Brand link color. Compound selectors needed to beat Zensical's
-   [data-md-color-scheme=slate][data-md-color-primary=indigo] specificity. */
-[data-md-color-scheme="default"][data-md-color-primary="indigo"] {
-  --md-typeset-a-color: #611d1d;
-  --md-accent-fg-color: #611d1d;
-  --md-accent-fg-color--transparent: #611d1d1a;
+/* Header, nav tabs and buttons in both schemes. */
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: var(--cc-purple);
+  --md-primary-fg-color--light: var(--cc-purple-light);
+  --md-primary-fg-color--dark: var(--cc-ink);
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: #ffffffb3;
 }
 
-[data-md-color-scheme="slate"][data-md-color-primary="indigo"] {
-  --md-typeset-a-color: #c91d19;
-  --md-accent-fg-color: #c91d19;
-  --md-accent-fg-color--transparent: #c91d191a;
+/* Light scheme: cool off-white ground, deep cyan links for contrast. */
+[data-md-color-scheme="default"][data-md-color-accent="custom"] {
+  --md-default-bg-color: #f7f5fb;
+  --md-accent-fg-color: var(--cc-cyan-deep);
+  --md-accent-fg-color--transparent: #0087a81a;
+  --md-typeset-a-color: var(--cc-cyan-deep);
+  --md-footer-bg-color: var(--cc-purple);
+  --md-footer-bg-color--dark: var(--cc-ink);
+}
+
+/* Dark scheme: the logo's purple-black ground with bright cyan links. */
+[data-md-color-scheme="slate"][data-md-color-accent="custom"] {
+  --md-hue: 270;
+  --md-default-bg-color: #0c0418;
+  --md-default-bg-color--light: #0c0418b3;
+  --md-default-bg-color--lighter: #0c041866;
+  --md-default-bg-color--lightest: #0c04181a;
+  --md-default-fg-color: #f2eefaf2;
+  --md-default-fg-color--light: #f2eefab3;
+  --md-default-fg-color--lighter: #f2eefa4d;
+  --md-default-fg-color--lightest: #f2eefa1f;
+  --md-code-bg-color: #180a30;
+  --md-accent-fg-color: var(--cc-cyan);
+  --md-accent-fg-color--transparent: #00d0f81a;
+  --md-typeset-a-color: var(--cc-cyan);
+  --md-footer-bg-color: #100020;
+  --md-footer-bg-color--dark: var(--cc-ink);
+}
+
+/* Zensical's header takes the page background, which in the light scheme
+   would swallow the white logo. Keep the header on the brand purple in both
+   schemes by redefining the theme variables inside it. */
+[data-md-color-scheme="default"] .md-header {
+  --md-default-bg-color: var(--cc-purple);
+  --md-default-bg-color--light: var(--cc-purple);
+  --md-default-bg-color--lighter: #ffffff1f;
+  --md-default-bg-color--lightest: #ffffff0d;
+  --md-default-fg-color: #ffffff;
+  --md-default-fg-color--light: #ffffffb3;
+  --md-default-fg-color--lighter: #ffffff4d;
+  --md-default-fg-color--lightest: #ffffff1f;
+  --md-accent-fg-color: var(--cc-cyan);
+}
+
+/* The wordmark colours "Code" cyan and "Crew" white; echo that in the
+   hero: cyan lead line on the purple ground of the dark scheme, deep
+   purple on the light one. */
+[data-md-color-scheme="default"] .md-content .hero {
+  color: var(--cc-purple);
+}
+[data-md-color-scheme="slate"] .md-content .hero {
+  color: #ffffff;
 }
 
 /* navigation.sections renders second-level entries as always-open groups,
@@ -35,6 +91,7 @@ h1,h2,h3 {
   display: block;
   max-width: 16rem;
   margin: 1rem auto 0;
+  border-radius: 1rem;
 }
 
 /* Hero heading on the homepage — see docs/index.md `{ .hero }` attr_list. */
