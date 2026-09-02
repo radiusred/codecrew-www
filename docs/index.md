@@ -27,16 +27,4 @@ You do not run the verbs. Your agent does. You are needed at three moments: when
 
 ## Read next
 
-The reference material lives with the code on GitHub:
-
-- [Overview](https://github.com/radiusred/gh-codecrew#readme) — why you would want a crew, and how it works in four beats
-- [Introduction](https://github.com/radiusred/gh-codecrew/blob/main/docs/introduction.md) — the protocol, the contracts, the CLI and its refusal codes
-- [Your first milestone](https://github.com/radiusred/gh-codecrew/blob/main/docs/first-milestone.md) — the quickstart, one milestone end to end
-- [Identities](https://github.com/radiusred/gh-codecrew/blob/main/docs/identities.md) — running solo, minting App identities, dispatching a role session
-- [Specification](https://github.com/radiusred/gh-codecrew/blob/main/SPEC.md) — the protocol itself
-
-## Follow along
-
-The [blog](blog/) carries release notes, design decisions and field reports from building and running CodeCrew. Subscribe via the [Atom feed](blog/atom.xml), or watch the [repository](https://github.com/radiusred/gh-codecrew).
-
-CodeCrew is built by [Radius Red](https://www.radiusred.uk/) and licensed under [Apache 2.0](https://github.com/radiusred/gh-codecrew/blob/main/LICENSE).
+While we're building out the site, find all the information you need at our [GitHub repo](https://github.com/radiusred/gh-codecrew).
