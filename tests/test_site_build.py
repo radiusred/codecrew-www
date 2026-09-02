@@ -70,14 +70,20 @@ def test_home_keeps_the_header(home: str):
 
 
 def test_home_has_the_product_page_flow(home: str):
-    assert 'class="cc-section cc-hero' in home
-    assert "cc-hero__headline" in home
-    assert "Agent-driven software delivery" in home
-    assert 'href="#start-now"' in home  # primary call to action
-    assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in home
-    for section in ("cc-how", "cc-why", "cc-proof", "cc-start"):
-        assert f"cc-section {section}" in home, section
+    for name in ("cc-hero", "cc-how", "cc-why", "cc-proof", "cc-start"):
+        assert f"cc-section {name}" in home, name
     assert 'id="start-now"' in home
+
+
+def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
+    hero = section(home, "cc-hero")
+    assert 'class="cc-hero__logo"' in hero
+    assert 'class="cc-logo"' in hero
+    assert 'class="cc-hero__body"' in hero
+    assert "cc-hero__headline" in hero
+    assert "Agent-driven software delivery" in hero
+    assert 'href="#start-now"' in hero  # primary call to action
+    assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in hero
 
 
 def test_home_has_exactly_one_install_block(home: str):

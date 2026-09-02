@@ -168,8 +168,12 @@ h1,h2,h3 {
 }
 
 /* Hero. The section carries the slate scheme attributes in the Markdown so
-   the type, links and code block take the dark palette whichever scheme
-   the visitor chose; the ground is the logo's purple-to-ink gradient. */
+   the type, links and buttons take the dark palette whichever scheme the
+   visitor chose; the ground is the logo's purple-to-ink gradient.
+
+   Layout is a grid: stacked and centred on narrow viewports; from 60em
+   (Zensical's own breakpoint) two columns, the logo on the left and the
+   headline, sub-headline and calls to action on the right, left-aligned. */
 .cc-hero {
   padding: 2.4rem 1rem 3rem;
   text-align: center;
@@ -177,16 +181,37 @@ h1,h2,h3 {
   color: var(--md-primary-bg-color);
 }
 
+.cc-hero .cc-section__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 1.4rem;
+}
+
+/* Markdown wraps the image in a <p>; the wrapper carries no margin so the
+   grid gap alone spaces the logo from the headline. */
+.md-typeset .cc-hero__logo p {
+  margin: 0;
+}
+
 .md-typeset .cc-logo {
   display: block;
   max-width: 13rem;
-  margin: 0 auto 1.4rem;
+  margin: 0;
   border-radius: 1rem;
 }
 
-.md-typeset .cc-hero__headline {
-  max-width: 32rem;
-  margin: 0 auto 1rem;
+/* The body is the centred grid item that carries the measure; the headline
+   and paragraphs fill it, so none of them needs auto side margins. The
+   paragraph rules below name .cc-hero so they outrank the general
+   `.md-typeset .cc-section p` margin rule (specificity (0,2,1)), which used
+   to strip the sub-headline's auto margins and leave it flush left. */
+.cc-hero__body {
+  max-width: 34rem;
+}
+
+.md-typeset .cc-hero .cc-hero__headline {
+  margin: 0 0 1rem;
   font-size: 2.4rem;
   line-height: 1.1;
   font-weight: 700;
@@ -194,12 +219,30 @@ h1,h2,h3 {
   color: var(--md-primary-bg-color);
 }
 
-.md-typeset .cc-hero__sub {
-  max-width: 34rem;
-  margin: 0 auto 1.6rem;
+.md-typeset .cc-hero .cc-hero__sub {
+  margin: 0 0 1.6rem;
   font-size: 0.95rem;
   line-height: 1.5;
   color: var(--md-primary-bg-color--light);
+}
+
+@media screen and (min-width: 60em) {
+  .cc-hero {
+    text-align: left;
+  }
+  .cc-hero .cc-section__inner {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+    gap: 3rem;
+  }
+  .md-typeset .cc-logo {
+    max-width: 19rem;
+  }
+  /* The column bounds the body: 56rem inner, less the logo and the gap. */
+  .cc-hero__body {
+    max-width: none;
+  }
 }
 
 /* The wordmark colours "Code" cyan and "Crew" white; echo it in the lead. */
@@ -207,13 +250,19 @@ h1,h2,h3 {
   color: var(--cc-cyan);
 }
 
-/* Calls to action. */
-.md-typeset .cc-cta {
+/* Calls to action: centred when stacked, flush left beside the logo. */
+.md-typeset .cc-hero .cc-cta {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.6rem;
-  margin: 0 0 2rem;
+  margin: 0;
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .cc-hero .cc-cta {
+    justify-content: flex-start;
+  }
 }
 
 .md-typeset .cc-button {
@@ -356,7 +405,7 @@ h1,h2,h3 {
   .md-typeset .cc-section h2 {
     font-size: 1.6rem;
   }
-  .md-typeset .cc-hero__headline {
+  .md-typeset .cc-hero .cc-hero__headline {
     font-size: 1.9rem;
   }
 }
