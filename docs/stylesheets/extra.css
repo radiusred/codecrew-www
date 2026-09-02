@@ -70,44 +70,10 @@ h1,h2,h3 {
   --md-accent-fg-color: var(--cc-cyan);
 }
 
-/* The wordmark colours "Code" cyan and "Crew" white; echo that in the
-   hero: cyan lead line on the purple ground of the dark scheme, deep
-   purple on the light one. */
-[data-md-color-scheme="default"] .md-content .hero {
-  color: var(--cc-purple);
-}
-[data-md-color-scheme="slate"] .md-content .hero {
-  color: #ffffff;
-}
-
 /* navigation.sections renders second-level entries as always-open groups,
    ignoring the toggle. Honor the aria-expanded Zensical already sets. */
 .md-nav__item--section > nav.md-nav[aria-expanded="false"] > .md-nav__list {
   display: none;
-}
-
-/* Logo on the homepage — see docs/index.md `{ .cc-logo }` attr_list. */
-.md-content .cc-logo {
-  display: block;
-  max-width: 16rem;
-  margin: 1rem auto 0;
-  border-radius: 1rem;
-}
-
-/* Hero heading on the homepage — see docs/index.md `{ .hero }` attr_list. */
-.md-content .hero {
-  font-size: 2.4rem;
-  line-height: 1.1;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 1rem 0 1.5rem;
-  text-align: center;
-  font-family: "Oswald", sans-serif;
-}
-@media (min-width: 1220px) {
-  .md-content .hero {
-    font-size: 3rem;
-  }
 }
 
 .md-copyright__registration {
@@ -149,4 +115,252 @@ h1,h2,h3 {
 
 .rr-page-meta__value {
   font-weight: 500;
+}
+
+/* ------------------------------------------------------------------ */
+/* Home page: docs/index.md rendered by overrides/home.html.           */
+/* Full-bleed sections; colours come from the palette variables above. */
+/* ------------------------------------------------------------------ */
+
+/* The home template drops the sidebars and the reading column, so let the
+   page escape the 61rem grid and the top margin: sections run edge to edge
+   and the hero sits flush under the nav tabs. */
+.md-main__inner:has(> .cc-home) {
+  max-width: none;
+  margin-top: 0;
+}
+
+.cc-home .headerlink {
+  display: none;
+}
+
+.cc-section {
+  padding: 3rem 1rem;
+}
+
+.cc-section__inner {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+/* Alternate sections take a faint ink tint of the scheme's foreground, so
+   the rhythm reads in both colour schemes without a new colour. */
+.cc-section--alt {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .cc-section h2 {
+  margin: 0 0 1.6rem;
+  font-size: 2rem;
+  line-height: 1.1;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset .cc-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.md-typeset .cc-section p {
+  margin: 0 0 0.8rem;
+}
+
+/* Hero. The section carries the slate scheme attributes in the Markdown so
+   the type, links and code block take the dark palette whichever scheme
+   the visitor chose; the ground is the logo's purple-to-ink gradient. */
+.cc-hero {
+  padding: 2.4rem 1rem 3rem;
+  text-align: center;
+  background: linear-gradient(180deg, var(--cc-purple) 0%, var(--cc-ink) 100%);
+  color: var(--md-primary-bg-color);
+}
+
+.md-typeset .cc-logo {
+  display: block;
+  max-width: 13rem;
+  margin: 0 auto 1.4rem;
+  border-radius: 1rem;
+}
+
+.md-typeset .cc-hero__headline {
+  max-width: 32rem;
+  margin: 0 auto 1rem;
+  font-size: 2.4rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--md-primary-bg-color);
+}
+
+.md-typeset .cc-hero__sub {
+  max-width: 34rem;
+  margin: 0 auto 1.6rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--md-primary-bg-color--light);
+}
+
+/* The wordmark colours "Code" cyan and "Crew" white; echo it in the lead. */
+.md-typeset .cc-hero__sub strong {
+  color: var(--cc-cyan);
+}
+
+/* Calls to action. */
+.md-typeset .cc-cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0 0 2rem;
+}
+
+.md-typeset .cc-button {
+  display: inline-block;
+  padding: 0.55em 1.4em;
+  border: 0.1rem solid var(--cc-cyan);
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cc-cyan);
+  transition: background-color 125ms, color 125ms, border-color 125ms;
+}
+
+.md-typeset .cc-button--primary {
+  background: var(--cc-cyan);
+  color: var(--cc-ink);
+}
+
+.md-typeset .cc-button:hover,
+.md-typeset .cc-button:focus {
+  background: var(--cc-cyan);
+  color: var(--cc-ink);
+}
+
+.md-typeset .cc-button--primary:hover,
+.md-typeset .cc-button--primary:focus {
+  background: var(--md-primary-bg-color);
+  border-color: var(--md-primary-bg-color);
+}
+
+/* The four-line install block, in the hero and again at the close. */
+.cc-install {
+  max-width: 44rem;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.md-typeset .cc-install pre {
+  margin: 0;
+}
+
+.cc-hero .cc-install pre > code {
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+}
+
+/* How it works: four numbered steps, left to right on desktop. */
+.cc-steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+  counter-reset: cc-step;
+}
+
+.cc-step {
+  position: relative;
+  padding-top: 0.8rem;
+  border-top: 0.15rem solid var(--md-accent-fg-color);
+  counter-increment: cc-step;
+}
+
+.md-typeset .cc-step h3::before {
+  content: counter(cc-step);
+  margin-right: 0.4rem;
+  color: var(--md-accent-fg-color);
+}
+
+@media screen and (min-width: 45em) {
+  .cc-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (min-width: 60em) {
+  .cc-steps {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.6rem;
+  }
+  .cc-step:not(:last-child)::after {
+    content: "\2192";
+    position: absolute;
+    top: 0.7rem;
+    right: -1.15rem;
+    font-size: 0.9rem;
+    color: var(--md-default-fg-color--lighter);
+  }
+}
+
+/* Why: three panels on the tinted band. */
+.cc-panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+
+.cc-panel {
+  padding: 1.2rem 1.2rem 0.6rem;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  background: var(--md-default-bg-color);
+}
+
+@media screen and (min-width: 45em) {
+  .cc-panels {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Proof: the receipts, two columns on desktop. */
+.md-typeset .cc-receipts ul {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset .cc-receipts li {
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: 0.15rem solid var(--md-accent-fg-color);
+}
+
+@media screen and (min-width: 45em) {
+  .md-typeset .cc-receipts ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Closing install call to action. */
+.cc-start {
+  text-align: center;
+}
+
+.md-typeset .cc-start p {
+  max-width: 40rem;
+  margin: 1rem auto 0;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .cc-section {
+    padding: 2rem 0.8rem;
+  }
+  .md-typeset .cc-section h2 {
+    font-size: 1.6rem;
+  }
+  .md-typeset .cc-hero__headline {
+    font-size: 1.9rem;
+  }
 }
