@@ -42,6 +42,12 @@ def blog(site: Path) -> str:
     return (site / "blog" / "index.html").read_text()
 
 
+def section(html: str, name: str) -> str:
+    """The markup of one home page section, by its `cc-*` class."""
+    start = html.index(f'<section class="cc-section {name}')
+    return html[start : html.index("</section>", start)]
+
+
 def test_home_uses_the_home_template(home: str):
     assert 'class="md-content cc-home"' in home
     assert "md-content__inner" not in home  # no reading column
@@ -71,8 +77,13 @@ def test_home_has_the_product_page_flow(home: str):
     assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in home
     for section in ("cc-how", "cc-why", "cc-proof", "cc-start"):
         assert f"cc-section {section}" in home, section
-    assert home.count("language-sh highlight") == 2  # install block in the hero and at the close
     assert 'id="start-now"' in home
+
+
+def test_home_has_exactly_one_install_block(home: str):
+    assert home.count("language-sh highlight") == 1
+    assert "cc-install" not in section(home, "cc-hero")
+    assert "cc-install" in section(home, "cc-start")
 
 
 def test_blog_keeps_the_default_layout(blog: str):

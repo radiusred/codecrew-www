@@ -244,7 +244,7 @@ h1,h2,h3 {
   border-color: var(--md-primary-bg-color);
 }
 
-/* The four-line install block, in the hero and again at the close. */
+/* The four-line install block, at the close only. */
 .cc-install {
   max-width: 44rem;
   margin: 0 auto;
@@ -253,10 +253,6 @@ h1,h2,h3 {
 
 .md-typeset .cc-install pre {
   margin: 0;
-}
-
-.cc-hero .cc-install pre > code {
-  border: 0.05rem solid var(--md-default-fg-color--lightest);
 }
 
 /* How it works: four numbered steps, left to right on desktop. */
