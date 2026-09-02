@@ -1,0 +1,17 @@
+[project]
+name = "codecrew_www"
+version = "0.1.0"
+description = "The CodeCrew website: codecrew.works"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "zensical>=0.0.39",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

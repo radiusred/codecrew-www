@@ -1,0 +1,17 @@
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+  <div class="md-copyright__registration">
+    CodeCrew is built by <a href="https://www.radiusred.uk/">Radius Red Ltd</a>,
+    registered in England &amp; Wales at 71-75 Shelton Street, London. WC2H 9JQ
+  </div>
+  {% if not config.extra.generator == false %}
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  {% endif %}
+</div>

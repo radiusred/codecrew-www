@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>CodeCrew Blog</title>
+  <subtitle>Release notes, design decisions and field reports from building and running CodeCrew.</subtitle>
+  <link href="https://codecrew.works/blog/atom.xml" rel="self" />
+  <link href="https://codecrew.works/blog/" rel="alternate" />
+  <id>https://codecrew.works/blog/</id>
+  <updated>2026-09-02T16:04:30.832081Z</updated>
+  <author>
+    <name>Radius Red Ltd.</name>
+  </author>
+</feed>

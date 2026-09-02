@@ -1,0 +1,47 @@
+name: Build and deploy site
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Daily at 00:05 UTC: promotes any drafts whose date has arrived.
+    - cron: '5 0 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: codecrew-www-deploy
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: radiusred/gh-codecrew
+          path: _sources/gh-codecrew
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+      - run: pip install zensical
+      - run: python3 sync_docs.py
+        env:
+          SYNC_SOURCE_BASE: _sources
+      - run: python3 main.py
+      - run: zensical build --clean
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

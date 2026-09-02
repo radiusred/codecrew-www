@@ -1,0 +1,59 @@
+{#-
+  Override of zensical/templates/partials/content.html.
+
+  Renders a "published on … by …" line immediately below the page H1
+  for any page whose frontmatter declares `date` and/or `author`.
+
+  Notes:
+   - Zensical sanitizes datetime values to ISO strings before passing
+     metadata into the (Rust) template engine, so we slice the string
+     ourselves instead of calling .strftime.
+   - The H1 itself is emitted by the page's Markdown, so we splice the
+     meta block in after </h1> rather than rendering our own heading.
+-#}
+{% include "partials/actions.html" %}
+
+{%- set d = page.meta.date -%}
+{%- set author = page.meta.author -%}
+{%- set months = ["", "January", "February", "March", "April", "May",
+                  "June", "July", "August", "September", "October",
+                  "November", "December"] -%}
+
+{%- set meta_html %}
+{%- if d or author %}
+<div class="rr-page-meta">
+  {%- if d %}
+  {%- set day_n = d[8:10] | int %}
+  {%- set month_n = d[5:7] | int %}
+  {%- set year_n = d[0:4] %}
+  {%- if day_n in [11, 12, 13] %}{% set suffix = "th" %}
+  {%- elif day_n % 10 == 1 %}{% set suffix = "st" %}
+  {%- elif day_n % 10 == 2 %}{% set suffix = "nd" %}
+  {%- elif day_n % 10 == 3 %}{% set suffix = "rd" %}
+  {%- else %}{% set suffix = "th" %}{% endif %}
+  <span class="rr-page-meta__item">
+    <span class="rr-page-meta__label">published on:</span>
+    <span class="rr-page-meta__value">{{ day_n }}{{ suffix }} {{ months[month_n] }} {{ year_n }}</span>
+  </span>
+  {%- endif %}
+  {%- if author %}
+  <span class="rr-page-meta__item">
+    <span class="rr-page-meta__label">by:</span>
+    <span class="rr-page-meta__value">{{ author }}</span>
+  </span>
+  {%- endif %}
+</div>
+{%- endif %}
+{%- endset %}
+
+{% if "<h1" in page.content %}
+  {{ page.content | replace("</h1>", "</h1>" ~ meta_html) }}
+{% else %}
+  <h1 id="__skip">{{ page.title | d(config.site_name, true) }}</h1>
+  {{ meta_html }}
+  {{ page.content }}
+{% endif %}
+{% include "partials/tags.html" %}
+{% include "partials/source-file.html" %}
+{% include "partials/feedback.html" %}
+{% include "partials/comments.html" %}

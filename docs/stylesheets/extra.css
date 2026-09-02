@@ -1,0 +1,95 @@
+/* extra fonts */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+
+h1,h2,h3 {
+  font-family: "Oswald", sans-serif;
+}
+
+/* Light scheme: warm off-white body so bright white doesn't strain eyes. */
+[data-md-color-scheme="default"] {
+  --md-default-bg-color: #f5f3ee;
+}
+
+/* Brand link color. Compound selectors needed to beat Zensical's
+   [data-md-color-scheme=slate][data-md-color-primary=indigo] specificity. */
+[data-md-color-scheme="default"][data-md-color-primary="indigo"] {
+  --md-typeset-a-color: #611d1d;
+  --md-accent-fg-color: #611d1d;
+  --md-accent-fg-color--transparent: #611d1d1a;
+}
+
+[data-md-color-scheme="slate"][data-md-color-primary="indigo"] {
+  --md-typeset-a-color: #c91d19;
+  --md-accent-fg-color: #c91d19;
+  --md-accent-fg-color--transparent: #c91d191a;
+}
+
+/* navigation.sections renders second-level entries as always-open groups,
+   ignoring the toggle. Honor the aria-expanded Zensical already sets. */
+.md-nav__item--section > nav.md-nav[aria-expanded="false"] > .md-nav__list {
+  display: none;
+}
+
+/* Logo on the homepage — see docs/index.md `{ .cc-logo }` attr_list. */
+.md-content .cc-logo {
+  display: block;
+  max-width: 16rem;
+  margin: 1rem auto 0;
+}
+
+/* Hero heading on the homepage — see docs/index.md `{ .hero }` attr_list. */
+.md-content .hero {
+  font-size: 2.4rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 1rem 0 1.5rem;
+  text-align: center;
+  font-family: "Oswald", sans-serif;
+}
+@media (min-width: 1220px) {
+  .md-content .hero {
+    font-size: 3rem;
+  }
+}
+
+.md-copyright__registration {
+  margin-top: 0.4rem;
+  opacity: 0.7;
+}
+
+/* "All posts..." archive link in the nav: right-align and dim. */
+.md-nav__link[href$="archive/"] {
+  justify-content: flex-end;
+  text-align: right;
+  font-style: italic;
+}
+
+/* Date suffix injected into nav titles by main.py:regenerate_nav. */
+.md-nav__link .muted {
+  opacity: 0.55;
+  margin-left: 0.25rem;
+  font-weight: 400;
+}
+
+/* Page metadata line rendered below the H1 by overrides/partials/content.html. */
+.rr-page-meta {
+  margin: -0.6rem 0 1.2rem;
+  font-size: 0.85em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+}
+
+.rr-page-meta__item {
+  white-space: nowrap;
+}
+
+.rr-page-meta__label {
+  opacity: 0.6;
+  margin-right: 0.15rem;
+}
+
+.rr-page-meta__value {
+  font-weight: 500;
+}
