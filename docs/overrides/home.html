@@ -1,0 +1,43 @@
+{#-
+  Home page template: the product page at codecrew.works/.
+  Selected by `template: home.html` in docs/index.md.
+
+  Extends main.html (which extends base.html and adds the Open Graph and
+  JSON-LD head). The header and tabs blocks are inherited untouched, so the
+  logo, search, palette toggle and nav tabs render as on every other page.
+
+  Overridden:
+   - site_nav: empty. Neither sidebar is in the markup; the page's
+     `hide: [navigation, toc]` front matter is belt and braces.
+   - container: full-bleed. No breadcrumbs (partials/path.html), no
+     partials/content.html (so the "published on" override and the actions
+     strip never apply), no md-content__inner reading column. The sections
+     come straight from the Markdown body.
+   - footer: the meta strip only (copyright + social), no prev/next
+     navigation.
+  MiniJinja: built-in filters only, no Python.
+-#}
+{% extends "main.html" %}
+
+{% block site_nav %}{% endblock %}
+
+{% block container %}
+  <div class="md-content cc-home" data-md-component="content">
+    <div class="md-typeset">
+      {{ page.content }}
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="md-footer">
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        {% include "partials/copyright.html" %}
+        {% if config.extra.social %}
+          {% include "partials/social.html" %}
+        {% endif %}
+      </div>
+    </div>
+  </footer>
+{% endblock %}
