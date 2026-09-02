@@ -146,10 +146,18 @@ h1,h2,h3 {
   margin: 0 auto;
 }
 
-/* Alternate sections take a faint ink tint of the scheme's foreground, so
-   the rhythm reads in both colour schemes without a new colour. */
+/* Alternate sections (Why, Start now) sit darker than the page ground and
+   carry a radial glow in the spirit of the logo artwork: a soft light
+   centre on the purple-black. In slate the band runs from --cc-purple-light
+   at the centre to --cc-ink at the edges (body text stays above 10:1, the
+   muted text above 5.8:1); in default the off-white darkens a step and the
+   same shape shows at low strength (body text above 11:1). */
 .cc-section--alt {
-  background: var(--md-default-fg-color--lightest);
+  background: radial-gradient(60% 75% at 50% 40%, #eeeaf5 0%, #e6e1f0 55%, #ddd6ea 100%);
+}
+
+[data-md-color-scheme="slate"] .cc-section--alt {
+  background: radial-gradient(60% 75% at 50% 40%, var(--cc-purple-light) 0%, var(--cc-purple) 45%, var(--cc-ink) 100%);
 }
 
 .md-typeset .cc-section h2 {
@@ -377,7 +385,7 @@ h1,h2,h3 {
   }
 }
 
-/* Why: three panels on the tinted band. */
+/* Why: three panels on the glowing band, on the page ground. */
 .cc-panels {
   display: grid;
   grid-template-columns: 1fr;
