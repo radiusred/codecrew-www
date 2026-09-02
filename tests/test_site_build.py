@@ -163,6 +163,16 @@ def test_home_footer_has_its_own_ground(css: str):
     assert "--md-footer-bg-color--dark: var(--cc-purple)" in rule(css, '[data-md-color-scheme="slate"] .cc-footer')
 
 
+def test_home_links_take_the_pink_and_buttons_keep_the_cyan(css: str):
+    assert "--cc-pink: #ce5ae9;" in rule(css, ":root")
+    assert "--cc-pink-deep:" in rule(css, ":root")
+    assert "--md-typeset-a-color: var(--cc-pink-deep)" in rule(css, ".cc-home")
+    assert "--md-typeset-a-color: var(--cc-pink)" in rule(css, '[data-md-color-scheme="slate"] .cc-home')
+    assert "--md-typeset-a-color: var(--cc-pink)" in rule(css, ".cc-section.cc-hero")
+    assert "--cc-pink" not in rule(css, ".md-typeset .cc-button")
+    assert "var(--cc-cyan-tint)" in rule(css, ".md-typeset .cc-button--primary")
+
+
 def test_blog_keeps_the_default_layout(blog: str):
     assert "cc-home" not in blog
     assert "md-content__inner" in blog

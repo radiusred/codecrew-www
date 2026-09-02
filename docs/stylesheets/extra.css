@@ -18,6 +18,13 @@ h1,h2,h3 {
   /* The cyan at 20% alpha: a soft fill for the primary button on the hero's
      dark ground, where the full cyan is too stark for a control. */
   --cc-cyan-tint: #00d0f833;
+  /* Second accent, sampled from the "docs" text in the docs icon: the
+     colour of links on the home page in slate (6:1 on the page ground,
+     5.5:1 on the hero). Its deeper companion carries the light scheme,
+     where the sampled pink reads at 3.1:1 (6.2:1 on the page, 5.2:1 on
+     the darker bands). */
+  --cc-pink: #ce5ae9;
+  --cc-pink-deep: #9327ae;
 }
 
 /* Header, nav tabs and buttons in both schemes. */
@@ -135,6 +142,27 @@ h1,h2,h3 {
 
 .cc-home .headerlink {
   display: none;
+}
+
+/* Links on the home page take the pink, so links and buttons no longer
+   share the cyan; buttons, the step rule, the receipts' rule and the
+   hero's bold keep it. Hover mixes the pink towards the scheme's text
+   colour; buttons are excluded so their own colours hold. */
+.cc-home {
+  --md-typeset-a-color: var(--cc-pink-deep);
+}
+
+[data-md-color-scheme="slate"] .cc-home {
+  --md-typeset-a-color: var(--cc-pink);
+}
+
+.cc-home .md-typeset a:not(.cc-button):is(:hover, :focus) {
+  color: color-mix(in srgb, var(--cc-pink-deep) 80%, black);
+}
+
+[data-md-color-scheme="slate"] .cc-home .md-typeset a:not(.cc-button):is(:hover, :focus),
+.cc-home .cc-hero a:not(.cc-button):is(:hover, :focus) {
+  color: color-mix(in srgb, var(--cc-pink) 70%, white);
 }
 
 .cc-section {
@@ -318,13 +346,13 @@ h1,h2,h3 {
   outline-offset: 0.1rem;
 }
 
-/* Plain links inside the hero take the deep cyan rather than the full one.
-   The section carries the slate attributes, whose selector sets the link
+/* Plain links inside the hero take the pink whichever scheme is on: the
+   section carries the slate attributes, whose selector sets the link
    colour at specificity (0,2,0); two classes match it, and this rule is
-   later. There are no such links today; this is the policy. */
+   later. The pink reads at 5.5:1 on the hero's purple, so it needs no
+   lightening there. There are no such links today; this is the policy. */
 .cc-section.cc-hero {
-  --md-typeset-a-color: var(--cc-cyan-deep);
-  --md-accent-fg-color: var(--cc-cyan-deep);
+  --md-typeset-a-color: var(--cc-pink);
 }
 
 /* The four-line install block, at the close only. */
