@@ -19,16 +19,6 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 <p class="cc-cta" markdown="span">[Start now](#start-now){ .cc-button .cc-button--primary } [Read the docs](https://github.com/radiusred/gh-codecrew#readme){ .cc-button }</p>
 
-<div class="cc-install" markdown>
-
-```sh
-gh extension install radiusred/gh-codecrew
-cd my-project            # any repo on GitHub, brand new or years old
-gh codecrew init         # writes and commits .codecrew.yml, roles/, AGENTS.md, CLAUDE.md, ROADMAP.md
-claude                   # or codex, or whichever coding agent you run
-```
-
-</div>
 </div>
 </section>
 
