@@ -59,6 +59,18 @@ def blog(site: Path) -> str:
     return (site / "blog" / "index.html").read_text()
 
 
+@pytest.fixture(scope="module")
+def css(site: Path) -> str:
+    return (site / "stylesheets" / "extra.css").read_text()
+
+
+def rule(css: str, selector: str) -> str:
+    """The declarations of the first rule whose selector line is exactly `selector`."""
+    match = re.search(r"^" + re.escape(selector) + r"\s*\{([^}]*)\}", css, re.M)
+    assert match, selector
+    return match.group(1)
+
+
 def section(page: str, name: str) -> str:
     """The markup of one home page section, by its `cc-*` class."""
     start = page.index(f'<section class="cc-section {name}')
@@ -137,6 +149,12 @@ def test_how_it_works_leads_with_the_three_moments_and_names_a_verb_per_step(hom
         assert snippets and snippets[0].startswith("gh codecrew "), step
         too_long = [snippet for snippet in snippets if len(snippet) > STEP_CODE_MAX]
         assert not too_long, too_long
+
+
+def test_alternate_bands_carry_the_glow_in_both_schemes(css: str):
+    assert "radial-gradient" in rule(css, ".cc-section--alt")
+    slate = rule(css, '[data-md-color-scheme="slate"] .cc-section--alt')
+    assert "radial-gradient" in slate and "var(--cc-ink)" in slate
 
 
 def test_blog_keeps_the_default_layout(blog: str):
