@@ -159,8 +159,10 @@ def test_alternate_bands_carry_the_glow_in_both_schemes(css: str):
 
 
 def test_home_footer_has_its_own_ground(css: str):
-    assert "border-top" in rule(css, ".cc-footer")
-    assert "--md-footer-bg-color--dark: var(--cc-purple)" in rule(css, '[data-md-color-scheme="slate"] .cc-footer')
+    footer = rule(css, ".cc-footer")
+    assert "--md-default-bg-color: var(--cc-purple)" in footer  # what .md-footer is painted with
+    assert "--md-default-fg-color: #ffffff" in footer
+    assert "border-top" in footer
 
 
 def test_home_links_take_the_pink_and_buttons_keep_the_cyan(css: str):
