@@ -14,7 +14,8 @@
      strip never apply), no md-content__inner reading column. The sections
      come straight from the Markdown body.
    - footer: the meta strip only (copyright + social), no prev/next
-     navigation.
+     navigation. Carries cc-footer so extra.css can give it a ground of
+     its own, apart from the Start now band above it.
   MiniJinja: built-in filters only, no Python.
 -#}
 {% extends "main.html" %}
@@ -30,7 +31,7 @@
 {% endblock %}
 
 {% block footer %}
-  <footer class="md-footer">
+  <footer class="md-footer cc-footer">
     <div class="md-footer-meta md-typeset">
       <div class="md-footer-meta__inner md-grid">
         {% include "partials/copyright.html" %}

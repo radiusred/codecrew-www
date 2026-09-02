@@ -95,6 +95,7 @@ def test_home_has_no_sidebars_or_footer_nav(home: str):
     assert "md-sidebar--secondary" not in home
     assert "md-footer__inner" not in home  # prev/next navigation
     assert "md-footer-meta" in home  # copyright + social strip stays
+    assert 'class="md-footer cc-footer"' in home  # its own ground, apart from Start now
     assert "md-social" in home
 
 
@@ -157,6 +158,11 @@ def test_alternate_bands_carry_the_glow_in_both_schemes(css: str):
     assert "radial-gradient" in slate and "var(--cc-ink)" in slate
 
 
+def test_home_footer_has_its_own_ground(css: str):
+    assert "border-top" in rule(css, ".cc-footer")
+    assert "--md-footer-bg-color--dark: var(--cc-purple)" in rule(css, '[data-md-color-scheme="slate"] .cc-footer')
+
+
 def test_blog_keeps_the_default_layout(blog: str):
     assert "cc-home" not in blog
     assert "md-content__inner" in blog
@@ -165,3 +171,4 @@ def test_blog_keeps_the_default_layout(blog: str):
     assert "md-footer__inner" in blog
     assert "cc-button" not in blog
     assert "cc-section" not in blog
+    assert "cc-footer" not in blog

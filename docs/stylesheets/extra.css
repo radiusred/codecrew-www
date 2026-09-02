@@ -437,6 +437,18 @@ h1,h2,h3 {
   margin: 1rem auto 0;
 }
 
+/* The footer meta strip after the Start now band. Zensical paints the
+   strip with --md-footer-bg-color--dark, which is --cc-ink in both schemes
+   and the very colour the slate band fades to; the home footer takes the
+   brand purple there and a hairline in both schemes so the two part. */
+.cc-footer {
+  border-top: 0.05rem solid var(--md-default-fg-color--lighter);
+}
+
+[data-md-color-scheme="slate"] .cc-footer {
+  --md-footer-bg-color--dark: var(--cc-purple);
+}
+
 @media screen and (max-width: 44.9375em) {
   .cc-section {
     padding: 2rem 0.8rem;
