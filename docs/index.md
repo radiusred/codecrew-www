@@ -19,7 +19,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 # Agent-driven software delivery, with the receipts kept in GitHub. { .cc-hero__headline }
 
-<p class="cc-hero__sub" markdown="span">CodeCrew is a third option, and a small one: **the record is the work.** Decisions and deviations are comments written at the moment they happen, in a fixed shape a machine can find later.</p>
+<p class="cc-hero__sub" markdown="span">CodeCrew is an engineering process framework, and a small one: **the record is the work.** Decisions and deviations are comments written at the moment they happen, in a fixed shape a machine can find later.</p>
 
 <p class="cc-cta" markdown="span">[Start now](#start-now){ .cc-button .cc-button--primary } [Read the docs](https://github.com/radiusred/gh-codecrew#readme){ .cc-button }</p>
 
