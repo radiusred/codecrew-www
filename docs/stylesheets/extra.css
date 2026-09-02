@@ -15,6 +15,9 @@ h1,h2,h3 {
   --cc-purple-light: #2d1458;
   --cc-cyan: #00d0f8;
   --cc-cyan-deep: #0087a8;
+  /* The cyan at 20% alpha: a soft fill for the primary button on the hero's
+     dark ground, where the full cyan is too stark for a control. */
+  --cc-cyan-tint: #00d0f833;
 }
 
 /* Header, nav tabs and buttons in both schemes. */
@@ -265,32 +268,55 @@ h1,h2,h3 {
   }
 }
 
+/* Buttons: two equal actions on the dark hero. The primary takes the soft
+   translucent cyan, the secondary a quiet light border; both carry light
+   text and no underline in any state (Zensical underlines every
+   `.md-typeset a`). Hover and keyboard focus stay subtle: the primary's
+   border firms up to the deep cyan, the secondary takes a faint wash. */
 .md-typeset .cc-button {
   display: inline-block;
   padding: 0.55em 1.4em;
-  border: 0.1rem solid var(--cc-cyan);
+  border: 0.1rem solid var(--md-default-fg-color--lighter);
   border-radius: 0.2rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--cc-cyan);
-  transition: background-color 125ms, color 125ms, border-color 125ms;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: background-color 125ms, border-color 125ms;
 }
 
 .md-typeset .cc-button--primary {
-  background: var(--cc-cyan);
-  color: var(--cc-ink);
+  background: var(--cc-cyan-tint);
+  border-color: transparent;
 }
 
-.md-typeset .cc-button:hover,
-.md-typeset .cc-button:focus {
-  background: var(--cc-cyan);
-  color: var(--cc-ink);
+.md-typeset .cc-button:is(:hover, :focus, :focus-visible) {
+  color: var(--md-default-fg-color);
+  text-decoration: none;
 }
 
-.md-typeset .cc-button--primary:hover,
-.md-typeset .cc-button--primary:focus {
-  background: var(--md-primary-bg-color);
-  border-color: var(--md-primary-bg-color);
+.md-typeset .cc-button:is(:hover, :focus-visible) {
+  background: var(--md-default-fg-color--lightest);
+  border-color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .cc-button--primary:is(:hover, :focus-visible) {
+  background: var(--cc-cyan-tint);
+  border-color: var(--cc-cyan-deep);
+}
+
+.md-typeset .cc-button:focus-visible {
+  outline: 0.1rem solid var(--cc-cyan-deep);
+  outline-offset: 0.1rem;
+}
+
+/* Plain links inside the hero take the deep cyan rather than the full one.
+   The section carries the slate attributes, whose selector sets the link
+   colour at specificity (0,2,0); two classes match it, and this rule is
+   later. There are no such links today; this is the policy. */
+.cc-section.cc-hero {
+  --md-typeset-a-color: var(--cc-cyan-deep);
+  --md-accent-fg-color: var(--cc-cyan-deep);
 }
 
 /* The four-line install block, at the close only. */
