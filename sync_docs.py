@@ -9,21 +9,20 @@ every build, and www.radiusred.uk no longer carries a copy of it.
 What lands where (repo-root-relative source -> path under docs/docs/):
 
     docs/introduction.md   -> index.md          (/docs/)
-    docs/**                -> **               (/docs/**, milestones included)
+    docs/**                -> **                (/docs/**, minus EXCLUDE)
     SPEC.md                -> spec.md
     CONTRIBUTING.md        -> contributing.md
     SECURITY.md            -> security.md
+
+docs/milestones/ is excluded: the per-milestone records are an internal
+engineering artefact, and this is the product's marketing site. Links into an
+excluded path go to GitHub like any other path that did not sync.
 
 README.md does not sync: the home page already is the README's argument, so
 links to it resolve to the home page rather than to a second copy. Links to
 anything else that did not sync — AGENTS.md, ROADMAP.md, CHANGELOG.md, LICENSE,
 roles/, assets/ — become absolute GitHub URLs. External URLs and bare in-page
 anchors are left alone.
-
-One page is generated rather than copied: docs/milestones/index.md, so the
-upstream's links to the bare `milestones/` directory land somewhere on-site
-instead of bouncing to a GitHub tree view, and so the nav section has a landing
-page (navigation.indexes is on).
 
 The Docs nav tab is written between the sentinel markers in zensical.toml, the
 same way main.py maintains the blog's.
@@ -62,7 +61,12 @@ NAV_INDENT = "  "  # top-level nav entries in zensical.toml sit at two spaces
 # page that calls itself "the map" — becomes the section index.
 DOCS_DIR = "docs"
 SECTION_INDEX = "docs/introduction.md"
-MILESTONES = "milestones"
+
+# Subtrees of the upstream docs/ dir that do not belong on the marketing site.
+# A trailing slash marks a subtree; the directory itself is excluded too, so a
+# link to it becomes a GitHub URL rather than resolving to nothing. The
+# milestone records are the engineering trail, not product documentation.
+EXCLUDE = ("milestones/",)
 
 # Root-of-repo files that sync alongside the docs/ tree.
 ROOT_FILE_MAP = {
@@ -109,9 +113,6 @@ H1_RE = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
 HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 # A title's subtitle: everything after the first ": " or " — ".
 SUBTITLE_RE = re.compile(r"\s*(?::|\s—)\s.*$", re.DOTALL)
-# The leading number of a milestone record's filename, for ordering.
-LEADING_NUMBER_RE = re.compile(r"^(\d+)")
-
 # The section's reading order, which is the order docs/introduction.md itself
 # prescribes rather than the alphabetical one. Pages the upstream adds later are
 # appended after these, alphabetically, and the trailing pair always comes last.
@@ -129,15 +130,6 @@ TRAILING_PAGES = (("contributing.md", "Contributing"), ("security.md", "Security
 # The index's own H1 ("CodeCrew, precisely") titles the page; the tab wants the
 # word a reader scans for.
 INDEX_LABEL = "Introduction"
-MILESTONES_LABEL = "Milestones"
-
-MILESTONES_INDEX = """# Milestones
-
-One record per milestone, compiled at close from the decisions and deviations
-recorded while the work happened — the "why", as it was written down at the
-time.
-
-"""
 
 
 def source_dir():
@@ -157,6 +149,16 @@ def split_anchor(path):
     return path, ""
 
 
+def is_excluded(docs_rel):
+    """True if `docs_rel` (relative to the upstream docs/ dir) is one of the
+    EXCLUDE subtrees, or sits inside one."""
+    for pattern in EXCLUDE:
+        prefix = pattern.rstrip("/")
+        if docs_rel == prefix or docs_rel.startswith(prefix + "/"):
+            return True
+    return False
+
+
 def map_to_dest(repo_path):
     """Map a repo-root-relative path to its path under DEST, or None if it
     does not sync (the caller then emits a GitHub URL)."""
@@ -166,8 +168,7 @@ def map_to_dest(repo_path):
         return "index.md"
     if repo_path.startswith(DOCS_DIR + "/"):
         rel = repo_path[len(DOCS_DIR) + 1 :]
-        # The bare milestones/ directory resolves to the index this sync writes.
-        return f"{MILESTONES}/index.md" if rel == MILESTONES else rel
+        return None if is_excluded(rel) else rel
     return None
 
 
@@ -175,7 +176,11 @@ def github_url(repo_path, is_image):
     ext = posixpath.splitext(repo_path.split("#", 1)[0])[1].lower()
     if is_image or ext in IMAGE_EXTS:
         return f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
-    return f"https://github.com/{REPO}/blob/{BRANCH}/{repo_path}"
+    # GitHub 301s /blob/ to /tree/ for a directory, so link the directory
+    # directly. Asked of the checkout rather than guessed from the absence of an
+    # extension: LICENSE has none and is a file.
+    view = "tree" if (source_dir() / repo_path).is_dir() else "blob"
+    return f"https://github.com/{REPO}/{view}/{BRANCH}/{repo_path}"
 
 
 def home_url(source_dest_dir):
@@ -295,65 +300,21 @@ def nav_label(title):
     return SUBTITLE_RE.sub("", title).strip() or title
 
 
-def milestone_sort_key(path):
-    """Milestone records order by the number their filename leads with, behind
-    the section index."""
-    if path.name == "index.md":
-        return (-1, 0, "")
-    m = LEADING_NUMBER_RE.match(path.name)
-    return (0, int(m.group(1)), path.name) if m else (1, 0, path.name)
-
-
-def write_milestones_index(dest):
-    """Write the milestones landing page: the section's records, in order."""
-    records = sorted(
-        (p for p in (dest / MILESTONES).glob("*.md") if p.name != "index.md"),
-        key=milestone_sort_key,
-    )
-    lines = [MILESTONES_INDEX.rstrip("\n"), ""]
-    for record in records:
-        title = extract_title(record, default=humanize(record.stem))
-        lines.append(f"- [{title}]({record.name})")
-    lines.append("")
-    (dest / MILESTONES / "index.md").write_text("\n".join(lines), encoding="utf-8")
-
-
 def nav_entries(dest):
-    """Build the [(label, target)] nav entries for the synced section, with the
-    milestone records nested under their index as ('Milestones', [entries])."""
+    """Build the [(label, target)] nav entries for the synced section."""
     pages = {p.relative_to(dest).as_posix() for p in dest.rglob("*.md")}
 
-    def entry(rel, label=None, trim=True):
+    def entry(rel, label=None):
         title = extract_title(dest / rel, default=humanize(Path(rel).stem))
-        if label is None:
-            label = nav_label(title) if trim else title
-        return (label, f"{SECTION}/{rel}")
+        return (label or nav_label(title), f"{SECTION}/{rel}")
 
     trailing_names = {name for name, _ in TRAILING_PAGES}
     ordered = [rel for rel in PAGE_ORDER if rel in pages]
     extra = sorted(
-        rel
-        for rel in pages
-        if rel not in PAGE_ORDER
-        and rel not in trailing_names
-        and not rel.startswith(MILESTONES + "/")
+        rel for rel in pages if rel not in PAGE_ORDER and rel not in trailing_names
     )
 
     entries = [entry(rel, INDEX_LABEL if rel == "index.md" else None) for rel in ordered + extra]
-
-    records = sorted((dest / MILESTONES).glob("*.md"), key=milestone_sort_key)
-    if records:
-        # The index leads, so navigation.indexes makes the section header it.
-        # Records keep their full titles: "M1:" is the label, not a subtitle.
-        nested = [
-            entry(
-                f"{MILESTONES}/{p.name}",
-                label=MILESTONES_LABEL if p.name == "index.md" else None,
-                trim=False,
-            )
-            for p in records
-        ]
-        entries.append((MILESTONES_LABEL, nested))
 
     for name, label in TRAILING_PAGES:
         if name in pages:
@@ -441,6 +402,8 @@ def sync():
     if docs_src.is_dir():
         for path in sorted(docs_src.rglob("*")):
             rel = path.relative_to(docs_src)
+            if is_excluded(rel.as_posix()):
+                continue
             if path.is_dir():
                 (DEST / rel).mkdir(parents=True, exist_ok=True)
                 continue
@@ -458,10 +421,6 @@ def sync():
         shutil.rmtree(DEST)
         print(f"  {NAME}: nothing to sync")
         return False
-
-    if (DEST / MILESTONES).is_dir():
-        write_milestones_index(DEST)
-        copied += 1
 
     print(f"  {NAME}: synced {copied} files into {DEST}")
     return True

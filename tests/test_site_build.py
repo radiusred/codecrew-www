@@ -497,8 +497,9 @@ def test_every_docs_nav_target_has_a_built_page(site: Path):
     config = (site.parent / "zensical.toml").read_text()
     block = config[config.index("BEGIN_DOCS_NAV") : config.index("END_DOCS_NAV")]
     targets = re.findall(r'"(docs/[^"]+\.md)"', block)
-    assert len(targets) > 10, targets  # the whole section, not a stub
-    assert "docs/spec.md" in targets and "docs/milestones/index.md" in targets
+    assert len(targets) >= 10, targets  # the whole section, not a stub
+    assert "docs/spec.md" in targets and "docs/contributing.md" in targets
+    assert not any("milestones" in target for target in targets)  # excluded
     for target in targets:
         rel = target.removesuffix(".md").removesuffix("/index")
         assert (site / rel / "index.html").is_file(), target
@@ -509,10 +510,18 @@ def test_the_synced_links_resolve_on_site(docs_index: str):
     assert '<a href="../">' in docs_index
     assert '<a href="../#codecrew-works">' in docs_index  # by the home page's own id
     assert '<a href="spec/">' in docs_index  # ../SPEC.md, now on-site
-    assert '<a href="milestones/">' in docs_index  # the bare directory, now an index
     # A file that did not sync still points at the repo.
     assert "github.com/radiusred/gh-codecrew/blob/main/CHANGELOG.md" in docs_index
     assert "README.md" not in docs_index
+
+
+def test_the_milestone_records_are_not_on_the_site(site: Path, docs_index: str):
+    # They are the engineering trail, not product documentation (M9-R1, as
+    # amended 2026-09-04). The upstream still has them; the site must not.
+    assert not (site / "docs" / "milestones").exists()
+    assert not list(site.rglob("*-role-contracts-and-cli-skeleton*"))
+    # The introduction's two links to them leave for GitHub, as a directory.
+    assert "github.com/radiusred/gh-codecrew/tree/main/docs/milestones" in docs_index
 
 
 def test_the_home_drawer_reaches_every_tab(home: str):
