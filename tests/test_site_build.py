@@ -317,8 +317,14 @@ def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, 
     assert "z-index" not in rest  # siblings rest at auto...
     lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
     assert "z-index: 5" in lift  # ...and the open trigger, a stacking context, ranks above them all
-    assert "background: #ffffff" in panel and "var(--md-default-bg-color)" not in panel  # raised above the page ground
-    assert "background: var(--md-code-bg-color)" in rule(css, '[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel')
+    assert "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift  # the crew badges' ring, unchanged
+    receipts_lift = rule(css, ".cc-receipts .cc-pop:hover, .cc-receipts .cc-pop:focus-within")
+    assert receipts_lift.strip() == "outline-color: transparent;"  # the receipts lose the ring and keep the lift
+    assert "background: #ffffff" in panel and "box-shadow: 0 0.8rem 2rem #0a001259" in panel  # raised: white, firmer shadow
+    assert "background: var(--cc-purple-light)" in rule(css, '[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel')
+    assert "font-size: 0.95rem" in panel
+    assert "top: calc(100% - 1.5rem)" in panel  # overlaps the card's bottom rather than gapping below it
+    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the tile's padding only
     assert "translateY(-2px)" in lift and "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift
     assert ".cc-pop:focus-visible" not in css  # no state brighter than the sustained one
     assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
