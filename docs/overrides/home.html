@@ -7,8 +7,15 @@
   logo, search, palette toggle and nav tabs render as on every other page.
 
   Overridden:
-   - site_nav: empty. Neither sidebar is in the markup; the page's
-     `hide: [navigation, toc]` front matter is belt and braces.
+   - site_nav: the primary sidebar only, always `hidden`; no toc sidebar.
+     `hidden` is not "gone": Zensical's stylesheet gives
+     .md-sidebar--primary `display: block; position: fixed` inside
+     `@media screen and (max-width: 76.234375em)`, which is the same
+     breakpoint at which the nav tabs collapse into the header's burger.
+     So the one element is the desktop sidebar M8-R1 drops and the mobile
+     drawer M8-R1's retained tabs turn into — and emitting it hidden gets
+     both. Removing it instead (this block was once empty) left the burger
+     opening an empty overlay on every phone: #9.
    - container: full-bleed. No breadcrumbs (partials/path.html), no
      partials/content.html (so the "published on" override and the actions
      strip never apply), no md-content__inner reading column. The sections
@@ -20,7 +27,18 @@
 -#}
 {% extends "main.html" %}
 
-{% block site_nav %}{% endblock %}
+{% block site_nav %}
+  {% if nav %}
+    {#- Hidden above the breakpoint, the drawer below it. Never the toc. -#}
+    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+      <div class="md-sidebar__scrollwrap">
+        <div class="md-sidebar__inner">
+          {% include "partials/nav.html" %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
 
 {% block container %}
   <div class="md-content cc-home" data-md-component="content">
