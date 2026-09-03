@@ -214,25 +214,41 @@ def test_steps_are_plain_cards_with_no_grab(css: str, home: str, site: Path):
     assert "cc-step--bg" not in css  # the rules went with the images
 
 
-def test_proof_section_has_a_backdrop_hook_ready_for_the_image(css: str, home: str, site: Path):
-    image = rule(css, ".cc-proof--bg::before")
-    assert "var(--cc-proof-bg, none) top center / 100% auto" in image
-    assert "filter: saturate(0.7) contrast(0.9) brightness(0.9)" in image
-    fade = rule(css, ".cc-proof--bg::after")
-    assert "var(--md-default-bg-color) 6.8rem" in fade  # solid ground before the receipts
-    expected = site / "assets" / "images" / "proof" / "pr-review.webp"
-    if expected.exists():
-        assert 'class="cc-section cc-proof cc-proof--bg"' in home
-        assert "--cc-proof-bg: url(../assets/images/proof/pr-review.webp)" in home
+def media_block(css: str, query: str) -> str:
+    """The body of the first `@media <query>` block."""
+    start = css.index(f"@media {query} {{")
+    depth, i = 0, start
+    while True:
+        if css[i] == "{":
+            depth += 1
+        elif css[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return css[start:i]
+        i += 1
+
+
+def test_proof_captures_are_two_angled_cards(css: str, home: str, site: Path):
+    proof = section(home, "cc-proof")
+    assert proof.index('class="cc-captures"') < proof.index('class="cc-receipts"')  # under the heading, above the receipts
+    figures = re.findall(r'<figure class="cc-capture">(.*?)</figure>', proof, re.S)
+    assert len(figures) == 2
+    first = re.search(r'<img src="(assets/images/proof/pr-review\.webp)"[^>]*alt="[^"]+"', figures[0]).group(1)
+    assert (site / first).is_file()
+    second_file = site / "assets" / "images" / "proof" / "task-plan.webp"
+    if second_file.exists():
+        assert 'src="assets/images/proof/task-plan.webp"' in figures[1]
     else:
-        assert "cc-proof--bg" not in home  # the hook ships unused until the image lands
-
-
-def test_step_bubbles_take_palette_grounds_and_tails(css: str):
-    assert "var(--md-default-fg-color--lightest)" in rule(css, ".md-typeset .cc-step .cc-bubble--you")
-    assert "var(--cc-cyan-tint)" in rule(css, ".md-typeset .cc-step .cc-bubble--agent")
-    assert 'content: ""' in rule(css, ".md-typeset .cc-step .cc-bubble::before")  # the tail
-    assert "white-space: nowrap" in rule(css, ".md-typeset .cc-bubble--agent code")
+        assert "<img" not in figures[1] and "task-plan.webp" in figures[1]  # the slot names its file and renders nothing
+    assert proof.count('<img src="assets/images/proof/') == 1 + second_file.exists()  # no stand-in
+    assert "perspective: 60rem" in rule(css, ".cc-captures")
+    assert "rotateY(8deg)" in rule(css, ".md-typeset .cc-capture:nth-child(1)")
+    assert "rotateY(-8deg)" in rule(css, ".md-typeset .cc-capture:nth-child(2)")
+    assert "display: none" in rule(css, ".md-typeset .cc-capture:empty")
+    phone = media_block(css, "screen and (max-width: 44.9375em)")
+    assert "perspective: none" in phone and "rotateY" not in phone
+    assert ".md-typeset .cc-capture:nth-child(n) {\n    transform: none;" in phone  # must outrank the nth-child rotations
+    assert "cc-proof--bg" not in css and "cc-proof--bg" not in home
 
 
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):

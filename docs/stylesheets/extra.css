@@ -687,48 +687,51 @@ h1,h2,h3 {
 
 /* Proof: the receipts, two columns on desktop. */
 
-/* Hook for one wide backdrop behind It has shipped, unused until the
-   operator's image lands: a desktop-size grab of a PR showing code and
-   review comments, expected at docs/assets/images/proof/pr-review.webp
-   (about 1600-1920px wide, under 250 KB). Give the section the class and
-   the image from the Markdown:
-   `<section class="cc-section cc-proof cc-proof--bg"
-     style="--cc-proof-bg: url(../assets/images/proof/pr-review.webp)" markdown>`
-   (the url from this stylesheet's directory, as for the step grabs). The
-   image covers the section width anchored top-centre on ::before, muted
-   by the eased filter; ::after runs a gradient in the scheme's own ground
-   from 15% at the top through 75% where the heading starts to solid
-   before the receipts list, so the list keeps its contrast in both
-   schemes and the top strip stays recognisable. */
-.cc-proof--bg {
-  position: relative;
+/* Proof captures: portrait screenshots as cards under the heading, in a
+   thin rounded frame with a soft shadow, angled towards each other with a
+   perspective on the row and a small opposite rotateY on each card; flat
+   and full-width on phones (the media query at the end). The row holds
+   two: the first is the PR with its review; the second slot is an empty
+   figure, which renders nothing, until the operator's second capture
+   arrives at docs/assets/images/proof/task-plan.webp (a task issue with
+   its Plan and a Decision comment) and goes in as an img. */
+.cc-captures {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin: 0 0 2.4rem;
+  perspective: 60rem;
+}
+
+.md-typeset .cc-capture {
+  flex: 0 1 24rem;
+  margin: 0;
   overflow: hidden;
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 0.6rem;
+  background: var(--cc-ink);
+  box-shadow: 0 1.2rem 2.4rem #0a001259;
 }
 
-.cc-proof--bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--cc-proof-bg, none) top center / 100% auto no-repeat;
-  filter: saturate(0.7) contrast(0.9) brightness(0.9);
+.md-typeset .cc-capture:empty {
+  display: none;
 }
 
-.cc-proof--bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--md-default-bg-color) 15%, transparent) 0,
-    color-mix(in srgb, var(--md-default-bg-color) 75%, transparent) 3rem,
-    var(--md-default-bg-color) 6.8rem
-  );
+.md-typeset .cc-capture img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.cc-proof--bg > * {
-  position: relative;
-  z-index: 1;
+.md-typeset .cc-capture:nth-child(1) {
+  transform: rotateY(8deg);
 }
+
+.md-typeset .cc-capture:nth-child(2) {
+  transform: rotateY(-8deg);
+}
+
 .md-typeset .cc-receipts ul {
   display: grid;
   grid-template-columns: 1fr;
@@ -786,6 +789,17 @@ h1,h2,h3 {
 @media screen and (max-width: 44.9375em) {
   .cc-section {
     padding: 2rem 0.8rem;
+  }
+  .cc-captures {
+    gap: 1.2rem;
+    perspective: none;
+  }
+  .md-typeset .cc-capture {
+    flex-basis: 100%;
+  }
+  /* Outranks the nth-child rotations above, which are one class more specific. */
+  .md-typeset .cc-capture:nth-child(n) {
+    transform: none;
   }
   .md-typeset .cc-section h2 {
     font-size: 1.6rem;
