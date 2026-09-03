@@ -377,8 +377,28 @@ h1,h2,h3 {
   text-align: center;
 }
 
-/* The verb each step turns on: one line of code that never breaks. */
-.md-typeset .cc-step__verb code {
+/* Under each step, two lines told apart by a glyph rather than a word: the
+   Claude mark for the verb the agent runs, a person for the human's moment.
+   The glyph is text-sized, in the muted text colour, a small gap before
+   the line; the code never breaks. */
+.md-typeset .cc-step__line {
+  margin: 0 0 0.3rem;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .cc-step__line .twemoji {
+  height: 1em;
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .cc-step__line .twemoji svg {
+  width: 1em;
+}
+
+.md-typeset .cc-step__line code {
   white-space: nowrap;
 }
 
@@ -413,6 +433,43 @@ h1,h2,h3 {
   }
 }
 
+/* The crew: five seat badges over the copy, on the page ground between
+   How it works and the Why band; a hairline marks it off from the steps. */
+.cc-crew {
+  border-top: 0.05rem solid var(--md-default-fg-color--lightest);
+}
+
+.cc-crew__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.6rem;
+  margin: 0 0 1.6rem;
+}
+
+.md-typeset .cc-crew__badge {
+  margin: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .cc-crew__badge img {
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.3rem;
+}
+
+.cc-crew__copy {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.md-typeset .cc-crew .cc-crew__verb {
+  margin: 0 0 0.8rem;
+}
+
 /* Why: three panels on the glowing band, on the page ground. */
 .cc-panels {
   display: grid;
@@ -431,6 +488,15 @@ h1,h2,h3 {
   .cc-panels {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* The hub-and-spokes figure in the third panel; its greys and cyan read on
+   both schemes without recolouring. */
+.md-typeset .cc-panel__figure {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 0.8rem;
 }
 
 /* Proof: the receipts, two columns on desktop. */
@@ -453,6 +519,13 @@ h1,h2,h3 {
   .md-typeset .cc-receipts ul {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.md-typeset .cc-proof .cc-proof__not-yet {
+  margin: 1.6rem 0 0;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--md-default-fg-color--light);
 }
 
 /* Closing install call to action. */
