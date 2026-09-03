@@ -28,12 +28,16 @@ INSTALL_LINE_MAX = 42
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
-# The receipts, one sentence each; the fourth opens a popover.
+# The receipts: glyph, header, strapline, and the popover's detail with its link target.
 RECEIPTS = (
-    ("Every milestone of the framework itself was delivered with it.", "https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones"),
-    ("The first spoke published its own announcement.", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
-    ("This project is agent-staffed, and you can check.", "https://github.com/radiusred/codecrew-www/pull/3"),
-    ("It scales from solo, to a team, to an orchestration platform.", None),
+    ("milestone", "Every milestone shipped this way.", "Agent-authored, independently reviewed.",
+     "deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each", "https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones"),
+    ("megaphone", "The first spoke published its own announcement.", "Driven from the hub, in public.",
+     "delivered by the protocol it describes", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
+    ("bot", "This project is agent-staffed, and you can check.", "Four seats, four App identities.",
+     "A reviewer App minted with write access satisfies GitHub's own required-review rule", "https://github.com/radiusred/codecrew-www/pull/3"),
+    ("network", "It scales from solo, to a team, to an orchestration platform.", "Same protocol, any routing table.",
+     "with a dedicated coordinator agent from the first event", "https://github.com/radiusred/gh-codecrew/issues/164"),
 )
 # The crew popovers: the opening of each contract in radiusred/gh-codecrew's roles/<role>.md,
 # reused verbatim (copied at the hub's main of 2026-09-03; the hub is not on CI's disk).
@@ -273,26 +277,24 @@ def squash(s: str) -> str:
     return re.sub(r" ([.,;:])", r"\1", " ".join(s.split()))
 
 
-def test_proof_caption_and_one_sentence_receipts(home: str):
+def test_proof_caption_heading_and_uniform_receipt_cards(home: str):
     proof = section(home, "cc-proof")
+    assert re.search(r'<h2 id="codecrew-works">CodeCrew Works<a class="headerlink"', proof)  # nothing linked the old id
     caption = re.search(r'<p class="cc-captures__caption">(.*?)</p>', proof, re.S).group(1)
     assert squash(text(caption)) == "A pull request merged after a change request. Author and reviewer are CodeCrew App identities."
     assert '<a href="#the-crew">CodeCrew App identities</a>' in caption
     assert 'id="the-crew"' in section(home, "cc-crew")
-    receipts = re.split(r'<div class="cc-receipt(?: cc-pop)?"[^>]*>', proof)[1:]  # each block runs to the next receipt
-    assert len(receipts) == 4
-    for block, (sentence, href) in zip(receipts, RECEIPTS):
-        line = re.search(r"<p>(.*?)</p>", block, re.S).group(1)
-        assert squash(text(line)) == sentence  # one sentence, nothing after it
-        if href:
-            assert f'<a href="{href}">{sentence}</a>' in line
-            assert "cc-pop__panel" not in block
-        else:
-            assert 'tabindex="0"' in receipts[3] or 'class="cc-receipt cc-pop" tabindex="0"' in proof
-            panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', block, re.S).group(1)
-            assert squash(text(panel)).count(". ") + 1 <= 3  # three short sentences at most
-            for target in ("radiusred/numberguess", "radiusred/snake", "gh-codecrew/issues/119", "gh-codecrew/issues/164"):
-                assert target in panel
+    cards = re.split(r'<div class="cc-receipt cc-pop" tabindex="0">', proof)[1:]
+    assert len(cards) == 4 and proof.count('class="cc-receipt ') == 4 and 'class="cc-receipt"' not in proof  # every receipt is a trigger
+    for card, (glyph, header, strap, detail, href) in zip(cards, RECEIPTS):
+        glyph_p = re.search(r'<p class="cc-receipt__glyph">(.*?)</p>', card, re.S).group(1)
+        assert glyph_p.count('<span class="twemoji">') == 1
+        assert f"<p><strong>{header}</strong></p>" in card
+        assert f'<p class="cc-receipt__strap">{strap}</p>' in card
+        panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', card, re.S).group(1)
+        assert detail in squash(text(panel)) and f'href="{href}"' in panel
+        assert card.index("cc-receipt__glyph") < card.index("<strong>") < card.index("cc-receipt__strap") < card.index("cc-pop__panel")
+    assert "cody" not in text(proof).lower() and "checky" not in text(proof).lower()  # role names only
 
 
 def test_crew_badges_open_popovers_quoting_the_contracts(home: str):
@@ -310,8 +312,11 @@ def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, 
     assert "visibility: hidden" in panel and "opacity: 0" in panel
     shown = rule(css, ".cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel")
     assert "visibility: visible" in shown and "opacity: 1" in shown
+    rest = rule(css, ".cc-pop")
+    assert "outline: 0.08rem solid transparent" in rest  # resting outline: only the colour transitions, from nothing
     lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
-    assert "translateY(-2px)" in lift and "outline: 0.05rem solid var(--cc-cyan-tint)" in lift
+    assert "translateY(-2px)" in lift and "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift
+    assert ".cc-pop:focus-visible" not in css  # no state brighter than the sustained one
     assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
     phone = media_block(css, "screen and (max-width: 44.9375em)")
     assert "position: fixed" in phone and "bottom: 1rem" in phone  # the sheet

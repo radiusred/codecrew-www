@@ -199,7 +199,7 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 <section class="cc-section cc-proof" markdown>
 <div class="cc-section__inner" markdown>
 
-## It has shipped
+## CodeCrew Works
 
 <div class="cc-captures">
 <figure class="cc-capture"><img src="assets/images/proof/pr-review-top.webp" alt="The upper half of a pull request on GitHub: merged by the implementer App, with the reviewer App's requested changes beginning below." width="1641" height="1549" loading="lazy"></figure>
@@ -209,24 +209,51 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 <p class="cc-captures__caption" markdown="span">A pull request merged after a change request. Author and reviewer are [CodeCrew App identities](#the-crew).</p>
 
 <div class="cc-receipts" markdown>
-<div class="cc-receipt" markdown>
+<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<p class="cc-receipt__glyph" markdown="span">:lucide-milestone:</p>
 
-**[Every milestone of the framework itself was delivered with it.](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones)**
+**Every milestone shipped this way.**
+
+<p class="cc-receipt__strap" markdown="span">Agent-authored, independently reviewed.</p>
+
+<div class="cc-pop__panel" markdown>
+
+Agent-authored PRs under GitHub App identities, independent review, deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
 
 </div>
-<div class="cc-receipt" markdown>
-
-**[The first spoke published its own announcement.](https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/)**
-
-</div>
-<div class="cc-receipt" markdown>
-
-**[This project is agent-staffed, and you can check.](https://github.com/radiusred/codecrew-www/pull/3)**
-
 </div>
 <div class="cc-receipt cc-pop" tabindex="0" markdown>
+<p class="cc-receipt__glyph" markdown="span">:lucide-megaphone:</p>
+
+**The first spoke published its own announcement.**
+
+<p class="cc-receipt__strap" markdown="span">Driven from the hub, in public.</p>
+
+<div class="cc-pop__panel" markdown>
+
+[radiusred/www](https://github.com/radiusred/www) is driven from the hub through the installed extension; its first delivery was [a blog post introducing CodeCrew, delivered by the protocol it describes](https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/).
+
+</div>
+</div>
+<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<p class="cc-receipt__glyph" markdown="span">:lucide-bot:</p>
+
+**This project is agent-staffed, and you can check.**
+
+<p class="cc-receipt__strap" markdown="span">Four seats, four App identities.</p>
+
+<div class="cc-pop__panel" markdown>
+
+Four App identities hold the four seats. A reviewer App minted with write access satisfies GitHub's own required-review rule, which is what makes a fully agent-gated merge possible. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
+
+</div>
+</div>
+<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<p class="cc-receipt__glyph" markdown="span">:lucide-network:</p>
 
 **It scales from solo, to a team, to an orchestration platform.**
+
+<p class="cc-receipt__strap" markdown="span">Same protocol, any routing table.</p>
 
 <div class="cc-pop__panel" markdown>
 
