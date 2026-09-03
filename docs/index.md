@@ -45,7 +45,7 @@ A GitHub issue, with its requirements written into it.
 <p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Say what you want built.</p>
 
 </div>
-<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/task.webp); --cc-step-bg-ratio: 529 / 653; --cc-step-bg-y: 2%" markdown>
+<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/task.webp); --cc-step-bg-ratio: 527 / 663; --cc-step-bg-y: 64%" markdown>
 
 ### :lucide-list-checks: Task
 

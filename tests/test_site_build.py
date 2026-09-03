@@ -29,9 +29,9 @@ STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 # One grab per How-it-works step, in order, with the anchor (a share of the
 # image's height) that puts its distinguishing feature in the strip above
-# the fade: the Requirements list, the parent-issue and branch pills, the
-# Merged badge and merged-by line, the document title.
-STEP_IMAGES = (("milestone", "62%"), ("task", "2%"), ("pr", "21%"), ("record", "0%"))
+# the fade: the Requirements list, the Plan heading, the Merged badge and
+# merged-by line, the document title.
+STEP_IMAGES = (("milestone", "62%"), ("task", "64%"), ("pr", "21%"), ("record", "0%"))
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 INSTALL_COMMANDS = (
     "gh extension install radiusred/gh-codecrew",
@@ -176,10 +176,10 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
 def test_each_step_carries_its_muted_screen_grab(css: str, home: str, site: Path):
     image = rule(css, ".cc-step--bg::before")
     assert "aspect-ratio: var(--cc-step-bg-ratio" in image and "translateY(calc(-1 * var(--cc-step-bg-y" in image
-    assert "filter: saturate(" in image  # muted
+    assert "filter: saturate(0.7) contrast(0.9) brightness(0.9)" in image  # eased so the grab is recognisable
     fade = rule(css, ".cc-step--bg::after")
-    assert "linear-gradient(180deg, #0a001226 0" in fade and "var(--cc-ink) 6.8rem" in fade  # clear at the top, solid ground by the heading
-    assert "padding: 7.2rem" in rule(css, ".cc-step--bg")  # the heading starts below the solid point
+    assert "linear-gradient(180deg, #0a001226 0" in fade and "var(--cc-ink) 8.8rem" in fade  # clear at the top, solid before the description
+    assert "padding: 7.2rem" in rule(css, ".cc-step--bg")  # the heading sits over the tail of the fade
     openings = re.findall(
         r'<div class="cc-step cc-step--bg" style="--cc-step-bg: url\(([^)]+)\); --cc-step-bg-ratio: \d+ / \d+; --cc-step-bg-y: (\d+%)">',
         section(home, "cc-how"),
