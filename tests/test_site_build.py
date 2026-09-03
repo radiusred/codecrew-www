@@ -228,26 +228,24 @@ def media_block(css: str, query: str) -> str:
         i += 1
 
 
-def test_proof_captures_are_two_angled_cards(css: str, home: str, site: Path):
+def test_proof_captures_are_two_halves_of_one_review(css: str, home: str, site: Path):
     proof = section(home, "cc-proof")
     assert proof.index('class="cc-captures"') < proof.index('class="cc-receipts"')  # under the heading, above the receipts
-    figures = re.findall(r'<figure class="cc-capture">(.*?)</figure>', proof, re.S)
-    assert len(figures) == 2
-    first = re.search(r'<img src="(assets/images/proof/pr-review\.webp)"[^>]*alt="[^"]+"', figures[0]).group(1)
-    assert (site / first).is_file()
-    second_file = site / "assets" / "images" / "proof" / "task-plan.webp"
-    if second_file.exists():
-        assert 'src="assets/images/proof/task-plan.webp"' in figures[1]
-    else:
-        assert "<img" not in figures[1] and "task-plan.webp" in figures[1]  # the slot names its file and renders nothing
-    assert proof.count('<img src="assets/images/proof/') == 1 + second_file.exists()  # no stand-in
+    images = re.findall(r'<figure class="cc-capture"><img src="(assets/images/proof/[^"]+)"[^>]*alt="[^"]+"[^>]*></figure>', proof)
+    assert images == ["assets/images/proof/pr-review-top.webp", "assets/images/proof/pr-review-bottom.webp"]  # top, then bottom
+    for url in images:
+        assert (site / url).is_file(), url
+    assert not (site / "assets" / "images" / "proof" / "pr-review.webp").exists()  # the single tall capture is gone
     assert "perspective: 60rem" in rule(css, ".cc-captures")
-    assert "rotateY(8deg)" in rule(css, ".md-typeset .cc-capture:nth-child(1)")
-    assert "rotateY(-8deg)" in rule(css, ".md-typeset .cc-capture:nth-child(2)")
-    assert "display: none" in rule(css, ".md-typeset .cc-capture:empty")
+    first, second = rule(css, ".md-typeset .cc-capture:nth-child(1)"), rule(css, ".md-typeset .cc-capture:nth-child(2)")
+    assert "rotateY(8deg)" in first and "rotateY(-8deg)" in second
+    for prefix in ("-webkit-mask-image", "mask-image"):  # the fades, on the whole card
+        assert f"{prefix}: linear-gradient(180deg, #000 86%, transparent 100%)" in first
+        assert f"{prefix}: linear-gradient(180deg, transparent 0, #000 14%)" in second
+    assert ":empty" not in css  # both cards always render
     phone = media_block(css, "screen and (max-width: 44.9375em)")
-    assert "perspective: none" in phone and "rotateY" not in phone
-    assert ".md-typeset .cc-capture:nth-child(n) {\n    transform: none;" in phone  # must outrank the nth-child rotations
+    assert "perspective: none" in phone and "rotateY" not in phone and "mask" not in phone  # flat, fades kept
+    assert ".md-typeset .cc-capture:nth-child(n) {\n    transform: none;" in phone
     assert "cc-proof--bg" not in css and "cc-proof--bg" not in home
 
 
