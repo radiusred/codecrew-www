@@ -273,6 +273,7 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 
 ## Start now
 
+<div class="cc-start__pair" markdown>
 <div class="cc-install cc-term">
 <div class="cc-term__bar" aria-hidden="true"><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__title">~/my-project</span></div>
 <pre><code class="cc-term__code"><span class="cc-term__line" data-out="&gt;= 2.50.0 required">gh --version</span>
@@ -282,7 +283,9 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 <span class="cc-term__line" data-out="or codex, or whichever agent you run">claude</span></code></pre>
 </div>
 
-Then one sentence to your agent: *Let's build this project!*
+<p class="cc-start__payoff" markdown="span"><span class="cc-start__lead">Then one sentence to your agent:</span> “Let's build this project!”</p>
+
+</div>
 
 </div>
 </section>

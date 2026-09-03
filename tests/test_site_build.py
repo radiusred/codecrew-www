@@ -193,6 +193,21 @@ def test_install_block_is_a_terminal_window_that_copies_clean(home: str):
     assert 'class="cc-term__line"' in term and "\n" in term  # one command per line
 
 
+def test_payoff_line_sits_beside_the_terminal(home: str, css: str):
+    start = section(home, "cc-start")
+    pair = re.search(r'<div class="cc-start__pair">(.*?)\n</div>\n</div>\n', start, re.S).group(1)
+    assert pair.index('class="cc-install cc-term"') < pair.index('class="cc-start__payoff"')  # terminal, then the line, as siblings
+    payoff = re.search(r'<p class="cc-start__payoff">(.*?)</p>', pair, re.S).group(1)
+    assert '<span class="cc-start__lead">Then one sentence to your agent:</span>' in payoff
+    assert "“Let's build this project!”" in html.unescape(payoff)  # double quotes carry the emphasis
+    assert "<em>" not in payoff  # the italic went
+    assert "Then one sentence" not in start.replace(payoff, "")  # said once
+    assert "grid-template-columns: 1fr" in rule(css, ".cc-start__pair")  # stacked on phones
+    # The indented form lives only inside a media block; the 60em block for this pair is the stylesheet's last one.
+    assert "@media screen and (min-width: 60em) {\n  .cc-start__pair {\n    grid-template-columns: auto 1fr;" in css  # beside it from 60em
+    assert "font-size: 1.8rem" in rule(css, ".md-typeset .cc-start .cc-start__payoff")
+
+
 def test_terminal_prompt_and_output_are_generated_content(css: str):
     assert 'content: "$"' in rule(css, ".cc-term__line::before")
     assert "attr(data-out)" in rule(css, ".cc-term__line[data-out]::after")
