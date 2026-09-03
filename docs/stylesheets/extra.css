@@ -766,6 +766,28 @@ h1,h2,h3 {
   margin: 0;
 }
 
+/* Each receipt: a glyph in the accent, a short header, a strapline, and
+   the popover on the whole card. */
+.md-typeset .cc-receipt .cc-receipt__glyph {
+  margin: 0 0 0.3rem;
+  line-height: 1;
+}
+
+.md-typeset .cc-receipt__glyph .twemoji {
+  height: 1.4rem;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-receipt__glyph .twemoji svg {
+  width: 1.4rem;
+}
+
+.md-typeset .cc-receipt .cc-receipt__strap {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--light);
+}
+
 @media screen and (min-width: 45em) {
   .cc-receipts {
     grid-template-columns: repeat(2, 1fr);
@@ -779,22 +801,25 @@ h1,h2,h3 {
    sheet fixed to the bottom of the viewport, so it can never leave the
    screen. Page ground, hairline border, shadow, the scheme's own text.
    Anything that opens a popover shows an accent-tint outline and lifts
-   2px on hover and focus-within; nothing else lifts. */
+   2px on hover and focus-within; nothing else lifts. The outline rests
+   at full width in transparent, so only its colour transitions and it
+   starts from nothing: with no resting outline, outline-color computes to
+   currentColor (the text colour) and the first frames of the transition
+   painted a near-white ring in slate and a near-black one in the light
+   scheme. Keyboard focus shows the same sustained ring; there is no
+   brighter focus-visible state. */
 .cc-pop {
   position: relative;
   cursor: default;
   border-radius: 0.4rem;
+  outline: 0.08rem solid transparent;
+  outline-offset: 0.3rem;
   transition: transform 125ms, outline-color 125ms;
 }
 
 .cc-pop:hover, .cc-pop:focus-within {
-  outline: 0.05rem solid var(--cc-cyan-tint);
-  outline-offset: 0.3rem;
+  outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent);
   transform: translateY(-2px);
-}
-
-.cc-pop:focus-visible {
-  outline-color: var(--md-accent-fg-color);
 }
 
 .md-typeset .cc-pop .cc-pop__panel {
