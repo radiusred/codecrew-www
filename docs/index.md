@@ -161,6 +161,11 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 
 ## It has shipped
 
+<div class="cc-captures">
+<figure class="cc-capture"><img src="assets/images/proof/pr-review.webp" alt="A pull request on GitHub: the reviewer App requested changes with two findings, the implementer App answered both, and the PR merged." width="1167" height="1768" loading="lazy"></figure>
+<figure class="cc-capture"><!-- the second capture, docs/assets/images/proof/task-plan.webp (a task issue with its Plan and a Decision comment), goes here as an img when it arrives; an empty figure renders nothing --></figure>
+</div>
+
 <div class="cc-receipts" markdown>
 
 - **Every milestone of the framework itself was delivered with it.** Agent-authored PRs under GitHub App identities, independent review, deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
