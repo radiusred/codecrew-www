@@ -903,6 +903,54 @@ h1,h2,h3 {
   margin: 1rem auto 0;
 }
 
+/* The terminal and the payoff line: stacked and centred on phones, two
+   columns from 60em with the terminal on the left and the line beside it,
+   vertically centred. The line is the section's close: the quote in the
+   heading face, the lead-in small and muted above it (kept because the
+   quote alone does not say who it is said to); the quotes carry the
+   emphasis, so the italic goes. */
+.cc-start__pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.6rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.md-typeset .cc-start .cc-start__payoff {
+  max-width: 24rem;
+  margin: 0;
+  font-family: "Oswald", sans-serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--md-default-fg-color);
+}
+
+.cc-start__lead {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--md-text-font-family);
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (min-width: 60em) {
+  .cc-start__pair {
+    grid-template-columns: auto 1fr;
+    gap: 3rem;
+    justify-items: start;
+    text-align: left;
+  }
+  .cc-start__pair .cc-term {
+    margin: 0;
+  }
+}
+
 /* The footer meta strip after the Start now band. Zensical's modern
    stylesheet paints .md-footer with --md-default-bg-color and the strip
    with --md-default-fg-color--lightest (the --md-footer-bg-color values
