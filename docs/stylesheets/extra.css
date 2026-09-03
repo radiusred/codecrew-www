@@ -693,20 +693,23 @@ h1,h2,h3 {
    towards each other with a perspective on the row and a mirrored 8deg
    rotateY. The continuity cue is a mask fade, not baked into the files:
    the first card fades out over its bottom 14%, the second in over its
-   top 14%, on the whole card so the frame fades with the image. Sized so
-   the pair fits the section at 1440px; flat and full-width on phones with
-   the fades kept (the media query at the end). */
+   top 14%, on the whole card so the frame fades with the image. At
+   26.5rem each the cards are readable; to fit the section the second
+   overlaps the first's right edge by 4rem and sits above it (z-index),
+   which covers the left capture's GitHub sidebar, with its shadow selling
+   the depth. Flat, full-width and unoverlapped on phones with the fades
+   kept (the media query at the end). */
 .cc-captures {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.6rem;
   margin: 0 0 2.4rem;
   perspective: 60rem;
 }
 
 .md-typeset .cc-capture {
-  flex: 0 1 22rem;
+  position: relative;
+  flex: 0 1 26.5rem;
   margin: 0;
   overflow: hidden;
   border: 0.05rem solid var(--md-default-fg-color--lighter);
@@ -728,6 +731,8 @@ h1,h2,h3 {
 }
 
 .md-typeset .cc-capture:nth-child(2) {
+  z-index: 1;
+  margin-left: -4rem;
   transform: rotateY(-8deg);
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%);
   mask-image: linear-gradient(180deg, transparent 0, #000 14%);
@@ -798,8 +803,9 @@ h1,h2,h3 {
   .md-typeset .cc-capture {
     flex-basis: 100%;
   }
-  /* Outranks the nth-child rotations above, which are one class more specific. */
+  /* Outranks the nth-child rules above, which are one class more specific. */
   .md-typeset .cc-capture:nth-child(n) {
+    margin-left: 0;
     transform: none;
   }
   .md-typeset .cc-section h2 {
