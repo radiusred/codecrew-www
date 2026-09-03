@@ -62,6 +62,8 @@ UPSTREAM = {
     ),
     "docs/milestones/2-second.md": '# M2: Second\n\n<img src="../../assets/shot.png" alt="">\n',
     "docs/milestones/10-tenth.md": "# M10: Tenth\n",
+    # A sibling whose name merely starts with an excluded prefix.
+    "docs/milestones-archive/kept.md": "# Kept\n",
 }
 
 CONFIG_TEMPLATE = (
@@ -112,6 +114,7 @@ def test_the_docs_tree_and_the_three_root_files_land_the_readme_does_not(upstrea
         "gsd-vs-frontier-orchestration.md",
         "identities.md",
         "index.md",
+        "milestones-archive/kept.md",  # excluded prefixes stop at a path boundary
         "platform-interop.md",
         "security.md",
         "spec.md",
@@ -193,6 +196,14 @@ def test_links_into_an_excluded_subtree_go_to_github(upstream):
     assert "milestones/index.md" not in index  # no on-site landing page any more
 
 
+def test_an_excluded_prefix_stops_at_a_path_boundary(upstream):
+    # "milestones/" must not swallow a sibling called "milestones-archive/".
+    sync()
+    assert (DEST / "milestones-archive" / "kept.md").is_file()
+    assert not (DEST / "milestones").exists()
+    assert "Kept" in {label for label, _ in nav_entries(DEST)}
+
+
 def test_github_url_picks_tree_for_a_directory_and_blob_for_a_file(upstream):
     # Asked of the checkout, not guessed from the absence of an extension.
     assert github_url("docs/milestones", is_image=False) == f"{GITHUB}/tree/main/docs/milestones"
@@ -200,6 +211,11 @@ def test_github_url_picks_tree_for_a_directory_and_blob_for_a_file(upstream):
     assert github_url("AGENTS.md", is_image=False) == f"{GITHUB}/blob/main/AGENTS.md"
     # A path that is not in the checkout at all cannot be a directory.
     assert github_url("ROADMAP.md", is_image=False) == f"{GITHUB}/blob/main/ROADMAP.md"
+    # A fragment does not turn a directory into a file.
+    assert (
+        github_url("docs/milestones#m1", is_image=False)
+        == f"{GITHUB}/tree/main/docs/milestones#m1"
+    )
 
 
 def test_the_nav_block_holds_the_whole_section_in_order(upstream):
@@ -214,11 +230,13 @@ def test_the_nav_block_holds_the_whole_section_in_order(upstream):
         '    { "Founding decisions" = "docs/founding-decisions.md" },',
         '    { "GSD vs. \\"just let the model orchestrate\\"" = "docs/gsd-vs-frontier-orchestration.md" },',
         '    { "CodeCrew Protocol Specification" = "docs/spec.md" },',
+        '    { "Kept" = "docs/milestones-archive/kept.md" },',
         '    { "Contributing" = "docs/contributing.md" },',
         '    { "Security" = "docs/security.md" },',
         '  ] },',
     ]
-    assert "milestones" not in nav_block(upstream)
+    # No record reaches the nav; the similarly-named sibling still does.
+    assert "docs/milestones/" not in nav_block(upstream)
     # The Docs tab sits between Home and Blog, and nothing outside the markers moved.
     config = (upstream / "zensical.toml").read_text(encoding="utf-8")
     assert config.index('"Home"') < config.index('"Docs"') < config.index('"Blog"')
