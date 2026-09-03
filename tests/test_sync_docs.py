@@ -6,10 +6,12 @@ never depends on a radiusred/gh-codecrew checkout being on disk. The real
 upstream is exercised by tests/test_site_build.py, which builds the site.
 """
 
+import tomllib
+
 import pytest
 
 import sync_docs
-from sync_docs import DEST, main, nav_entries, sync, write_docs_nav
+from sync_docs import DEST, main, nav_entries, sync, toml_string, write_docs_nav
 
 GITHUB = "https://github.com/radiusred/gh-codecrew/blob/main"
 RAW = "https://raw.githubusercontent.com/radiusred/gh-codecrew/main"
@@ -33,6 +35,7 @@ UPSTREAM = {
         "[records](milestones/); the [changelog](../CHANGELOG.md) and the\n"
         "[logo](../assets/logo.webp) stay upstream.\n"
         "[gh](https://cli.github.com/) is external, [top](#top) is an anchor.\n"
+        "[root-relative](/docs/identities.md) and [above root](../../README.md).\n"
     ),
     "docs/first-milestone.md": "# Your first milestone\n",
     "docs/identities.md": "# Identities: running solo, staffing a crew\n",
@@ -131,7 +134,7 @@ def test_readme_links_land_on_the_home_page_with_its_own_anchors(upstream):
     assert "[landing page](../index.md)" in index  # the site's home page, not a copy
     assert "[receipts](../index.md#codecrew-works)" in index  # README anchor translated
     assert "[where it goes](../index.md)" in index  # no counterpart section: anchor dropped
-    assert "README" not in index
+    assert "](../README.md" not in index  # no link to the file survives the move
     # Two levels down, the home page is two levels up.
     assert "[landing page](../../index.md)" in page("milestones/1-first.md")
 
@@ -144,6 +147,21 @@ def test_links_to_files_that_did_not_sync_become_github_urls(upstream):
     assert f"[coordinator contract]({GITHUB}/roles/coordinator.md)" in page("spec.md")
     # HTML <img src> is rewritten too, and always to raw.
     assert f'<img src="{RAW}/assets/shot.png" alt="">' in page("milestones/2-second.md")
+
+
+def test_a_root_relative_link_resolves_against_the_repo_root(upstream):
+    sync()
+    # "/docs/identities.md" means the repo's docs/identities.md, as it does on
+    # GitHub — not a URL path, and never a doubled slash in a blob link.
+    assert "[root-relative](identities.md)" in page("index.md")
+
+
+def test_a_link_above_the_repo_root_is_left_alone_and_reported(upstream, capsys):
+    sync()
+    # docs/introduction.md's "../../README.md" escapes the repo: there is no
+    # target to rewrite to, and the strict build is what catches it.
+    assert "[above root](../../README.md)" in page("index.md")
+    assert "escapes the repo root" in capsys.readouterr().out
 
 
 def test_external_urls_and_bare_anchors_are_left_alone(upstream):
@@ -212,6 +230,34 @@ def test_a_page_the_order_does_not_know_is_appended_before_the_trailing_pair(ups
     assert labels[-2:] == ["Contributing", "Security"]
 
 
+def test_the_generated_config_parses_whatever_a_title_carries(upstream):
+    hostile = {
+        "docs/backslash.md": "# Path C:\\users\n",
+        "docs/control.md": "# Bell \x07 and tab\n",
+        "docs/quoted.md": '# He said "hello"\n',
+    }
+    for relpath, content in hostile.items():
+        (upstream / "_sources/gh-codecrew" / relpath).write_text(content, encoding="utf-8")
+    main()
+    config = tomllib.loads((upstream / "zensical.toml").read_text(encoding="utf-8"))
+    docs = next(entry["Docs"] for entry in config["nav"] if "Docs" in entry)
+    labels = {label for entry in docs for label in entry}
+    # Round-trips exactly: the backslash is a backslash, not an escape.
+    assert "Path C:\\users" in labels
+    assert 'He said "hello"' in labels
+    assert "Bell \x07 and tab" in labels
+
+
+def test_toml_string_escapes_what_toml_requires():
+    assert toml_string("plain") == '"plain"'
+    assert toml_string("back\\slash") == '"back\\\\slash"'
+    assert toml_string('say "hi"') == '"say \\"hi\\""'
+    assert toml_string("line\nbreak") == '"line\\nbreak"'
+    assert toml_string("bell\x07") == '"bell\\u0007"'
+    for value in ("back\\slash", 'say "hi"', "line\nbreak", "bell\x07"):
+        assert tomllib.loads(f"x = {toml_string(value)}")["x"] == value
+
+
 def test_the_sync_is_idempotent(upstream):
     main()
     first_tree, first_config = synced(), (upstream / "zensical.toml").read_text()
@@ -227,11 +273,19 @@ def test_a_removed_upstream_page_does_not_survive_the_next_sync(upstream):
     assert "extensions.md" not in synced()
 
 
-def test_without_an_upstream_the_tree_goes_and_the_nav_block_empties(upstream, monkeypatch):
+def test_without_an_upstream_the_sync_fails_loudly_and_leaves_no_nav_entries(
+    upstream, monkeypatch
+):
     main()
     assert DEST.exists() and '"Docs"' in nav_block(upstream)
+
     monkeypatch.setenv("SYNC_SOURCE_BASE", str(upstream / "nowhere"))
-    main()
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+    # The site cannot build without the upstream — the home page's docs button
+    # targets the section index — so this is an error, not a quiet degrade.
+    assert "no gh-codecrew checkout" in str(exit_info.value)
+    assert "SYNC_SOURCE_BASE" in str(exit_info.value)
     assert not DEST.exists()
     assert nav_block(upstream).strip() == sync_docs.NAV_BEGIN  # no dangling nav entries
 

@@ -26,9 +26,13 @@ instead of bouncing to a GitHub tree view, and so the nav section has a landing
 page (navigation.indexes is on).
 
 The Docs nav tab is written between the sentinel markers in zensical.toml, the
-same way main.py maintains the blog's. When no upstream checkout is on disk the
-block is emptied and the destination removed, so a build without one still
-succeeds — with no Docs tab and nothing dangling in the nav.
+same way main.py maintains the blog's.
+
+An absent upstream checkout is an error, not a quiet degrade: the nav block is
+emptied and the destination removed so the config is left consistent, and then
+the sync exits nonzero naming what to clone. The site cannot build without it —
+the home page's "Read the docs" button targets docs/index.md, so a build with no
+synced section fails on a dangling link, and failing here says why.
 
 Source location: $SYNC_SOURCE_BASE/gh-codecrew, defaulting to ../gh-codecrew.
 CI checks the upstream out under _sources/.
@@ -86,6 +90,19 @@ IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico"}
 MD_LINK_RE = re.compile(r'(!?)\[([^\]]*)\]\(([^)\s]+)(\s+"[^"]*")?\)')
 # HTML <img src="...">. Matches single or double quotes.
 HTML_IMG_RE = re.compile(r'(<img\b[^>]*?\bsrc=)(["\'])([^"\']+)\2', re.IGNORECASE)
+
+# TOML basic-string escapes. Anything else below 0x20 (and DEL) goes to \uXXXX,
+# so a title carrying a backslash or a control character cannot produce a config
+# that fails to parse — or one that parses into a different label.
+TOML_ESCAPES = {
+    "\\": "\\\\",
+    '"': '\\"',
+    "\b": "\\b",
+    "\t": "\\t",
+    "\n": "\\n",
+    "\f": "\\f",
+    "\r": "\\r",
+}
 
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 H1_RE = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
@@ -192,14 +209,26 @@ def rewrite_target(url, source_repo_path, is_image):
         # Pure anchor like "#foo".
         return url
 
-    source_dir_ = posixpath.dirname(source_repo_path)
-    resolved = (
-        posixpath.normpath(posixpath.join(source_dir_, path))
-        if source_dir_
-        else posixpath.normpath(path)
-    )
+    if path.startswith("/"):
+        # Root-relative in a repo-relative document: resolve against the repo
+        # root, which is what such a link means on GitHub.
+        resolved = posixpath.normpath(path).lstrip("/")
+    else:
+        source_dir_ = posixpath.dirname(source_repo_path)
+        resolved = (
+            posixpath.normpath(posixpath.join(source_dir_, path))
+            if source_dir_
+            else posixpath.normpath(path)
+        )
     if resolved.startswith("../") or resolved == "..":
-        # Escapes repo root — leave the original alone.
+        # Escapes the repo root: already broken upstream, and there is no
+        # target to point at. Left alone and reported — once the page is under
+        # docs/docs/ the link resolves against the site instead of the repo, so
+        # a --strict build fails on it rather than shipping a wrong URL.
+        print(
+            f"  note: {source_repo_path} links {url}, which escapes the repo "
+            "root — left as written"
+        )
         return url
 
     source_dest = map_to_dest(source_repo_path) or ""
@@ -333,16 +362,28 @@ def nav_entries(dest):
     return entries
 
 
+def toml_string(value):
+    """`value` as a quoted TOML basic string."""
+    out = []
+    for char in value:
+        if char in TOML_ESCAPES:
+            out.append(TOML_ESCAPES[char])
+        elif char < "\x20" or char == "\x7f":
+            out.append(f"\\u{ord(char):04x}")
+        else:
+            out.append(char)
+    return '"' + "".join(out) + '"'
+
+
 def _nav_lines(entries, indent):
     lines = []
     for label, target in entries:
-        safe = label.replace('"', '\\"')
         if isinstance(target, list):
-            lines.append(f'{indent}{{ "{safe}" = [')
+            lines.append(f"{indent}{{ {toml_string(label)} = [")
             lines += _nav_lines(target, indent + "  ")
             lines.append(f"{indent}] }},")
         else:
-            lines.append(f'{indent}{{ "{safe}" = "{target}" }},')
+            lines.append(f"{indent}{{ {toml_string(label)} = {toml_string(target)} }},")
     return lines
 
 
@@ -428,7 +469,18 @@ def sync():
 
 def main():
     print(f"Syncing {REPO} docs into {DEST}/")
-    write_docs_nav(nav_entries(DEST) if sync() else [])
+    if sync():
+        write_docs_nav(nav_entries(DEST))
+        return
+    # Leave the config consistent with the (now absent) tree, then say why the
+    # build that follows would have failed on the home page's docs button.
+    write_docs_nav([])
+    raise SystemExit(
+        f"error: no {NAME} checkout at {source_dir()}. The docs section and the "
+        "home page's 'Read the docs' button both need it: clone "
+        f"https://github.com/{REPO} beside this repo, or point "
+        "SYNC_SOURCE_BASE at the directory holding it."
+    )
 
 
 if __name__ == "__main__":
