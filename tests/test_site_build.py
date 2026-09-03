@@ -194,6 +194,8 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
 
 
 def test_steps_are_plain_cards_with_no_grab(css: str, home: str, site: Path):
+    assert "content: counter(cc-step)" in rule(css, ".md-typeset .cc-step h3::before")  # the accent number
+    assert "var(--md-accent-fg-color)" in rule(css, ".md-typeset .cc-step h3 .twemoji")  # the accent glyph
     assert "cc-step--bg" not in home
     assert "steps/" not in home  # no step image referenced
     assert not (site / "assets" / "images" / "steps").exists()
