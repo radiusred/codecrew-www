@@ -47,8 +47,9 @@ internal issue trackers or private repositories.
 
 `sync_docs.py` reads the upstream from `$SYNC_SOURCE_BASE/gh-codecrew`,
 defaulting to `../gh-codecrew` — so a sibling clone of the hub is all it
-needs. Without one it empties the docs nav and the section is simply
-absent; the site-build tests skip for the same reason.
+needs. Without one it exits nonzero saying what to clone: the site cannot
+build without the section, because the home page's "Read the docs" button
+targets it. The site-build tests skip for the same reason.
 
 ```sh
 uv sync
