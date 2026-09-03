@@ -481,28 +481,84 @@ h1,h2,h3 {
   text-align: center;
 }
 
-/* Under each step, two lines told apart by a glyph rather than a word: the
-   Claude mark for the verb the agent runs, a person for the human's moment.
-   The glyph is text-sized, in the muted text colour, a small gap before
-   the line; the code never breaks. */
-.md-typeset .cc-step__line {
-  margin: 0 0 0.3rem;
-  font-size: 0.75rem;
-  color: var(--md-default-fg-color--light);
+/* Under each step, a two-line conversation in speech bubbles, CSS only:
+   the human's on the left with the person glyph and one short line, the
+   agent's on the right with the Claude glyph and the verb it runs as code.
+   Grounds from the palette: a faint fg tint for the human, the cyan tint
+   for the agent; the text is the scheme's own, above 10:1 on both in both
+   schemes. Tails are a bordered pseudo-element outside the bubble, so the
+   translucent grounds never overlap. The code never breaks; the bubble
+   fits its content up to 88% of the card, so nothing scrolls on a phone. */
+.cc-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0 0.4rem; /* room for the tails, so they stay inside the card */
 }
 
-.md-typeset .cc-step__line .twemoji {
+.md-typeset .cc-step .cc-bubble {
+  position: relative;
+  width: fit-content;
+  max-width: 88%;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .cc-step .cc-bubble--you {
+  align-self: flex-start;
+  border-bottom-left-radius: 0.15rem;
+  background: var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .cc-step .cc-bubble--agent {
+  align-self: flex-end;
+  border-bottom-right-radius: 0.15rem;
+  background: var(--cc-cyan-tint);
+}
+
+.md-typeset .cc-step .cc-bubble::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-top: 0.45rem solid transparent;
+}
+
+.md-typeset .cc-step .cc-bubble--you::before {
+  left: -0.4rem;
+  border-right: 0.45rem solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .cc-step .cc-bubble--agent::before {
+  right: -0.4rem;
+  border-left: 0.45rem solid var(--cc-cyan-tint);
+}
+
+.md-typeset .cc-bubble .twemoji {
   height: 1em;
-  margin-right: 0.4em;
+  margin-right: 0.35em;
   vertical-align: -0.1em;
   color: var(--md-default-fg-color--light);
 }
 
-.md-typeset .cc-step__line .twemoji svg {
+.md-typeset .cc-bubble--agent .twemoji {
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-bubble .twemoji svg {
   width: 1em;
 }
 
-.md-typeset .cc-step__line code {
+.md-typeset .cc-bubble--agent code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
   white-space: nowrap;
 }
 

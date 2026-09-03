@@ -28,6 +28,13 @@ INSTALL_LINE_MAX = 42
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
+# The conversation under each step: the human's line and the verb the agent runs.
+STEP_CHAT = (
+    ("Let's add a new feature.", "gh codecrew milestone new"),
+    ("Plan it and get started.", "gh codecrew task start"),
+    ("Reviewed and approved.", "gh codecrew task finish"),
+    ("That's everything. Close it.", "gh codecrew milestone close"),
+)
 INSTALL_COMMANDS = (
     "gh --version",
     "gh extension install radiusred/gh-codecrew",
@@ -81,7 +88,8 @@ def section(page: str, name: str) -> str:
 
 
 def text(markup: str) -> str:
-    """The visible text of a fragment: tags stripped, entities unescaped."""
+    """The visible text of a fragment: glyphs (whose SVG carries a title) dropped, tags stripped, entities unescaped."""
+    markup = re.sub(r'<span class="twemoji">.*?</svg></span>', " ", markup, flags=re.S)
     return html.unescape(re.sub(r"<[^>]+>", " ", markup))
 
 
@@ -178,19 +186,23 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
     assert lead in how
     assert how.index('class="cc-how__lead"') < how.index('class="cc-steps"')
     assert lead not in section(home, "cc-start")
+    assert "the bubble on the right is the one it runs" in how  # the lead describes the bubbles
     steps = re.split(r'<div class="cc-step(?: [^"]*)?"[^>]*>', how)[1:]  # not .cc-steps
     assert len(steps) == 4
-    for step in steps:
+    for step, (line, verb) in zip(steps, STEP_CHAT):
         heading = re.search(r"<h3[^>]*>(.*?)</h3>", step, re.S).group(1)
         assert '<span class="twemoji">' in heading  # the Lucide glyph before the step's name
-        agent = re.search(r'<p class="cc-step__line cc-step__agent">(.*?)</p>', step, re.S).group(1)
-        you = re.search(r'<p class="cc-step__line cc-step__you">(.*?)</p>', step, re.S).group(1)
-        assert '<span class="twemoji">' in agent and "<title>Claude</title>" in agent  # the Claude glyph
+        chat = re.search(r'<div class="cc-chat">(.*?)</div>', step, re.S).group(1)
+        you = re.search(r'<p class="cc-bubble cc-bubble--you">(.*?)</p>', chat, re.S).group(1)
+        agent = re.search(r'<p class="cc-bubble cc-bubble--agent">(.*?)</p>', chat, re.S).group(1)
+        assert chat.index("cc-bubble--you") < chat.index("cc-bubble--agent")  # the human speaks first
         assert '<span class="twemoji">' in you and "<title>" not in you  # the lucide person glyph
+        assert text(you).strip() == line  # one short line of speech
+        assert '<span class="twemoji">' in agent and "<title>Claude</title>" in agent  # the Claude glyph
         snippets = [html.unescape(m) for m in re.findall(r"<code>(.*?)</code>", agent)]
-        assert len(snippets) == 1 and snippets[0].startswith("gh codecrew "), step
-        too_long = [snippet for snippet in snippets if len(snippet) > STEP_CODE_MAX]
-        assert not too_long, too_long
+        assert snippets == [verb]  # exactly one code line, the verb unchanged
+        assert len(verb) <= STEP_CODE_MAX
+        assert text(agent).strip() == verb  # nothing in the agent's bubble but the verb
 
 
 def test_steps_are_plain_cards_with_no_grab(css: str, home: str, site: Path):
@@ -214,6 +226,13 @@ def test_proof_section_has_a_backdrop_hook_ready_for_the_image(css: str, home: s
         assert "--cc-proof-bg: url(../assets/images/proof/pr-review.webp)" in home
     else:
         assert "cc-proof--bg" not in home  # the hook ships unused until the image lands
+
+
+def test_step_bubbles_take_palette_grounds_and_tails(css: str):
+    assert "var(--md-default-fg-color--lightest)" in rule(css, ".md-typeset .cc-step .cc-bubble--you")
+    assert "var(--cc-cyan-tint)" in rule(css, ".md-typeset .cc-step .cc-bubble--agent")
+    assert 'content: ""' in rule(css, ".md-typeset .cc-step .cc-bubble::before")  # the tail
+    assert "white-space: nowrap" in rule(css, ".md-typeset .cc-bubble--agent code")
 
 
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):

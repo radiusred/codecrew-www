@@ -32,7 +32,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 ## How it works
 
-<p class="cc-how__lead" markdown="span">Your agent runs the verbs — the line under each step is the one it runs. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.</p>
+<p class="cc-how__lead" markdown="span">Your agent runs the verbs — under each step, the bubble on the right is the one it runs. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.</p>
 
 <div class="cc-steps" markdown>
 <div class="cc-step" markdown>
@@ -41,8 +41,10 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 A GitHub issue, with its requirements written into it.
 
-<p class="cc-step__line cc-step__agent" markdown="span">:simple-claude: `gh codecrew milestone new`</p>
-<p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Say what you want built.</p>
+<div class="cc-chat" markdown>
+<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Let's add a new feature.</p>
+<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew milestone new`</p>
+</div>
 
 </div>
 <div class="cc-step" markdown>
@@ -51,8 +53,10 @@ A GitHub issue, with its requirements written into it.
 
 An issue with a plan in it, hung off the milestone. Plans come before work: `task start` refuses without one.
 
-<p class="cc-step__line cc-step__agent" markdown="span">:simple-claude: `gh codecrew task start`</p>
-<p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Answer any gate it raises.</p>
+<div class="cc-chat" markdown>
+<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Plan it and get started.</p>
+<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew task start`</p>
+</div>
 
 </div>
 <div class="cc-step" markdown>
@@ -61,8 +65,10 @@ An issue with a plan in it, hung off the milestone. Plans come before work: `tas
 
 One task, one PR, one merge point. Every gate is checked here, and a blocked one refuses with a reason.
 
-<p class="cc-step__line cc-step__agent" markdown="span">:simple-claude: `gh codecrew task finish`</p>
-<p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Review it — the second moment.</p>
+<div class="cc-chat" markdown>
+<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Reviewed and approved.</p>
+<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew task finish`</p>
+</div>
 
 </div>
 <div class="cc-step" markdown>
@@ -71,8 +77,10 @@ One task, one PR, one merge point. Every gate is checked here, and a blocked one
 
 At close, the recorded decisions become a milestone document, reviewed like code.
 
-<p class="cc-step__line cc-step__agent" markdown="span">:simple-claude: `gh codecrew milestone close`</p>
-<p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Verdict every requirement.</p>
+<div class="cc-chat" markdown>
+<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: That's everything. Close it.</p>
+<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew milestone close`</p>
+</div>
 
 </div>
 </div>
