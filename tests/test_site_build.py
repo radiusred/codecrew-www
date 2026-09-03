@@ -1,13 +1,19 @@
 """Build the site and check the home page template against the rest.
 
 The home page (docs/index.md) selects docs/overrides/home.html and hides the
-navigation, toc and footer nav. Every other page keeps Zensical's default
-layout. `zensical build` has no site-dir option, so the fixture copies the
-site source into a temp dir and builds there, in strict mode so any warning
-fails the build.
+navigation, toc and footer nav. Every other page — the blog, and the docs
+section sync_docs.py builds from radiusred/gh-codecrew — keeps Zensical's
+default layout. `zensical build` has no site-dir option, so the fixture copies
+the site source into a temp dir, runs the sync there, and builds in strict mode
+so any warning fails the build.
+
+The build needs the upstream on disk, since the nav and the hero's button both
+point into the synced section: the module skips without one. CI checks it out,
+so it never skips there.
 """
 
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -17,6 +23,27 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+UPSTREAM_NAME = "gh-codecrew"
+
+
+def upstream_base() -> Path | None:
+    """The directory holding a radiusred/gh-codecrew checkout: what CI points
+    SYNC_SOURCE_BASE at, else the sibling directory a local clone sits in."""
+    configured = os.environ.get("SYNC_SOURCE_BASE")
+    candidate = Path(configured) if configured else ROOT.parent
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    return candidate.resolve() if (candidate / UPSTREAM_NAME).is_dir() else None
+
+
+UPSTREAM = upstream_base()
+pytestmark = pytest.mark.skipif(
+    UPSTREAM is None,
+    reason=(
+        "needs a radiusred/gh-codecrew checkout beside this repo (or "
+        "SYNC_SOURCE_BASE pointing at one): the docs section is synced from it"
+    ),
+)
 
 # Measured in headless Chromium at a 420px viewport (root font 20px, code
 # 12.8px JetBrains Mono, 16px of padding a side): the install block's code
@@ -67,8 +94,19 @@ INSTALL_COMMANDS = (
 @pytest.fixture(scope="module")
 def site(tmp_path_factory) -> Path:
     src = tmp_path_factory.mktemp("codecrew-www")
-    shutil.copytree(ROOT / "docs", src / "docs")
+    # The synced tree is generated, never committed: drop any local copy and
+    # rebuild it here, so this exercises the sync the deploy actually runs.
+    shutil.copytree(ROOT / "docs", src / "docs", ignore=shutil.ignore_patterns("docs"))
     shutil.copy(ROOT / "zensical.toml", src / "zensical.toml")
+    shutil.copy(ROOT / "sync_docs.py", src / "sync_docs.py")
+    synced = subprocess.run(
+        [sys.executable, "sync_docs.py"],
+        cwd=src,
+        env={**os.environ, "SYNC_SOURCE_BASE": str(UPSTREAM)},
+        capture_output=True,
+        text=True,
+    )
+    assert synced.returncode == 0, synced.stdout + synced.stderr
     result = subprocess.run(
         [sys.executable, "-m", "zensical", "build", "--clean", "--strict"],
         cwd=src,
@@ -160,7 +198,8 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert "the answer is in a chat transcript nobody saved" in hero  # the antecedent
     assert "Decisions and deviations" not in hero  # said once, in the Why panel
     assert 'href="#start-now"' in hero  # primary call to action
-    assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in hero
+    assert 'href="docs/"' in hero  # the docs on this site, not the README on GitHub
+    assert "github.com" not in hero
 
 
 def test_home_has_exactly_one_install_block(home: str):
@@ -410,3 +449,55 @@ def test_blog_keeps_the_default_layout(blog: str):
     assert "cc-button" not in blog
     assert "cc-section" not in blog
     assert "cc-footer" not in blog
+
+
+@pytest.fixture(scope="module")
+def docs_index(site: Path) -> str:
+    return (site / "docs" / "index.html").read_text()
+
+
+def test_docs_tab_sits_between_home_and_blog(home: str):
+    tabs = [
+        " ".join(text(label).split())
+        for _, label in re.findall(
+            r'<a href="([^"]*)" class="md-tabs__link[^"]*">(.*?)</a>', home, re.S
+        )
+    ]
+    assert tabs == ["Home", "Docs", "Blog"]
+
+
+def test_the_hero_button_lands_on_the_docs_index(site: Path, home: str):
+    assert 'href="docs/"' in section(home, "cc-hero")
+    assert (site / "docs" / "index.html").is_file()  # what that href resolves to
+
+
+def test_docs_section_keeps_the_default_layout(docs_index: str):
+    assert "cc-home" not in docs_index
+    assert "md-content__inner" in docs_index  # the reading column the home page drops
+    assert "md-sidebar--primary" in docs_index
+    assert "md-sidebar--secondary" in docs_index
+    assert "md-footer__inner" in docs_index  # prev/next navigation
+    assert "cc-section" not in docs_index
+    assert "cc-footer" not in docs_index
+
+
+def test_every_docs_nav_target_has_a_built_page(site: Path):
+    config = (site.parent / "zensical.toml").read_text()
+    block = config[config.index("BEGIN_DOCS_NAV") : config.index("END_DOCS_NAV")]
+    targets = re.findall(r'"(docs/[^"]+\.md)"', block)
+    assert len(targets) > 10, targets  # the whole section, not a stub
+    assert "docs/spec.md" in targets and "docs/milestones/index.md" in targets
+    for target in targets:
+        rel = target.removesuffix(".md").removesuffix("/index")
+        assert (site / rel / "index.html").is_file(), target
+
+
+def test_the_synced_links_resolve_on_site(docs_index: str):
+    # ../README.md is the home page, which carries the README's argument.
+    assert '<a href="../">' in docs_index
+    assert '<a href="../#codecrew-works">' in docs_index  # by the home page's own id
+    assert '<a href="spec/">' in docs_index  # ../SPEC.md, now on-site
+    assert '<a href="milestones/">' in docs_index  # the bare directory, now an index
+    # A file that did not sync still points at the repo.
+    assert "github.com/radiusred/gh-codecrew/blob/main/CHANGELOG.md" in docs_index
+    assert "README.md" not in docs_index
