@@ -622,6 +622,7 @@ h1,h2,h3 {
 
 .md-typeset .cc-crew__badge {
   margin: 0;
+  padding: 0.4rem 0.5rem;
   text-align: center;
   font-size: 0.7rem;
   color: var(--md-default-fg-color--light);
@@ -631,6 +632,10 @@ h1,h2,h3 {
    each sits on a rounded tile of the brand purple in both schemes: on the
    light ground the marks would otherwise vanish, and the tile is the
    ground the App avatars carry. */
+.md-typeset .cc-crew__badge p {
+  margin: 0; /* md_in_html wraps the image in a paragraph */
+}
+
 .md-typeset .cc-crew__badge img {
   display: block;
   width: 3rem;
@@ -683,6 +688,14 @@ h1,h2,h3 {
 
 .md-typeset .cc-panel__glyph .twemoji svg {
   width: 2.4rem;
+}
+
+/* One muted line under the pair, centred. */
+.md-typeset .cc-proof .cc-captures__caption {
+  margin: -1.2rem 0 2.4rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--md-default-fg-color--light);
 }
 
 /* Proof: the receipts, two columns on desktop. */
@@ -738,25 +751,87 @@ h1,h2,h3 {
   mask-image: linear-gradient(180deg, transparent 0, #000 14%);
 }
 
-.md-typeset .cc-receipts ul {
+.cc-receipts {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.2rem 2rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.md-typeset .cc-receipts li {
-  margin: 0;
+.cc-receipt {
   padding-top: 0.8rem;
   border-top: 0.15rem solid var(--md-accent-fg-color);
 }
 
+.md-typeset .cc-receipt p {
+  margin: 0;
+}
+
 @media screen and (min-width: 45em) {
-  .md-typeset .cc-receipts ul {
+  .cc-receipts {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Popovers, CSS only: a Markdown panel inside its trigger, hidden at rest
+   and shown while the trigger is hovered or holds focus (the trigger has
+   tabindex="0", so keyboard users and a tap on a phone open it too). On
+   desktop the panel sits below the trigger, centred; below 45em it is a
+   sheet fixed to the bottom of the viewport, so it can never leave the
+   screen. Page ground, hairline border, shadow, the scheme's own text.
+   Anything that opens a popover shows an accent-tint outline and lifts
+   2px on hover and focus-within; nothing else lifts. */
+.cc-pop {
+  position: relative;
+  cursor: default;
+  border-radius: 0.4rem;
+  transition: transform 125ms, outline-color 125ms;
+}
+
+.cc-pop:hover, .cc-pop:focus-within {
+  outline: 0.05rem solid var(--cc-cyan-tint);
+  outline-offset: 0.3rem;
+  transform: translateY(-2px);
+}
+
+.cc-pop:focus-visible {
+  outline-color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-pop .cc-pop__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  z-index: 4;
+  width: 19rem;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 0.4rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  box-shadow: 0 0.6rem 1.6rem #0a001240;
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 125ms, visibility 125ms;
+}
+
+.cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel {
+  visibility: visible;
+  opacity: 1;
+}
+
+.md-typeset .cc-pop__panel p {
+  margin: 0 0 0.5rem;
+}
+
+.md-typeset .cc-pop__panel p:last-child {
+  margin-bottom: 0;
 }
 
 .md-typeset .cc-proof .cc-proof__not-yet {
@@ -806,6 +881,23 @@ h1,h2,h3 {
   /* Outranks the nth-child rules above, which are one class more specific. */
   .md-typeset .cc-capture:nth-child(n) {
     margin-left: 0;
+    transform: none;
+  }
+  /* The lift as a relative offset here: a transformed trigger would become
+     the containing block of its fixed sheet below and pin it to the badge. */
+  .cc-pop:hover, .cc-pop:focus-within {
+    top: -2px;
+    transform: none;
+  }
+  /* The popover as a sheet at the bottom of the viewport. */
+  .md-typeset .cc-pop .cc-pop__panel {
+    position: fixed;
+    top: auto;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    width: auto;
+    max-width: none;
     transform: none;
   }
   .md-typeset .cc-section h2 {

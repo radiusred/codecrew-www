@@ -93,12 +93,52 @@ At close, the recorded decisions become a milestone document, reviewed like code
 
 ## The crew
 
-<div class="cc-crew__badges">
-<figure class="cc-crew__badge"><img src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512"><figcaption>implementer</figcaption></figure>
-<figure class="cc-crew__badge"><img src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512"><figcaption>reviewer</figcaption></figure>
-<figure class="cc-crew__badge"><img src="assets/images/crew/codecrew-test-t.png" alt="" width="512" height="512"><figcaption>qa</figcaption></figure>
-<figure class="cc-crew__badge"><img src="assets/images/crew/codecrew-docs-t.png" alt="" width="512" height="512"><figcaption>doc-synthesizer</figcaption></figure>
-<figure class="cc-crew__badge"><img src="assets/images/crew/codecrew-coord-t.png" alt="" width="512" height="512"><figcaption>coordinator</figcaption></figure>
+<div class="cc-crew__badges" markdown>
+<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<img src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<figcaption>implementer</figcaption>
+<div class="cc-pop__panel" markdown>
+
+You implement one CodeCrew task. Your work is judged by someone else — build for the reviewer, the QA agent, and the person reading the audit trail in three weeks.
+
+</div>
+</figure>
+<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<img src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
+<figcaption>reviewer</figcaption>
+<div class="cc-pop__panel" markdown>
+
+You review one CodeCrew PR. You exist because self-evaluation shares the blind spots of the work itself — your value is independence, so form your own view before reading the implementer's narrative.
+
+</div>
+</figure>
+<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<img src="assets/images/crew/codecrew-test-t.png" alt="" width="512" height="512">
+<figcaption>qa</figcaption>
+<div class="cc-pop__panel" markdown>
+
+You exercise what was built against what was promised. The reviewer judges the diff; you judge the behaviour. Run the thing.
+
+</div>
+</figure>
+<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<img src="assets/images/crew/codecrew-docs-t.png" alt="" width="512" height="512">
+<figcaption>doc-synthesizer</figcaption>
+<div class="cc-pop__panel" markdown>
+
+You write the milestone document — the record that lets someone in three months understand *why* the system is the way it is. You compile what was recorded; you do not invent what wasn't.
+
+</div>
+</figure>
+<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<img src="assets/images/crew/codecrew-coord-t.png" alt="" width="512" height="512">
+<figcaption>coordinator</figcaption>
+<div class="cc-pop__panel" markdown>
+
+You run the delivery loop for a CodeCrew project and hold no seat in it. You open the milestones and the tasks, dispatch the crew seats by the routing table, own the review loop in both directions, raise the gates only a human can answer, and drive the milestone verbs. You never write code, review, verdict or merge: your product is the record on GitHub and one correct dispatch per transition.
+
+</div>
+</figure>
 </div>
 
 <div class="cc-crew__copy" markdown>
@@ -166,13 +206,34 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 <figure class="cc-capture"><img src="assets/images/proof/pr-review-bottom.webp" alt="The lower half of the same pull request: the reviewer App's two findings and the implementer App's answer to both." width="1626" height="1647" loading="lazy"></figure>
 </div>
 
+<p class="cc-captures__caption" markdown="span">A pull request merged after a change request. Author and reviewer are [CodeCrew App identities](#the-crew).</p>
+
 <div class="cc-receipts" markdown>
+<div class="cc-receipt" markdown>
 
-- **Every milestone of the framework itself was delivered with it.** Agent-authored PRs under GitHub App identities, independent review, deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
-- **This project is agent-staffed, and you can check.** Four App identities hold the four seats: the implementer implements, the reviewer reviews, the qa seat gives verdicts, the doc-synthesizer writes. PRs merge on the reviewer's approval — a reviewer App minted with write access satisfies GitHub's own required-review rule, which is what makes a fully agent-gated merge possible. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
-- **The first spoke published its own announcement.** [radiusred/www](https://github.com/radiusred/www) is driven from the hub through the installed extension; its first delivery was [a blog post introducing CodeCrew, delivered by the protocol it describes](https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/).
-- **An orchestration platform drove the whole crew, with no human but at the gates.** A Paperclip company — four role agents under a CEO, each on its own App identity — ran three milestones on [radiusred/numberguess](https://github.com/radiusred/numberguess); the third went from `milestone new` to `milestone close` on GitHub's own webhook events. A fourth cycle then ran a fresh repo with a dedicated coordinator agent from the first event. The findings, and what each changed: [#119](https://github.com/radiusred/gh-codecrew/issues/119) and [#164](https://github.com/radiusred/gh-codecrew/issues/164).
+**[Every milestone of the framework itself was delivered with it.](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones)**
 
+</div>
+<div class="cc-receipt" markdown>
+
+**[The first spoke published its own announcement.](https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/)**
+
+</div>
+<div class="cc-receipt" markdown>
+
+**[This project is agent-staffed, and you can check.](https://github.com/radiusred/codecrew-www/pull/3)**
+
+</div>
+<div class="cc-receipt cc-pop" tabindex="0" markdown>
+
+**It scales from solo, to a team, to an orchestration platform.**
+
+<div class="cc-pop__panel" markdown>
+
+A Paperclip company — four role agents under a CEO, each on its own App identity — ran three milestones on [radiusred/numberguess](https://github.com/radiusred/numberguess); the third went from `milestone new` to `milestone close` on GitHub's own webhook events. A fourth cycle then ran a fresh repo, [radiusred/snake](https://github.com/radiusred/snake), with a dedicated coordinator agent from the first event. The findings, and what each changed: [#119](https://github.com/radiusred/gh-codecrew/issues/119) and [#164](https://github.com/radiusred/gh-codecrew/issues/164).
+
+</div>
+</div>
 </div>
 
 <p class="cc-proof__not-yet" markdown="span">Not yet: any backend other than GitHub, or GitHub Enterprise Server.</p>
