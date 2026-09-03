@@ -35,7 +35,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 <p class="cc-how__lead" markdown="span">Your agent runs the verbs — the line under each step is the one it runs. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.</p>
 
 <div class="cc-steps" markdown>
-<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/milestone.webp); --cc-step-bg-ratio: 533 / 532; --cc-step-bg-y: 62%" markdown>
+<div class="cc-step" markdown>
 
 ### :lucide-flag: Milestone
 
@@ -45,7 +45,7 @@ A GitHub issue, with its requirements written into it.
 <p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Say what you want built.</p>
 
 </div>
-<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/task.webp); --cc-step-bg-ratio: 527 / 663; --cc-step-bg-y: 64%" markdown>
+<div class="cc-step" markdown>
 
 ### :lucide-list-checks: Task
 
@@ -55,7 +55,7 @@ An issue with a plan in it, hung off the milestone. Plans come before work: `tas
 <p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Answer any gate it raises.</p>
 
 </div>
-<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/pr.webp); --cc-step-bg-ratio: 520 / 638; --cc-step-bg-y: 21%" markdown>
+<div class="cc-step" markdown>
 
 ### :lucide-git-pull-request: PR
 
@@ -65,7 +65,7 @@ One task, one PR, one merge point. Every gate is checked here, and a blocked one
 <p class="cc-step__line cc-step__you" markdown="span">:lucide-user: Review it — the second moment.</p>
 
 </div>
-<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/images/steps/record.webp); --cc-step-bg-ratio: 526 / 628; --cc-step-bg-y: 0%" markdown>
+<div class="cc-step" markdown>
 
 ### :lucide-file-text: Record
 

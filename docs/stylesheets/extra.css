@@ -520,91 +520,6 @@ h1,h2,h3 {
   counter-increment: cc-step;
 }
 
-/* A muted screen-grab at the top of each step card. The step carries the
-   class, its image, the image's aspect ratio and the anchor from the
-   Markdown:
-   `<div class="cc-step cc-step--bg" style="--cc-step-bg: url(../assets/...);
-     --cc-step-bg-ratio: 533 / 532; --cc-step-bg-y: 62%" markdown>`.
-   The url is written from this stylesheet's directory: Chromium resolves a
-   url() held in a custom property against the stylesheet that substitutes
-   it, not the document that declared it, and ../assets/ also resolves from
-   the site root, where going above the root clamps to it.
-   The image sits on ::before, a box of the image's own ratio at the
-   card's width, shifted up by --cc-step-bg-y of its own height so the
-   strip visible above the fade shows the grab's distinguishing feature at
-   any card width (background-position percentages would land differently
-   on desktop and phone, since the overflow differs). Saturation and
-   contrast are eased a little so the grab stays recognisable; ::after lays
-   a vertical gradient over it, mostly clear at the top and the solid ink
-   ground by the point the description paragraph starts. The heading (bold,
-   with the accent number and glyph) sits over the tail of the fade, at 85%
-   ink or more (9:1 at worst); the description sits on plain ink (16:1, the
-   muted lines 9:1) in both schemes. The band is shorter on phones so four
-   cards do not run long. */
-.cc-step--bg {
-  --md-typeset-color: #f2eefaf2;
-  --md-default-fg-color: #f2eefaf2;
-  --md-default-fg-color--light: #f2eefab3;
-  --md-code-bg-color: #180a30;
-  --md-code-fg-color: #f2eefa;
-  padding: 7.2rem 1rem 0.6rem;
-  border-radius: 0.4rem;
-  overflow: hidden;
-  color: var(--md-default-fg-color);
-  background: var(--cc-ink);
-}
-
-.cc-step--bg::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  aspect-ratio: var(--cc-step-bg-ratio, 1);
-  background: var(--cc-step-bg, none) center top / 100% auto no-repeat;
-  filter: saturate(0.7) contrast(0.9) brightness(0.9);
-  transform: translateY(calc(-1 * var(--cc-step-bg-y, 0%)));
-}
-
-.cc-step--bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, #0a001226 0, #0a001299 5.6rem, #0a0012d9 7.2rem, var(--cc-ink) 8.8rem);
-}
-
-.cc-step--bg > * {
-  position: relative;
-  z-index: 1;
-}
-
-@media screen and (max-width: 44.9375em) {
-  .cc-step--bg {
-    padding-top: 5.6rem;
-  }
-  .cc-step--bg::after {
-    background: linear-gradient(180deg, #0a001226 0, #0a001299 4.2rem, #0a0012d9 5.6rem, var(--cc-ink) 7.2rem);
-  }
-}
-
-.md-typeset .cc-step h3::before {
-  content: counter(cc-step);
-  margin-right: 0.4rem;
-  color: var(--md-accent-fg-color);
-}
-
-/* A Lucide glyph before each step's name, in the accent. */
-.md-typeset .cc-step h3 .twemoji {
-  height: 1em;
-  margin-right: 0.3em;
-  vertical-align: -0.1em;
-  color: var(--md-accent-fg-color);
-}
-
-.md-typeset .cc-step h3 .twemoji svg {
-  width: 1em;
-}
-
 @media screen and (min-width: 45em) {
   .cc-steps {
     grid-template-columns: repeat(2, 1fr);
@@ -697,6 +612,49 @@ h1,h2,h3 {
 }
 
 /* Proof: the receipts, two columns on desktop. */
+
+/* Hook for one wide backdrop behind It has shipped, unused until the
+   operator's image lands: a desktop-size grab of a PR showing code and
+   review comments, expected at docs/assets/images/proof/pr-review.webp
+   (about 1600-1920px wide, under 250 KB). Give the section the class and
+   the image from the Markdown:
+   `<section class="cc-section cc-proof cc-proof--bg"
+     style="--cc-proof-bg: url(../assets/images/proof/pr-review.webp)" markdown>`
+   (the url from this stylesheet's directory, as for the step grabs). The
+   image covers the section width anchored top-centre on ::before, muted
+   by the eased filter; ::after runs a gradient in the scheme's own ground
+   from 15% at the top through 75% where the heading starts to solid
+   before the receipts list, so the list keeps its contrast in both
+   schemes and the top strip stays recognisable. */
+.cc-proof--bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.cc-proof--bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--cc-proof-bg, none) top center / 100% auto no-repeat;
+  filter: saturate(0.7) contrast(0.9) brightness(0.9);
+}
+
+.cc-proof--bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--md-default-bg-color) 15%, transparent) 0,
+    color-mix(in srgb, var(--md-default-bg-color) 75%, transparent) 3rem,
+    var(--md-default-bg-color) 6.8rem
+  );
+}
+
+.cc-proof--bg > * {
+  position: relative;
+  z-index: 1;
+}
 .md-typeset .cc-receipts ul {
   display: grid;
   grid-template-columns: 1fr;

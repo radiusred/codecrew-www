@@ -27,11 +27,6 @@ INSTALL_LINE_MAX = 42
 # the crew section's `identity new`) are held to the same 42.
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
-# One grab per How-it-works step, in order, with the anchor (a share of the
-# image's height) that puts its distinguishing feature in the strip above
-# the fade: the Requirements list, the Plan heading, the Merged badge and
-# merged-by line, the document title.
-STEP_IMAGES = (("milestone", "62%"), ("task", "64%"), ("pr", "21%"), ("record", "0%"))
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 INSTALL_COMMANDS = (
     "gh --version",
@@ -198,23 +193,25 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
         assert not too_long, too_long
 
 
-def test_each_step_carries_its_muted_screen_grab(css: str, home: str, site: Path):
-    image = rule(css, ".cc-step--bg::before")
-    assert "aspect-ratio: var(--cc-step-bg-ratio" in image and "translateY(calc(-1 * var(--cc-step-bg-y" in image
-    assert "filter: saturate(0.7) contrast(0.9) brightness(0.9)" in image  # eased so the grab is recognisable
-    fade = rule(css, ".cc-step--bg::after")
-    assert "linear-gradient(180deg, #0a001226 0" in fade and "var(--cc-ink) 8.8rem" in fade  # clear at the top, solid before the description
-    assert "padding: 7.2rem" in rule(css, ".cc-step--bg")  # the heading sits over the tail of the fade
-    openings = re.findall(
-        r'<div class="cc-step cc-step--bg" style="--cc-step-bg: url\(([^)]+)\); --cc-step-bg-ratio: \d+ / \d+; --cc-step-bg-y: (\d+%)">',
-        section(home, "cc-how"),
-    )
-    assert openings == [(f"../assets/images/steps/{name}.webp", anchor) for name, anchor in STEP_IMAGES]
-    for url, _ in openings:
-        # Chromium resolves a url() in a custom property from the stylesheet that uses it.
-        assert (site / "stylesheets" / url).resolve().is_file(), url
-    strays = [p.name for p in (site / "assets" / "images").glob("*.png") if p.stem in [n for n, _ in STEP_IMAGES] + ["docs"]]
-    assert not strays, strays  # the grabs live under steps/ only
+def test_steps_are_plain_cards_with_no_grab(css: str, home: str, site: Path):
+    assert "cc-step--bg" not in home
+    assert "steps/" not in home  # no step image referenced
+    assert not (site / "assets" / "images" / "steps").exists()
+    assert "cc-step--bg" not in css  # the rules went with the images
+
+
+def test_proof_section_has_a_backdrop_hook_ready_for_the_image(css: str, home: str, site: Path):
+    image = rule(css, ".cc-proof--bg::before")
+    assert "var(--cc-proof-bg, none) top center / 100% auto" in image
+    assert "filter: saturate(0.7) contrast(0.9) brightness(0.9)" in image
+    fade = rule(css, ".cc-proof--bg::after")
+    assert "var(--md-default-bg-color) 6.8rem" in fade  # solid ground before the receipts
+    expected = site / "assets" / "images" / "proof" / "pr-review.webp"
+    if expected.exists():
+        assert 'class="cc-section cc-proof cc-proof--bg"' in home
+        assert "--cc-proof-bg: url(../assets/images/proof/pr-review.webp)" in home
+    else:
+        assert "cc-proof--bg" not in home  # the hook ships unused until the image lands
 
 
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
