@@ -520,6 +520,24 @@ h1,h2,h3 {
   counter-increment: cc-step;
 }
 
+.md-typeset .cc-step h3::before {
+  content: counter(cc-step);
+  margin-right: 0.4rem;
+  color: var(--md-accent-fg-color);
+}
+
+/* A Lucide glyph before each step's name, in the accent. */
+.md-typeset .cc-step h3 .twemoji {
+  height: 1em;
+  margin-right: 0.3em;
+  vertical-align: -0.1em;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-step h3 .twemoji svg {
+  width: 1em;
+}
+
 @media screen and (min-width: 45em) {
   .cc-steps {
     grid-template-columns: repeat(2, 1fr);
