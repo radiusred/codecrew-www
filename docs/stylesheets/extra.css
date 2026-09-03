@@ -807,7 +807,10 @@ h1,h2,h3 {
    currentColor (the text colour) and the first frames of the transition
    painted a near-white ring in slate and a near-black one in the light
    scheme. Keyboard focus shows the same sustained ring; there is no
-   brighter focus-visible state. */
+   brighter focus-visible state. The lifted trigger is a stacking context
+   (the transform), so its panel's z-index ranks only inside it and later
+   siblings in the grid painted over a row-1 panel; the open trigger
+   therefore takes z-index 5, above every sibling at auto. */
 .cc-pop {
   position: relative;
   cursor: default;
@@ -818,6 +821,7 @@ h1,h2,h3 {
 }
 
 .cc-pop:hover, .cc-pop:focus-within {
+  z-index: 5;
   outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent);
   transform: translateY(-2px);
 }
@@ -833,7 +837,7 @@ h1,h2,h3 {
   padding: 0.7rem 0.9rem;
   border: 0.05rem solid var(--md-default-fg-color--lighter);
   border-radius: 0.4rem;
-  background: var(--md-default-bg-color);
+  background: #ffffff; /* a shade above the off-white page; raised, not colour-in-colour */
   color: var(--md-default-fg-color);
   box-shadow: 0 0.6rem 1.6rem #0a001240;
   font-size: 0.7rem;
@@ -844,6 +848,11 @@ h1,h2,h3 {
   visibility: hidden;
   opacity: 0;
   transition: opacity 125ms, visibility 125ms;
+}
+
+/* In slate the code ground is the shade above the page. */
+[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel {
+  background: var(--md-code-bg-color);
 }
 
 .cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel {

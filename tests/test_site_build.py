@@ -314,7 +314,11 @@ def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, 
     assert "visibility: visible" in shown and "opacity: 1" in shown
     rest = rule(css, ".cc-pop")
     assert "outline: 0.08rem solid transparent" in rest  # resting outline: only the colour transitions, from nothing
+    assert "z-index" not in rest  # siblings rest at auto...
     lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
+    assert "z-index: 5" in lift  # ...and the open trigger, a stacking context, ranks above them all
+    assert "background: #ffffff" in panel and "var(--md-default-bg-color)" not in panel  # raised above the page ground
+    assert "background: var(--md-code-bg-color)" in rule(css, '[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel')
     assert "translateY(-2px)" in lift and "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift
     assert ".cc-pop:focus-visible" not in css  # no state brighter than the sustained one
     assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
