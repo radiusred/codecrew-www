@@ -173,11 +173,12 @@ def test_steps_accept_a_dimmed_background_image(css: str, home: str):
     assert "cc-step--bg" not in home  # no image shipped in this change
 
 
-def test_crew_section_names_the_seats_and_no_crew_member(home: str):
+def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     crew = section(home, "cc-crew")
     badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption>([^<]+)</figcaption>', crew)
     assert tuple(badges) == CREW_ROLES
     assert "identity new reviewer" in crew
+    assert "background: var(--cc-purple)" in rule(css, ".md-typeset .cc-crew__badge img")  # white marks need a ground
     lower = text(home).lower()
     for name in CREW_MEMBER_NAMES:
         assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
