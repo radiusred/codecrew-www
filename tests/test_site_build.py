@@ -27,6 +27,11 @@ INSTALL_LINE_MAX = 42
 # the crew section's `identity new`) are held to the same 42.
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
+# One grab per How-it-works step, in order, with the anchor (a share of the
+# image's height) that puts its distinguishing feature in the strip above
+# the fade: the Requirements list, the parent-issue and branch pills, the
+# Merged badge and merged-by line, the document title.
+STEP_IMAGES = (("milestone", "62%"), ("task", "2%"), ("pr", "21%"), ("record", "0%"))
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 INSTALL_COMMANDS = (
     "gh extension install radiusred/gh-codecrew",
@@ -153,9 +158,11 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
     assert lead in how
     assert how.index('class="cc-how__lead"') < how.index('class="cc-steps"')
     assert lead not in section(home, "cc-start")
-    steps = how.split('<div class="cc-step">')[1:]
+    steps = re.split(r'<div class="cc-step(?: [^"]*)?"[^>]*>', how)[1:]  # not .cc-steps
     assert len(steps) == 4
     for step in steps:
+        heading = re.search(r"<h3[^>]*>(.*?)</h3>", step, re.S).group(1)
+        assert '<span class="twemoji">' in heading  # the Lucide glyph before the step's name
         agent = re.search(r'<p class="cc-step__line cc-step__agent">(.*?)</p>', step, re.S).group(1)
         you = re.search(r'<p class="cc-step__line cc-step__you">(.*?)</p>', step, re.S).group(1)
         assert '<span class="twemoji">' in agent and "<title>Claude</title>" in agent  # the Claude glyph
@@ -166,11 +173,23 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
         assert not too_long, too_long
 
 
-def test_steps_accept_a_dimmed_background_image(css: str, home: str):
-    hook = rule(css, ".cc-step--bg")
-    assert "var(--cc-step-bg" in hook  # the image, set per step
-    assert "background: #0a0012cc" in rule(css, ".cc-step--bg::before")  # the overlay keeping contrast
-    assert "cc-step--bg" not in home  # no image shipped in this change
+def test_each_step_carries_its_muted_screen_grab(css: str, home: str, site: Path):
+    image = rule(css, ".cc-step--bg::before")
+    assert "aspect-ratio: var(--cc-step-bg-ratio" in image and "translateY(calc(-1 * var(--cc-step-bg-y" in image
+    assert "filter: saturate(" in image  # muted
+    fade = rule(css, ".cc-step--bg::after")
+    assert "linear-gradient(180deg, #0a001226 0" in fade and "var(--cc-ink) 6.8rem" in fade  # clear at the top, solid ground by the heading
+    assert "padding: 7.2rem" in rule(css, ".cc-step--bg")  # the heading starts below the solid point
+    openings = re.findall(
+        r'<div class="cc-step cc-step--bg" style="--cc-step-bg: url\(([^)]+)\); --cc-step-bg-ratio: \d+ / \d+; --cc-step-bg-y: (\d+%)">',
+        section(home, "cc-how"),
+    )
+    assert openings == [(f"../assets/images/steps/{name}.webp", anchor) for name, anchor in STEP_IMAGES]
+    for url, _ in openings:
+        # Chromium resolves a url() in a custom property from the stylesheet that uses it.
+        assert (site / "stylesheets" / url).resolve().is_file(), url
+    strays = [p.name for p in (site / "assets" / "images").glob("*.png") if p.stem in [n for n, _ in STEP_IMAGES] + ["docs"]]
+    assert not strays, strays  # the grabs live under steps/ only
 
 
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
