@@ -118,12 +118,16 @@ It builds the App through GitHub's manifest flow with that role's minimal permis
 <div class="cc-panels" markdown>
 <div class="cc-panel" markdown>
 
+<p class="cc-panel__glyph" markdown="span">:lucide-scroll-text:</p>
+
 ### The record is the work
 
 Milestones are GitHub issues; tasks are issues with a plan in them. Decisions and deviations are comments written at the moment they happen, in a fixed shape a machine can find later.
 
 </div>
 <div class="cc-panel" markdown>
+
+<p class="cc-panel__glyph" markdown="span">:lucide-shield-check:</p>
 
 ### Gates that refuse, not remind
 
@@ -132,9 +136,9 @@ CI green, an independent approval, a human sign-off wherever one was asked for �
 </div>
 <div class="cc-panel" markdown>
 
-### No server, no dashboard
+<p class="cc-panel__glyph" markdown="span">:simple-github:</p>
 
-![One hub repo holds the contracts, routing table and milestones; spoke repos hold tasks, PRs and CI, each with a two-line pointer back to the hub.](assets/images/hub-and-spokes.svg){ .cc-panel__figure }
+### No server, no dashboard
 
 One repo is the hub: the contracts, the routing table and the milestone issues. Every other repo is a spoke with a two-line pointer file, and for a single project the hub is its own spoke. There is no other place to look — it is `gh`, issues, PRs and CI.
 
@@ -168,23 +172,16 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 
 ## Start now
 
-<div class="cc-install" markdown>
-
-```sh
-gh extension install radiusred/gh-codecrew
-# any repo on GitHub, new or years old
-cd my-project
-# writes and commits the CodeCrew files
-gh codecrew init
-# or codex, or whichever agent you run
-claude
-```
-
+<div class="cc-install cc-term">
+<div class="cc-term__bar" aria-hidden="true"><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__title">~/my-project</span></div>
+<pre><code class="cc-term__code"><span class="cc-term__line" data-out="&gt;= 2.50.0 required">gh --version</span>
+<span class="cc-term__line">gh extension install radiusred/gh-codecrew</span>
+<span class="cc-term__line" data-out="any repo on GitHub, new or years old">cd my-project</span>
+<span class="cc-term__line" data-out="writes and commits the CodeCrew files">gh codecrew init</span>
+<span class="cc-term__line" data-out="or codex, or whichever agent you run">claude</span></code></pre>
 </div>
 
 Then one sentence to your agent: *Let's build this project!*
-
-Two things to have first: `gh` 2.50.0 or later, and pull-request CI of some kind — `task finish` refuses a PR that reports no checks at all, because absence never satisfies a gate. Ten lines of workflow do; the [quickstart](https://github.com/radiusred/gh-codecrew/blob/main/docs/first-milestone.md#5-finish-the-task) shows them.
 
 </div>
 </section>

@@ -355,15 +355,119 @@ h1,h2,h3 {
   --md-typeset-a-color: var(--cc-pink);
 }
 
-/* The four-line install block, at the close only. */
+/* The install block at the close, as a terminal window: always on the ink,
+   whichever scheme, with a title bar and three muted dots. Each command is
+   a line span; the `$` prompt is ::before and the dim "output" beneath it
+   is ::after from the span's data-out attribute, so neither is in the DOM
+   text: Zensical's copy button (clipboard.js reads the selection's text)
+   yields the five commands and nothing else. The window sizes to its
+   longest line plus the prompt (fit-content), centred in the band, and is
+   the positioned box, so Zensical's copy button (nav.md-code__nav) lands in
+   the title bar. The light-type variables are set here as the header does,
+   since the window is dark in the light scheme too. The chrome and type
+   scale up from 45em; phones keep the tighter sizes that fit the
+   42-character line plus prompt in the 420px column. */
 .cc-install {
   max-width: 44rem;
   margin: 0 auto;
   text-align: left;
 }
 
-.md-typeset .cc-install pre {
+.cc-term {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  --md-default-fg-color: #f2eefaf2;
+  --md-default-fg-color--light: #f2eefab3;
+  --md-default-fg-color--lighter: #f2eefa4d;
+  --md-default-fg-color--lightest: #f2eefa1f;
+  --md-code-bg-color: var(--cc-ink);
+  --md-code-fg-color: #f2eefaf2;
+  --md-accent-fg-color: var(--cc-cyan);
+  position: relative;
+  overflow: hidden;
+  border: 0.05rem solid #f2eefa33;
+  border-radius: 0.5rem;
+  background: var(--cc-ink);
+  box-shadow: 0 1rem 2rem #0a001266;
+}
+
+.cc-term__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 0.05rem solid #f2eefa1f;
+  background: #180a30;
+}
+
+.cc-term__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #f2eefa33;
+}
+
+.cc-term__title {
+  margin-left: 0.4rem;
+  font: 0.65rem/1 var(--md-code-font-family);
+  color: #f2eefa80;
+}
+
+.md-typeset .cc-term pre {
+  position: static;
   margin: 0;
+}
+
+.md-typeset .cc-term pre > code {
+  display: block;
+  padding: 0.8rem 0.6rem;
+  border-radius: 0;
+  background: var(--cc-ink);
+  color: #f2eefaf2;
+}
+
+.cc-term__line::before {
+  content: "$";
+  display: inline-block;
+  width: 1.5ch;
+  color: var(--cc-cyan);
+}
+
+.cc-term__line[data-out]::after {
+  content: "\A" attr(data-out);
+  white-space: pre;
+  color: #f2eefa80;
+}
+
+.cc-term .md-code__nav {
+  top: 0.25rem;
+  right: 0.5rem;
+  background: transparent;
+}
+
+@media screen and (min-width: 45em) {
+  .cc-term__bar {
+    gap: 0.45rem;
+    padding: 0.7rem 1rem;
+  }
+  .cc-term__dot {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+  .cc-term__title {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .md-typeset .cc-term pre > code {
+    padding: 1rem 1.6rem 1rem 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .cc-term .md-code__nav {
+    top: 0.45rem;
+    right: 0.7rem;
+  }
 }
 
 /* How it works: the lead under the title, then four numbered steps, two by
@@ -577,13 +681,19 @@ h1,h2,h3 {
   }
 }
 
-/* The hub-and-spokes figure in the third panel; its greys and cyan read on
-   both schemes without recolouring. */
-.md-typeset .cc-panel__figure {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0 0 0.8rem;
+/* One large glyph at the top of each panel, in the accent, nothing else. */
+.md-typeset .cc-panel .cc-panel__glyph {
+  margin: 0 0 0.6rem;
+  line-height: 1;
+}
+
+.md-typeset .cc-panel__glyph .twemoji {
+  height: 2.4rem;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-panel__glyph .twemoji svg {
+  width: 2.4rem;
 }
 
 /* Proof: the receipts, two columns on desktop. */

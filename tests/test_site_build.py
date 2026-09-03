@@ -34,6 +34,7 @@ CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 STEP_IMAGES = (("milestone", "62%"), ("task", "64%"), ("pr", "21%"), ("record", "0%"))
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 INSTALL_COMMANDS = (
+    "gh --version",
     "gh extension install radiusred/gh-codecrew",
     "cd my-project",
     "gh codecrew init",
@@ -90,8 +91,8 @@ def text(markup: str) -> str:
 
 
 def code_lines(block: str) -> list[str]:
-    """The text lines of the first highlighted code block in `block`."""
-    code = re.search(r"<pre>.*?<code>(.*?)</code>", block, re.S).group(1)
+    """The text lines of the first code block in `block`: what a copy of it yields."""
+    code = re.search(r"<pre>.*?<code[^>]*>(.*?)</code>", block, re.S).group(1)
     lines = [html.unescape(re.sub(r"<[^>]+>", "", line)) for line in code.split("\n")]
     return [line for line in lines if line.strip()]
 
@@ -140,16 +141,40 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
 
 
 def test_home_has_exactly_one_install_block(home: str):
-    assert home.count("language-sh highlight") == 1
+    assert home.count('class="cc-install cc-term"') == 1
     assert "cc-install" not in section(home, "cc-hero")
     assert "cc-install" in section(home, "cc-start")
+    assert "language-sh highlight" not in home  # the terminal window replaced the fenced block
 
 
-def test_install_block_fits_a_phone_and_keeps_the_commands(home: str):
-    lines = code_lines(section(home, "cc-start"))
-    assert [line for line in lines if not line.startswith("#")] == list(INSTALL_COMMANDS)
+def test_install_block_is_a_terminal_window_that_copies_clean(home: str):
+    start = section(home, "cc-start")
+    term = start[start.index('<div class="cc-install cc-term">') : start.index("</pre>")]
+    assert 'class="cc-term__bar"' in term and term.count('class="cc-term__dot"') == 3
+    assert 'class="cc-term__title">~/my-project<' in term
+    assert term.count('<span class="cc-term__line"') == 5
+    outputs = [html.unescape(o) for o in re.findall(r'data-out="([^"]+)"', term)]
+    assert outputs == [
+        ">= 2.50.0 required",
+        "any repo on GitHub, new or years old",
+        "writes and commits the CodeCrew files",
+        "or codex, or whichever agent you run",
+    ]
+    lines = code_lines(start)  # the DOM text: what the copy button yields
+    assert lines == list(INSTALL_COMMANDS)  # five runnable lines, the version check first
+    assert "Two things to have first" not in start  # the prerequisites paragraph is gone
+    assert "$" not in "".join(lines)  # the prompt is CSS, never typed
     too_long = [line for line in lines if len(line) > INSTALL_LINE_MAX]
     assert not too_long, too_long
+    assert term.index("</code>") > term.index(INSTALL_COMMANDS[-1])
+    assert 'class="cc-term__line"' in term and "\n" in term  # one command per line
+
+
+def test_terminal_prompt_and_output_are_generated_content(css: str):
+    assert 'content: "$"' in rule(css, ".cc-term__line::before")
+    assert "attr(data-out)" in rule(css, ".cc-term__line[data-out]::after")
+    window = rule(css, ".cc-term")
+    assert "width: fit-content" in window and "max-width: 100%" in window and "margin: 0 auto" in window
 
 
 def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: str):
@@ -203,9 +228,16 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
         assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
 
 
-def test_why_panel_carries_the_hub_and_spokes_figure(home: str):
+def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
     why = section(home, "cc-why")
-    assert 'src="assets/images/hub-and-spokes.svg"' in why
+    assert "<img" not in why
+    assert not (site / "assets" / "images" / "hub-and-spokes.svg").exists()
+    panels = why.split('<div class="cc-panel">')[1:]
+    assert len(panels) == 3
+    for panel in panels:
+        glyphs = re.findall(r'<p class="cc-panel__glyph">(.*?)</p>', panel, re.S)
+        assert len(glyphs) == 1 and glyphs[0].count('<span class="twemoji">') == 1, panel[:80]
+        assert panel.index("cc-panel__glyph") < panel.index("<h3")  # the glyph tops the panel
     assert "One repo is the hub" in why
 
 
