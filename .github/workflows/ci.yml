@@ -21,5 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # The docs section is synced from the hub at build time, and the site
+      # build test rebuilds it: without this checkout that whole module skips.
+      - uses: actions/checkout@v6
+        with:
+          repository: radiusred/gh-codecrew
+          path: _sources/gh-codecrew
       - uses: astral-sh/setup-uv@v6
       - run: uv run pytest
+        env:
+          SYNC_SOURCE_BASE: _sources
