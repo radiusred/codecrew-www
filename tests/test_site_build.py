@@ -139,6 +139,12 @@ def rule(css: str, selector: str) -> str:
     return match.group(1)
 
 
+def drawer(page: str) -> str:
+    """The markup of the primary sidebar: what the header's burger opens."""
+    start = page.index('<div class="md-sidebar md-sidebar--primary"')
+    return page[start : page.index("</main>", start)]
+
+
 def section(page: str, name: str) -> str:
     """The markup of one home page section, by its `cc-*` class."""
     start = page.index(f'<section class="cc-section {name}')
@@ -164,9 +170,15 @@ def test_home_uses_the_home_template(home: str):
     assert "rr-page-meta" not in home  # the "published on" override is bypassed
 
 
-def test_home_has_no_sidebars_or_footer_nav(home: str):
-    assert "md-sidebar--primary" not in home
-    assert "md-sidebar--secondary" not in home
+def test_home_drops_the_desktop_sidebars_and_the_footer_nav(home: str):
+    # The primary sidebar is present but `hidden`, which is not the same as
+    # absent: Zensical gives .md-sidebar--primary display:block below the
+    # tab-collapse breakpoint, so this one element is both the desktop sidebar
+    # M8-R1 drops and the drawer its retained tabs collapse into. It used to be
+    # removed outright, which left the burger opening an empty overlay (#9).
+    sidebar = re.search(r'<div class="md-sidebar md-sidebar--primary"[^>]*>', home)
+    assert sidebar and "hidden" in sidebar.group(0)
+    assert "md-sidebar--secondary" not in home  # no "on this page" panel
     assert "md-footer__inner" not in home  # prev/next navigation
     assert "md-footer-meta" in home  # copyright + social strip stays
     assert 'class="md-footer cc-footer"' in home  # its own ground, apart from Start now
@@ -501,3 +513,34 @@ def test_the_synced_links_resolve_on_site(docs_index: str):
     # A file that did not sync still points at the repo.
     assert "github.com/radiusred/gh-codecrew/blob/main/CHANGELOG.md" in docs_index
     assert "README.md" not in docs_index
+
+
+def test_the_home_drawer_reaches_every_tab(home: str):
+    # Below 76.234375em the tabs are gone and the drawer is the only navigation,
+    # so it must carry what the tabs carried.
+    panel = drawer(home)
+    assert "md-nav--primary" in panel
+    targets = set(re.findall(r'<a href="([^"]*)" class="md-nav__link', panel))
+    assert {"", "./docs/", "./blog/"} <= targets, sorted(targets)
+
+
+def test_no_page_offers_a_burger_with_nothing_behind_it(home: str, blog: str, docs_index: str):
+    # The bug in #9 was exactly this pair coming apart on one page: the header
+    # renders the toggle unconditionally, the template decided the panel.
+    for name, page in (("home", home), ("blog", blog), ("docs", docs_index)):
+        assert 'data-md-toggle="drawer"' in page, name
+        assert "md-nav--primary" in drawer(page), name
+
+
+def test_the_hidden_drawer_rests_on_a_stylesheet_rule_that_still_exists(site: Path):
+    # `hidden` only means "desktop only" because the theme overrides it below
+    # the breakpoint. If an upgrade drops that, the home page loses its drawer
+    # silently on phones — so assert the rule rather than trust it.
+    bundled = [p for p in (site / "assets/stylesheets/modern").glob("*.css") if "palette" not in p.name]
+    assert len(bundled) == 1, bundled
+    css = bundled[0].read_text()
+    start = css.index(".md-sidebar--primary{position:fixed")
+    rule = css[start : css.index("}", start)]
+    assert "display:block" in rule
+    query = css[css.rindex("@media", 0, start) :][: css[css.rindex("@media", 0, start) :].index("{")]
+    assert query == "@media screen and (max-width:76.234375em)", query
