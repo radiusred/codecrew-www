@@ -28,6 +28,22 @@ INSTALL_LINE_MAX = 42
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
+# The receipts, one sentence each; the fourth opens a popover.
+RECEIPTS = (
+    ("Every milestone of the framework itself was delivered with it.", "https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones"),
+    ("The first spoke published its own announcement.", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
+    ("This project is agent-staffed, and you can check.", "https://github.com/radiusred/codecrew-www/pull/3"),
+    ("It scales from solo, to a team, to an orchestration platform.", None),
+)
+# The crew popovers: the opening of each contract in radiusred/gh-codecrew's roles/<role>.md,
+# reused verbatim (copied at the hub's main of 2026-09-03; the hub is not on CI's disk).
+ROLE_OPENINGS = {
+    "implementer": "You implement one CodeCrew task. Your work is judged by someone else — build for the reviewer, the QA agent, and the person reading the audit trail in three weeks.",
+    "reviewer": "You review one CodeCrew PR. You exist because self-evaluation shares the blind spots of the work itself — your value is independence, so form your own view before reading the implementer's narrative.",
+    "qa": "You exercise what was built against what was promised. The reviewer judges the diff; you judge the behaviour. Run the thing.",
+    "doc-synthesizer": "You write the milestone document — the record that lets someone in three months understand why the system is the way it is. You compile what was recorded; you do not invent what wasn't.",
+    "coordinator": "You run the delivery loop for a CodeCrew project and hold no seat in it. You open the milestones and the tasks, dispatch the crew seats by the routing table, own the review loop in both directions, raise the gates only a human can answer, and drive the milestone verbs. You never write code, review, verdict or merge: your product is the record on GitHub and one correct dispatch per transition.",
+}
 # The conversation under each step: the human's line and the verb the agent runs.
 STEP_CHAT = (
     ("Let's add a new feature.", "gh codecrew milestone new"),
@@ -252,9 +268,62 @@ def test_proof_captures_are_two_halves_of_one_review(css: str, home: str, site: 
     assert "cc-proof--bg" not in css and "cc-proof--bg" not in home
 
 
+def squash(s: str) -> str:
+    """Collapse whitespace, including the space `text()` leaves where a tag closed before punctuation."""
+    return re.sub(r" ([.,;:])", r"\1", " ".join(s.split()))
+
+
+def test_proof_caption_and_one_sentence_receipts(home: str):
+    proof = section(home, "cc-proof")
+    caption = re.search(r'<p class="cc-captures__caption">(.*?)</p>', proof, re.S).group(1)
+    assert squash(text(caption)) == "A pull request merged after a change request. Author and reviewer are CodeCrew App identities."
+    assert '<a href="#the-crew">CodeCrew App identities</a>' in caption
+    assert 'id="the-crew"' in section(home, "cc-crew")
+    receipts = re.split(r'<div class="cc-receipt(?: cc-pop)?"[^>]*>', proof)[1:]  # each block runs to the next receipt
+    assert len(receipts) == 4
+    for block, (sentence, href) in zip(receipts, RECEIPTS):
+        line = re.search(r"<p>(.*?)</p>", block, re.S).group(1)
+        assert squash(text(line)) == sentence  # one sentence, nothing after it
+        if href:
+            assert f'<a href="{href}">{sentence}</a>' in line
+            assert "cc-pop__panel" not in block
+        else:
+            assert 'tabindex="0"' in receipts[3] or 'class="cc-receipt cc-pop" tabindex="0"' in proof
+            panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', block, re.S).group(1)
+            assert squash(text(panel)).count(". ") + 1 <= 3  # three short sentences at most
+            for target in ("radiusred/numberguess", "radiusred/snake", "gh-codecrew/issues/119", "gh-codecrew/issues/164"):
+                assert target in panel
+
+
+def test_crew_badges_open_popovers_quoting_the_contracts(home: str):
+    crew = section(home, "cc-crew")
+    figures = re.findall(r'<figure class="cc-crew__badge cc-pop" tabindex="0">(.*?)</figure>', crew, re.S)
+    assert len(figures) == 5
+    for figure, role in zip(figures, CREW_ROLES):
+        assert re.search(rf"<figcaption>{role}</figcaption>", figure)
+        panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', figure, re.S).group(1)
+        assert squash(text(panel)) == ROLE_OPENINGS[role]  # verbatim from the contract's opening
+
+
+def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, home: str):
+    panel = rule(css, ".md-typeset .cc-pop .cc-pop__panel")
+    assert "visibility: hidden" in panel and "opacity: 0" in panel
+    shown = rule(css, ".cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel")
+    assert "visibility: visible" in shown and "opacity: 1" in shown
+    lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
+    assert "translateY(-2px)" in lift and "outline: 0.05rem solid var(--cc-cyan-tint)" in lift
+    assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
+    phone = media_block(css, "screen and (max-width: 44.9375em)")
+    assert "position: fixed" in phone and "bottom: 1rem" in phone  # the sheet
+    for name in ("cc-crew", "cc-proof"):  # no JavaScript and no title tooltips for any of it
+        markup = re.sub(r'<a class="headerlink"[^>]*>', "", section(home, name))  # Zensical's own heading anchors carry a title
+        assert "<script" not in markup
+        assert 'title="' not in markup
+
+
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     crew = section(home, "cc-crew")
-    badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption>([^<]+)</figcaption>', crew)
+    badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>(?:</p>)?\s*<figcaption>([^<]+)</figcaption>', crew)
     assert tuple(badges) == CREW_ROLES
     assert "identity new reviewer" in crew
     assert "background: var(--cc-purple)" in rule(css, ".md-typeset .cc-crew__badge img")  # white marks need a ground
