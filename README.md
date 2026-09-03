@@ -4,19 +4,23 @@ Source for [codecrew.works](https://codecrew.works), the CodeCrew website:
 a landing page and a blog for release notes, design decisions and field
 reports. A lightweight marketing site, nothing more.
 
-The product, its reference docs and its specification live in
-[radiusred/gh-codecrew](https://github.com/radiusred/gh-codecrew); the site
-links there rather than mirroring them. Radius Red's own site,
-[www.radiusred.uk](https://www.radiusred.uk/), also carries a synced copy
-of the docs.
+The product itself lives in
+[radiusred/gh-codecrew](https://github.com/radiusred/gh-codecrew), which
+stays the single source of truth for its documentation: `sync_docs.py`
+builds that repo's `docs/` tree, `SPEC.md`, `CONTRIBUTING.md` and
+`SECURITY.md` into `/docs/` here on every deploy. Nothing synced is
+committed. `www.radiusred.uk` carries only the README as a project landing
+page and points here for the rest.
 
 ## Layout
 
 - `docs/index.md` — landing page
 - `docs/blog/posts/` — blog posts; `_drafts/` holds future-dated ones
+- `docs/docs/` — the synced upstream docs, generated and git-ignored
 - `main.py` — draft promotion, blog nav, archive page and Atom feed
-- `zensical.toml` — site config; the nav block between `BEGIN_BLOG_POSTS`
-  and `END_BLOG_POSTS` is generated
+- `sync_docs.py` — the upstream docs sync and its nav block
+- `zensical.toml` — site config; the nav blocks between `BEGIN_BLOG_POSTS`
+  / `END_BLOG_POSTS` and `BEGIN_DOCS_NAV` / `END_DOCS_NAV` are generated
 
 ## Writing a post
 
@@ -41,8 +45,14 @@ internal issue trackers or private repositories.
 
 ## Local preview
 
+`sync_docs.py` reads the upstream from `$SYNC_SOURCE_BASE/gh-codecrew`,
+defaulting to `../gh-codecrew` — so a sibling clone of the hub is all it
+needs. Without one it empties the docs nav and the section is simply
+absent; the site-build tests skip for the same reason.
+
 ```sh
 uv sync
+uv run python sync_docs.py   # builds docs/docs/ from ../gh-codecrew
 uv run python main.py
 uv run zensical serve        # http://localhost:8000
 uv run pytest
@@ -51,8 +61,9 @@ uv run pytest
 ## Deploys
 
 `.github/workflows/site.yml` runs on every push to `main`, daily at 00:05
-UTC, and on demand. It builds with Zensical and publishes `site/` to
-GitHub Pages. `docs/CNAME` keeps the custom domain attached across deploys.
+UTC, and on demand. It checks `radiusred/gh-codecrew` out under `_sources/`,
+runs the sync, builds with Zensical and publishes `site/` to GitHub Pages —
+so a docs change upstream reaches the site on the next scheduled build. `docs/CNAME` keeps the custom domain attached across deploys.
 
 DNS for `codecrew.works` (a proxied CNAME to `radiusred.github.io`) and
 the Cloudflare zone configuration live as code in
