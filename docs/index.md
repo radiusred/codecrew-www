@@ -162,8 +162,8 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 ## It has shipped
 
 <div class="cc-captures">
-<figure class="cc-capture"><img src="assets/images/proof/pr-review.webp" alt="A pull request on GitHub: the reviewer App requested changes with two findings, the implementer App answered both, and the PR merged." width="1167" height="1768" loading="lazy"></figure>
-<figure class="cc-capture"><!-- the second capture, docs/assets/images/proof/task-plan.webp (a task issue with its Plan and a Decision comment), goes here as an img when it arrives; an empty figure renders nothing --></figure>
+<figure class="cc-capture"><img src="assets/images/proof/pr-review-top.webp" alt="The upper half of a pull request on GitHub: merged by the implementer App, with the reviewer App's requested changes beginning below." width="1641" height="1549" loading="lazy"></figure>
+<figure class="cc-capture"><img src="assets/images/proof/pr-review-bottom.webp" alt="The lower half of the same pull request: the reviewer App's two findings and the implementer App's answer to both." width="1626" height="1647" loading="lazy"></figure>
 </div>
 
 <div class="cc-receipts" markdown>

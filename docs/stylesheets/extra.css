@@ -687,35 +687,32 @@ h1,h2,h3 {
 
 /* Proof: the receipts, two columns on desktop. */
 
-/* Proof captures: portrait screenshots as cards under the heading, in a
-   thin rounded frame with a soft shadow, angled towards each other with a
-   perspective on the row and a small opposite rotateY on each card; flat
-   and full-width on phones (the media query at the end). The row holds
-   two: the first is the PR with its review; the second slot is an empty
-   figure, which renders nothing, until the operator's second capture
-   arrives at docs/assets/images/proof/task-plan.webp (a task issue with
-   its Plan and a Decision comment) and goes in as an img. */
+/* Proof captures: one PR review split across two panels, the upper and
+   lower halves of the same page (overlapping by about 100px), as cards
+   under the heading in a thin rounded frame with a soft shadow, angled
+   towards each other with a perspective on the row and a mirrored 8deg
+   rotateY. The continuity cue is a mask fade, not baked into the files:
+   the first card fades out over its bottom 14%, the second in over its
+   top 14%, on the whole card so the frame fades with the image. Sized so
+   the pair fits the section at 1440px; flat and full-width on phones with
+   the fades kept (the media query at the end). */
 .cc-captures {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.6rem;
   margin: 0 0 2.4rem;
   perspective: 60rem;
 }
 
 .md-typeset .cc-capture {
-  flex: 0 1 24rem;
+  flex: 0 1 22rem;
   margin: 0;
   overflow: hidden;
   border: 0.05rem solid var(--md-default-fg-color--lighter);
   border-radius: 0.6rem;
   background: var(--cc-ink);
   box-shadow: 0 1.2rem 2.4rem #0a001259;
-}
-
-.md-typeset .cc-capture:empty {
-  display: none;
 }
 
 .md-typeset .cc-capture img {
@@ -726,10 +723,14 @@ h1,h2,h3 {
 
 .md-typeset .cc-capture:nth-child(1) {
   transform: rotateY(8deg);
+  -webkit-mask-image: linear-gradient(180deg, #000 86%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 86%, transparent 100%);
 }
 
 .md-typeset .cc-capture:nth-child(2) {
   transform: rotateY(-8deg);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 14%);
 }
 
 .md-typeset .cc-receipts ul {
