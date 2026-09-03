@@ -410,9 +410,41 @@ h1,h2,h3 {
 }
 
 .cc-step {
+  position: relative;
   padding-top: 0.8rem;
   border-top: 0.15rem solid var(--md-accent-fg-color);
   counter-increment: cc-step;
+}
+
+/* Hook for a dimmed screen-grab behind a step, no image shipped yet. Give
+   the step the class and its image, from the Markdown
+   (`<div class="cc-step cc-step--bg" style="--cc-step-bg: url(...)" markdown>`)
+   or from here (`.cc-steps .cc-step:nth-child(2) { --cc-step-bg: url(...) }`).
+   An 80% ink overlay sits between the image and the text, so even a white
+   image leaves light text above 10:1, and the step takes light type in
+   both schemes. */
+.cc-step--bg {
+  --md-typeset-color: #f2eefaf2;
+  --md-default-fg-color: #f2eefaf2;
+  --md-default-fg-color--light: #f2eefab3;
+  --md-code-bg-color: #180a30;
+  --md-code-fg-color: #f2eefa;
+  padding: 0.8rem 1rem 0.4rem;
+  border-radius: 0.4rem;
+  color: var(--md-default-fg-color);
+  background: var(--cc-step-bg, none) center / cover no-repeat, var(--cc-ink);
+}
+
+.cc-step--bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #0a0012cc;
+}
+
+.cc-step--bg > * {
+  position: relative;
 }
 
 .md-typeset .cc-step h3::before {

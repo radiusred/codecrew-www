@@ -166,6 +166,13 @@ def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: 
         assert not too_long, too_long
 
 
+def test_steps_accept_a_dimmed_background_image(css: str, home: str):
+    hook = rule(css, ".cc-step--bg")
+    assert "var(--cc-step-bg" in hook  # the image, set per step
+    assert "background: #0a0012cc" in rule(css, ".cc-step--bg::before")  # the overlay keeping contrast
+    assert "cc-step--bg" not in home  # no image shipped in this change
+
+
 def test_crew_section_names_the_seats_and_no_crew_member(home: str):
     crew = section(home, "cc-crew")
     badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption>([^<]+)</figcaption>', crew)
