@@ -237,15 +237,18 @@ def test_proof_captures_are_two_halves_of_one_review(css: str, home: str, site: 
         assert (site / url).is_file(), url
     assert not (site / "assets" / "images" / "proof" / "pr-review.webp").exists()  # the single tall capture is gone
     assert "perspective: 60rem" in rule(css, ".cc-captures")
+    card = rule(css, ".md-typeset .cc-capture")
+    assert "flex: 0 1 26.5rem" in card and "position: relative" in card  # readable size; positioned for z-order
     first, second = rule(css, ".md-typeset .cc-capture:nth-child(1)"), rule(css, ".md-typeset .cc-capture:nth-child(2)")
     assert "rotateY(8deg)" in first and "rotateY(-8deg)" in second
+    assert "margin-left: -4rem" in second and "z-index: 1" in second  # the second overlaps the first's right edge, above it
     for prefix in ("-webkit-mask-image", "mask-image"):  # the fades, on the whole card
         assert f"{prefix}: linear-gradient(180deg, #000 86%, transparent 100%)" in first
         assert f"{prefix}: linear-gradient(180deg, transparent 0, #000 14%)" in second
     assert ":empty" not in css  # both cards always render
     phone = media_block(css, "screen and (max-width: 44.9375em)")
     assert "perspective: none" in phone and "rotateY" not in phone and "mask" not in phone  # flat, fades kept
-    assert ".md-typeset .cc-capture:nth-child(n) {\n    transform: none;" in phone
+    assert ".md-typeset .cc-capture:nth-child(n) {\n    margin-left: 0;\n    transform: none;" in phone  # no overlap, no tilt on phones
     assert "cc-proof--bg" not in css and "cc-proof--bg" not in home
 
 
