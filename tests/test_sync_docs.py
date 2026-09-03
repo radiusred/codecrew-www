@@ -11,9 +11,18 @@ import tomllib
 import pytest
 
 import sync_docs
-from sync_docs import DEST, main, nav_entries, sync, toml_string, write_docs_nav
+from sync_docs import (
+    DEST,
+    github_url,
+    main,
+    nav_entries,
+    rewrite_target,
+    sync,
+    toml_string,
+    write_docs_nav,
+)
 
-GITHUB = "https://github.com/radiusred/gh-codecrew/blob/main"
+GITHUB = "https://github.com/radiusred/gh-codecrew"
 RAW = "https://raw.githubusercontent.com/radiusred/gh-codecrew/main"
 
 UPSTREAM = {
@@ -27,12 +36,14 @@ UPSTREAM = {
     ),
     "CONTRIBUTING.md": "# Contributing\n",
     "SECURITY.md": "# Security\n",
+    "LICENSE": "Apache 2.0\n",
     "docs/introduction.md": (
         "# CodeCrew, precisely\n\n"
         "The [landing page](../README.md), the [receipts](../README.md#the-receipts)\n"
         "and [where it goes](../README.md#where-it-goes-from-here).\n"
         "Read [the spec](../SPEC.md#roles), [identities](identities.md) and the\n"
-        "[records](milestones/); the [changelog](../CHANGELOG.md) and the\n"
+        "[records](milestones/) and [one record](milestones/1-first.md); the\n"
+        "[changelog](../CHANGELOG.md), the [licence](../LICENSE) and the\n"
         "[logo](../assets/logo.webp) stay upstream.\n"
         "[gh](https://cli.github.com/) is external, [top](#top) is an anchor.\n"
         "[root-relative](/docs/identities.md) and [above root](../../README.md).\n"
@@ -101,10 +112,6 @@ def test_the_docs_tree_and_the_three_root_files_land_the_readme_does_not(upstrea
         "gsd-vs-frontier-orchestration.md",
         "identities.md",
         "index.md",
-        "milestones/1-first.md",
-        "milestones/10-tenth.md",
-        "milestones/2-second.md",
-        "milestones/index.md",
         "platform-interop.md",
         "security.md",
         "spec.md",
@@ -114,6 +121,7 @@ def test_the_docs_tree_and_the_three_root_files_land_the_readme_does_not(upstrea
     assert not (DEST / "introduction.md").exists()
     assert not (DEST / "readme.md").exists()
     assert not (DEST / "agents.md").exists()
+    assert not (DEST / "milestones").exists()  # EXCLUDE: the engineering trail
 
 
 def test_links_between_synced_pages_resolve_on_site(upstream):
@@ -121,11 +129,18 @@ def test_links_between_synced_pages_resolve_on_site(upstream):
     index = page("index.md")
     assert "[the spec](spec.md#roles)" in index  # ../SPEC.md from docs/
     assert "[identities](identities.md)" in index
-    assert "[records](milestones/index.md)" in index  # the bare directory link
-    # A page one level down reaches back up.
-    assert "[the intro](../index.md)" in page("milestones/1-first.md")
     # SPEC.md sits at the repo root, so its docs/ links flatten into the section.
     assert "[founding decisions](founding-decisions.md)" in page("spec.md")
+
+
+def test_a_page_in_a_subdirectory_reaches_the_index_and_the_home_page(upstream):
+    # Nothing in the current upstream syncs into a subdirectory, so this holds
+    # rewrite_target to the depth arithmetic directly: a page one level down
+    # reaches the section index at ../ and the site's home page at ../../.
+    deep = "docs/guides/deep.md"
+    assert rewrite_target("../introduction.md", deep, is_image=False) == "../index.md"
+    assert rewrite_target("../../README.md", deep, is_image=False) == "../../index.md"
+    assert rewrite_target("../identities.md", deep, is_image=False) == "../identities.md"
 
 
 def test_readme_links_land_on_the_home_page_with_its_own_anchors(upstream):
@@ -135,18 +150,15 @@ def test_readme_links_land_on_the_home_page_with_its_own_anchors(upstream):
     assert "[receipts](../index.md#codecrew-works)" in index  # README anchor translated
     assert "[where it goes](../index.md)" in index  # no counterpart section: anchor dropped
     assert "](../README.md" not in index  # no link to the file survives the move
-    # Two levels down, the home page is two levels up.
-    assert "[landing page](../../index.md)" in page("milestones/1-first.md")
 
 
 def test_links_to_files_that_did_not_sync_become_github_urls(upstream):
     sync()
     index = page("index.md")
-    assert f"[changelog]({GITHUB}/CHANGELOG.md)" in index
+    assert f"[changelog]({GITHUB}/blob/main/CHANGELOG.md)" in index
     assert f"[logo]({RAW}/assets/logo.webp)" in index  # an image extension goes to raw
-    assert f"[coordinator contract]({GITHUB}/roles/coordinator.md)" in page("spec.md")
-    # HTML <img src> is rewritten too, and always to raw.
-    assert f'<img src="{RAW}/assets/shot.png" alt="">' in page("milestones/2-second.md")
+    assert f"[coordinator contract]({GITHUB}/blob/main/roles/coordinator.md)" in page("spec.md")
+    assert f"[licence]({GITHUB}/blob/main/LICENSE)" in index  # no extension, still a file
 
 
 def test_a_root_relative_link_resolves_against_the_repo_root(upstream):
@@ -171,18 +183,26 @@ def test_external_urls_and_bare_anchors_are_left_alone(upstream):
     assert "[an agent](agent://<agent id>)" in page("spec.md")  # SPEC's own scheme
 
 
-def test_the_milestones_index_lists_every_record_in_number_order(upstream):
+def test_links_into_an_excluded_subtree_go_to_github(upstream):
+    # The upstream fixture still has milestone records: the exclusion is proved
+    # against a tree that has them, not one that happens not to.
     sync()
-    index = page("milestones/index.md")
-    links = [line for line in index.splitlines() if line.startswith("- [")]
-    assert links == [
-        "- [M1: First](1-first.md)",
-        "- [M2: Second](2-second.md)",
-        "- [M10: Tenth](10-tenth.md)",  # by number, not by filename
-    ]
+    index = page("index.md")
+    assert f"[records]({GITHUB}/tree/main/docs/milestones)" in index  # the directory
+    assert f"[one record]({GITHUB}/blob/main/docs/milestones/1-first.md)" in index
+    assert "milestones/index.md" not in index  # no on-site landing page any more
 
 
-def test_the_nav_block_orders_the_section_and_nests_the_records(upstream):
+def test_github_url_picks_tree_for_a_directory_and_blob_for_a_file(upstream):
+    # Asked of the checkout, not guessed from the absence of an extension.
+    assert github_url("docs/milestones", is_image=False) == f"{GITHUB}/tree/main/docs/milestones"
+    assert github_url("LICENSE", is_image=False) == f"{GITHUB}/blob/main/LICENSE"
+    assert github_url("AGENTS.md", is_image=False) == f"{GITHUB}/blob/main/AGENTS.md"
+    # A path that is not in the checkout at all cannot be a directory.
+    assert github_url("ROADMAP.md", is_image=False) == f"{GITHUB}/blob/main/ROADMAP.md"
+
+
+def test_the_nav_block_holds_the_whole_section_in_order(upstream):
     main()
     assert nav_block(upstream).splitlines()[1:] == [
         '  { "Docs" = [',
@@ -194,30 +214,23 @@ def test_the_nav_block_orders_the_section_and_nests_the_records(upstream):
         '    { "Founding decisions" = "docs/founding-decisions.md" },',
         '    { "GSD vs. \\"just let the model orchestrate\\"" = "docs/gsd-vs-frontier-orchestration.md" },',
         '    { "CodeCrew Protocol Specification" = "docs/spec.md" },',
-        '    { "Milestones" = [',
-        '      { "Milestones" = "docs/milestones/index.md" },',
-        '      { "M1: First" = "docs/milestones/1-first.md" },',
-        '      { "M2: Second" = "docs/milestones/2-second.md" },',
-        '      { "M10: Tenth" = "docs/milestones/10-tenth.md" },',
-        '    ] },',
         '    { "Contributing" = "docs/contributing.md" },',
         '    { "Security" = "docs/security.md" },',
         '  ] },',
     ]
+    assert "milestones" not in nav_block(upstream)
     # The Docs tab sits between Home and Blog, and nothing outside the markers moved.
     config = (upstream / "zensical.toml").read_text(encoding="utf-8")
     assert config.index('"Home"') < config.index('"Docs"') < config.index('"Blog"')
 
 
-def test_guide_labels_drop_a_subtitle_and_records_keep_theirs(upstream):
+def test_guide_labels_drop_a_subtitle(upstream):
     sync()
-    labels = dict((label, target) for label, target in nav_entries(DEST) if isinstance(target, str))
+    labels = {label for label, _ in nav_entries(DEST)}
     assert "Identities" in labels  # "Identities: running solo, staffing a crew"
     assert "Local extensions" in labels  # "Local extensions — `roles/<role>.local.md`"
     assert 'GSD vs. "just let the model orchestrate"' in labels
     assert "CodeCrew Protocol Specification" in labels  # no subtitle to drop
-    records = dict(next(t for label, t in nav_entries(DEST) if label == "Milestones"))
-    assert "M1: First" in records  # "M1:" is the label, not a subtitle
 
 
 def test_a_page_the_order_does_not_know_is_appended_before_the_trailing_pair(upstream):
@@ -226,7 +239,7 @@ def test_a_page_the_order_does_not_know_is_appended_before_the_trailing_pair(ups
     sync()
     labels = [label for label, _ in nav_entries(DEST)]
     assert labels.index("CodeCrew Protocol Specification") < labels.index("Alpha")
-    assert labels.index("Alpha") < labels.index("Zeta") < labels.index("Milestones")
+    assert labels.index("Alpha") < labels.index("Zeta")
     assert labels[-2:] == ["Contributing", "Security"]
 
 

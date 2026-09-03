@@ -12,6 +12,10 @@ builds that repo's `docs/` tree, `SPEC.md`, `CONTRIBUTING.md` and
 committed. `www.radiusred.uk` carries only the README as a project landing
 page and points here for the rest.
 
+`docs/milestones/` is excluded — see `EXCLUDE` in `sync_docs.py`. The
+per-milestone records are the engineering trail, not product documentation;
+links into them resolve to GitHub like any other path that does not sync.
+
 ## Layout
 
 - `docs/index.md` — landing page
