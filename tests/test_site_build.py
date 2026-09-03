@@ -23,9 +23,11 @@ ROOT = Path(__file__).resolve().parent.parent
 # column holds 43 characters before it scrolls sideways. The longest command
 # is 42. Longer lines scroll on a phone.
 INSTALL_LINE_MAX = 42
-# The same measurement for an inline code element inside a How-it-works
-# step: about 46 characters at 420px. The longest verb line is 44.
-STEP_CODE_MAX = 44
+# One rule for every code line on the page: the step lines (longest 33,
+# the crew section's `identity new`) are held to the same 42.
+STEP_CODE_MAX = 42
+CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
+CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 INSTALL_COMMANDS = (
     "gh extension install radiusred/gh-codecrew",
     "cd my-project",
@@ -77,6 +79,11 @@ def section(page: str, name: str) -> str:
     return page[start : page.index("</section>", start)]
 
 
+def text(markup: str) -> str:
+    """The visible text of a fragment: tags stripped, entities unescaped."""
+    return html.unescape(re.sub(r"<[^>]+>", " ", markup))
+
+
 def code_lines(block: str) -> list[str]:
     """The text lines of the first highlighted code block in `block`."""
     code = re.search(r"<pre>.*?<code>(.*?)</code>", block, re.S).group(1)
@@ -107,8 +114,9 @@ def test_home_keeps_the_header(home: str):
 
 
 def test_home_has_the_product_page_flow(home: str):
-    for name in ("cc-hero", "cc-how", "cc-why", "cc-proof", "cc-start"):
-        assert f"cc-section {name}" in home, name
+    order = ("cc-hero", "cc-how", "cc-crew", "cc-why", "cc-proof", "cc-start")
+    positions = [home.index(f"cc-section {name}") for name in order]
+    assert positions == sorted(positions)  # the crew sits between How it works and Why
     assert 'id="start-now"' in home
 
 
@@ -120,6 +128,8 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert "cc-hero__headline" in hero
     assert "Agent-driven software delivery" in hero
     assert "CodeCrew is an engineering process framework, and a small one" in hero
+    assert "the answer is in a chat transcript nobody saved" in hero  # the antecedent
+    assert "Decisions and deviations" not in hero  # said once, in the Why panel
     assert 'href="#start-now"' in hero  # primary call to action
     assert 'href="https://github.com/radiusred/gh-codecrew#readme"' in hero
 
@@ -137,19 +147,39 @@ def test_install_block_fits_a_phone_and_keeps_the_commands(home: str):
     assert not too_long, too_long
 
 
-def test_how_it_works_leads_with_the_three_moments_and_names_a_verb_per_step(home: str):
+def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: str):
     how = section(home, "cc-how")
-    lead = "You do not run the verbs. Your agent does."
+    lead = "You are needed at three moments"
     assert lead in how
     assert how.index('class="cc-how__lead"') < how.index('class="cc-steps"')
     assert lead not in section(home, "cc-start")
     steps = how.split('<div class="cc-step">')[1:]
     assert len(steps) == 4
     for step in steps:
-        snippets = [html.unescape(m) for m in re.findall(r"<code>(.*?)</code>", step)]
-        assert snippets and snippets[0].startswith("gh codecrew "), step
+        agent = re.search(r'<p class="cc-step__line cc-step__agent">(.*?)</p>', step, re.S).group(1)
+        you = re.search(r'<p class="cc-step__line cc-step__you">(.*?)</p>', step, re.S).group(1)
+        assert '<span class="twemoji">' in agent and "<title>Claude</title>" in agent  # the Claude glyph
+        assert '<span class="twemoji">' in you and "<title>" not in you  # the lucide person glyph
+        snippets = [html.unescape(m) for m in re.findall(r"<code>(.*?)</code>", agent)]
+        assert len(snippets) == 1 and snippets[0].startswith("gh codecrew "), step
         too_long = [snippet for snippet in snippets if len(snippet) > STEP_CODE_MAX]
         assert not too_long, too_long
+
+
+def test_crew_section_names_the_seats_and_no_crew_member(home: str):
+    crew = section(home, "cc-crew")
+    badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption>([^<]+)</figcaption>', crew)
+    assert tuple(badges) == CREW_ROLES
+    assert "identity new reviewer" in crew
+    lower = text(home).lower()
+    for name in CREW_MEMBER_NAMES:
+        assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
+
+
+def test_why_panel_carries_the_hub_and_spokes_figure(home: str):
+    why = section(home, "cc-why")
+    assert 'src="assets/images/hub-and-spokes.svg"' in why
+    assert "One repo is the hub" in why
 
 
 def test_alternate_bands_carry_the_glow_in_both_schemes(css: str):
