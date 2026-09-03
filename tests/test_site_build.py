@@ -341,7 +341,10 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>(?:</p>)?\s*<figcaption>([^<]+)</figcaption>', crew)
     assert tuple(badges) == CREW_ROLES
     assert "identity new reviewer" in crew
-    assert "background: var(--cc-purple)" in rule(css, ".md-typeset .cc-crew__badge img")  # white marks need a ground
+    badge = rule(css, ".md-typeset .cc-crew__badge img")
+    assert "background: var(--cc-purple)" in badge  # white marks need a ground
+    assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
+    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the overlap stays at the tile's padding
     lower = text(home).lower()
     for name in CREW_MEMBER_NAMES:
         assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only

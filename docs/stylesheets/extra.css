@@ -638,11 +638,11 @@ h1,h2,h3 {
 
 .md-typeset .cc-crew__badge img {
   display: block;
-  width: 3rem;
-  height: 3rem;
-  margin: 0 auto 0.3rem;
-  padding: 0.25rem;
-  border-radius: 0.6rem;
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 0.4rem;
+  padding: 0.5rem;
+  border-radius: 1.2rem;
   background: var(--cc-purple);
 }
 
@@ -836,7 +836,8 @@ h1,h2,h3 {
 /* The panel rises out of its card: its top edge overlaps the card's
    bottom (1.5rem into a receipt, whose strapline it covers; 0.5rem into a
    badge tile, its padding only, so a wide panel never sits over a
-   neighbouring badge's caption). Clearly raised: white with a firmer
+   neighbouring badge's caption; the tile is 7rem wide now and a 22rem
+   panel still reaches its neighbours, so the depth stays at the padding). Clearly raised: white with a firmer
    shadow on the off-white page, where white is the lightest ground there
    is; --cc-purple-light, two shades up from the page, in slate. Type at
    0.95rem. */
