@@ -173,13 +173,14 @@ def map_to_dest(repo_path):
 
 
 def github_url(repo_path, is_image):
-    ext = posixpath.splitext(repo_path.split("#", 1)[0])[1].lower()
-    if is_image or ext in IMAGE_EXTS:
+    path = repo_path.split("#", 1)[0]
+    if is_image or posixpath.splitext(path)[1].lower() in IMAGE_EXTS:
         return f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
     # GitHub 301s /blob/ to /tree/ for a directory, so link the directory
     # directly. Asked of the checkout rather than guessed from the absence of an
-    # extension: LICENSE has none and is a file.
-    view = "tree" if (source_dir() / repo_path).is_dir() else "blob"
+    # extension: LICENSE has none and is a file. The fragment is stripped first —
+    # rewrite_target already splits it off, but a direct caller may not have.
+    view = "tree" if (source_dir() / path).is_dir() else "blob"
     return f"https://github.com/{REPO}/{view}/{BRANCH}/{repo_path}"
 
 
