@@ -430,11 +430,12 @@ h1,h2,h3 {
    strip visible above the fade shows the grab's distinguishing feature at
    any card width (background-position percentages would land differently
    on desktop and phone, since the overflow differs). Saturation and
-   contrast are pulled down; ::after lays a vertical gradient over it,
-   mostly clear at the top and the solid ink ground by the point the
-   heading starts, so the wording sits on a plain surface and the grab
-   reads as a hint above it. Light type in both schemes: body text on the
-   ink is 16:1, the muted lines 9:1. The band is shorter on phones so four
+   contrast are eased a little so the grab stays recognisable; ::after lays
+   a vertical gradient over it, mostly clear at the top and the solid ink
+   ground by the point the description paragraph starts. The heading (bold,
+   with the accent number and glyph) sits over the tail of the fade, at 85%
+   ink or more (9:1 at worst); the description sits on plain ink (16:1, the
+   muted lines 9:1) in both schemes. The band is shorter on phones so four
    cards do not run long. */
 .cc-step--bg {
   --md-typeset-color: #f2eefaf2;
@@ -457,7 +458,7 @@ h1,h2,h3 {
   width: 100%;
   aspect-ratio: var(--cc-step-bg-ratio, 1);
   background: var(--cc-step-bg, none) center top / 100% auto no-repeat;
-  filter: saturate(0.35) contrast(0.75) brightness(0.85);
+  filter: saturate(0.7) contrast(0.9) brightness(0.9);
   transform: translateY(calc(-1 * var(--cc-step-bg-y, 0%)));
 }
 
@@ -465,7 +466,7 @@ h1,h2,h3 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #0a001226 0, #0a0012b3 4.4rem, var(--cc-ink) 6.8rem);
+  background: linear-gradient(180deg, #0a001226 0, #0a001299 5.6rem, #0a0012d9 7.2rem, var(--cc-ink) 8.8rem);
 }
 
 .cc-step--bg > * {
@@ -478,7 +479,7 @@ h1,h2,h3 {
     padding-top: 5.6rem;
   }
   .cc-step--bg::after {
-    background: linear-gradient(180deg, #0a001226 0, #0a0012b3 3.4rem, var(--cc-ink) 5.2rem);
+    background: linear-gradient(180deg, #0a001226 0, #0a001299 4.2rem, #0a0012d9 5.6rem, var(--cc-ink) 7.2rem);
   }
 }
 
