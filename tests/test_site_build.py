@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from sync_docs import HOME_ANCHORS
 from upstream_guard import absent_upstream, find_upstream
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -421,6 +422,10 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     assert len(re.findall(TABLE_BLOCK, crew, re.S)) == 1
     lead, _, rest = crew.partition('<div class="language-yaml highlight">')
     assert "routing table" in text(lead)  # it lands under the sentence that names one
+    # The gloss sends the reader to the hub's real table by the anchor the README
+    # cut left it (gh-codecrew#235: `## The routing table`), not the numbered beat.
+    assert '<a href="https://github.com/radiusred/gh-codecrew#the-routing-table">' in lead
+    assert "2-four-seats" not in home
     assert "identity new reviewer" in rest  # and before the verb that mints a seat's holder
     lines = code_lines(crew)
     assert lines[0] == "roles:"
@@ -524,10 +529,17 @@ def test_every_docs_nav_target_has_a_built_page(site: Path):
         assert (site / rel / "index.html").is_file(), target
 
 
-def test_the_synced_links_resolve_on_site(docs_index: str):
-    # ../README.md is the home page, which carries the README's argument.
-    assert '<a href="../">' in docs_index
-    assert '<a href="../#codecrew-works">' in docs_index  # by the home page's own id
+def test_the_synced_links_resolve_on_site(docs_index: str, home: str):
+    # ../README.md is the home page, which carries the README's argument. Which
+    # README anchors the introduction links depends on the hub checkout — before
+    # gh-codecrew#238 the receipts, after it the routing table — so the check is
+    # the invariant: every fragment that crossed over is one HOME_ANCHORS knows
+    # and an id the built home page has, and no README anchor rode through raw.
+    home_links = re.findall(r'<a href="\.\./(#[\w-]*)?">', docs_index)
+    assert home_links, "the introduction links the README"
+    for fragment in filter(None, home_links):
+        assert fragment in HOME_ANCHORS.values(), fragment
+        assert f'id="{fragment[1:]}"' in home, fragment
     assert '<a href="spec/">' in docs_index  # ../SPEC.md, now on-site
     # A file that did not sync still points at the repo.
     assert "github.com/radiusred/gh-codecrew/blob/main/CHANGELOG.md" in docs_index

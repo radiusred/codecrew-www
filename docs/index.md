@@ -147,7 +147,7 @@ Four seats — implementer, reviewer, qa, doc-synthesizer — and a coordinator 
 
 A seat is held by you, by a colleague's username, by a GitHub team, or by a GitHub App identity minted for the job. Solo is not a degraded mode; it is the routing table with every seat pointing at you.
 
-Here is what a `roles:` section looks like. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it. Yours will look different: [CodeCrew's own table](https://github.com/radiusred/gh-codecrew#2-four-seats-always-staffed) is in its README.
+Here is what a `roles:` section looks like. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it. Yours will look different: [CodeCrew's own table](https://github.com/radiusred/gh-codecrew#the-routing-table) is in its README.
 
 ```yaml
 roles:
