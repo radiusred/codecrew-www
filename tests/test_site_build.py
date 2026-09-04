@@ -43,6 +43,8 @@ INSTALL_LINE_MAX = 42
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
+# The crew section's example routing table, the only fenced block on the home page.
+TABLE_BLOCK = r'<div class="language-yaml highlight">.*?</div>'
 # The receipts: glyph, header, strapline, and the popover's detail with its link target.
 RECEIPTS = (
     ("milestone", "Every milestone shipped this way.", "Agent-authored, independently reviewed.",
@@ -399,9 +401,37 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
     assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
     assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the overlap stays at the tile's padding
-    lower = text(home).lower()
+    # The one place the page prints the bot logins is the example routing
+    # table below, where the block's own gloss makes them this project's
+    # routing choice rather than part of the framework. Everywhere else the
+    # M8 rule holds: role names in the copy, logins in link targets only.
+    outside_the_table = text(re.sub(TABLE_BLOCK, " ", home, flags=re.S)).lower()
     for name in CREW_MEMBER_NAMES:
-        assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
+        assert not re.search(rf"\b{name}\b", outside_the_table), name
+
+
+def test_crew_section_shows_the_example_routing_table(home: str):
+    """M10-R7: a concrete table where the seats are introduced.
+
+    It is an example, not a mirror — the hub's own table as it stands, and
+    another project's will not resemble it (the M10-R6 amendment on
+    radiusred/gh-codecrew#207). Nothing here compares it to a .codecrew.yml.
+    """
+    crew = section(home, "cc-crew")
+    assert len(re.findall(TABLE_BLOCK, home, re.S)) == 1  # the page's only fenced block, and it is here
+    assert len(re.findall(TABLE_BLOCK, crew, re.S)) == 1
+    lead, _, rest = crew.partition('<div class="language-yaml highlight">')
+    assert "routing table" in text(lead)  # it lands under the sentence that names one
+    assert "identity new reviewer" in rest  # and before the verb that mints a seat's holder
+    lines = code_lines(crew)
+    assert lines[0] == "roles:"
+    seats = [line.strip(" :") for line in lines if re.fullmatch(r"  [\w-]+:", line)]
+    assert tuple(seats) == CREW_ROLES  # a row per badge above, in the same order
+    keys = {line.split(":")[0].strip() for line in lines[1:]}
+    assert {"harness", "model", "identity"} <= keys  # what a row routes
+    assert "    identity: ~   # a human: the operator" in lines  # a seat a person holds
+    too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
+    assert not too_long, too_long  # the page's one ceiling for every code line
 
 
 def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):

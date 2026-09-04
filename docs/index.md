@@ -147,6 +147,29 @@ Four seats — implementer, reviewer, qa, doc-synthesizer — and a coordinator 
 
 A seat is held by you, by a colleague's username, by a GitHub team, or by a GitHub App identity minted for the job. Solo is not a degraded mode; it is the routing table with every seat pointing at you.
 
+Here is a worked example: the `roles:` section of this project's own `.codecrew.yml`, as it stands today. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it. Yours will look different.
+
+```yaml
+roles:
+  implementer:
+    harness: claude-code
+    model: claude-fable-5
+    identity: radiusred-cody
+  reviewer:
+    harness: codex
+    model: gpt-5.5
+    identity: radiusred-checky
+  qa:
+    harness: codex
+    model: gpt-5.5
+    identity: radiusred-testy
+  doc-synthesizer:
+    harness: claude-code
+    identity: radiusred-wordy
+  coordinator:
+    identity: ~   # a human: the operator
+```
+
 When you want the record to show *which* agent did what, one command mints a crew member:
 
 <p class="cc-crew__verb" markdown="span">`gh codecrew identity new reviewer`</p>
