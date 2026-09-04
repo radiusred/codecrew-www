@@ -79,11 +79,13 @@ HOME_SOURCE = "README.md"
 # The home page is the README's argument in page form, not a copy of it, so its
 # section ids are its own. README anchors cross over through this table; one it
 # does not know is dropped — the link still lands on the home page — and
-# reported, rather than left to dangle a --strict build breaks on.
+# reported, rather than left to dangle a --strict build breaks on. A row per
+# heading the README has and the home page answers: a heading the README lost
+# loses its row too, so a page still linking it is reported rather than quietly
+# redirected (gh-codecrew#235 cut the README to a landing page; #read-next has
+# no home-page counterpart and stays unmapped).
 HOME_ANCHORS = {
-    "#why-youd-want-a-crew": "",  # the hero is this section
-    "#how-it-works-in-four-beats": "#how-it-works",
-    "#the-receipts": "#codecrew-works",
+    "#the-routing-table": "#the-crew",  # the home page's own annotated table
     "#start-now": "#start-now",
 }
 

@@ -39,8 +39,8 @@ UPSTREAM = {
     "LICENSE": "Apache 2.0\n",
     "docs/introduction.md": (
         "# CodeCrew, precisely\n\n"
-        "The [landing page](../README.md), the [receipts](../README.md#the-receipts)\n"
-        "and [where it goes](../README.md#where-it-goes-from-here).\n"
+        "The [landing page](../README.md), the [table](../README.md#the-routing-table),\n"
+        "the [install](../README.md#start-now) and the [receipts](../README.md#the-receipts).\n"
         "Read [the spec](../SPEC.md#roles), [identities](identities.md) and the\n"
         "[records](milestones/) and [one record](milestones/1-first.md); the\n"
         "[changelog](../CHANGELOG.md), the [licence](../LICENSE) and the\n"
@@ -146,12 +146,17 @@ def test_a_page_in_a_subdirectory_reaches_the_index_and_the_home_page(upstream):
     assert rewrite_target("../identities.md", deep, is_image=False) == "../identities.md"
 
 
-def test_readme_links_land_on_the_home_page_with_its_own_anchors(upstream):
+def test_readme_links_land_on_the_home_page_with_its_own_anchors(upstream, capsys):
     sync()
     index = page("index.md")
     assert "[landing page](../index.md)" in index  # the site's home page, not a copy
-    assert "[receipts](../index.md#codecrew-works)" in index  # README anchor translated
-    assert "[where it goes](../index.md)" in index  # no counterpart section: anchor dropped
+    assert "[table](../index.md#the-crew)" in index  # README anchor translated to the home page's id
+    assert "[install](../index.md#start-now)" in index  # the one anchor both pages share
+    # A heading the README no longer has (gh-codecrew#235 cut the receipts) has
+    # no row: the anchor is dropped, the link lands on the home page, and the
+    # sync says so rather than redirecting a link that is dead upstream.
+    assert "[receipts](../index.md)" in index
+    assert "links README#the-receipts, which the home page has no section for" in capsys.readouterr().out
     assert "](../README.md" not in index  # no link to the file survives the move
 
 
