@@ -29,7 +29,7 @@ jobs:
         env:
           SYNC_SOURCE_BASE: _sources
       - run: python3 main.py
-      - run: zensical build --clean
+      - run: zensical build --clean --strict
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
