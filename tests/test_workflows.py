@@ -52,3 +52,19 @@ def test_the_deploy_syncs_then_builds_strict() -> None:
     ]
     assert order == sorted(order)
     assert blocks[order[-1]].splitlines()[0] == STRICT_BUILD
+
+
+def test_the_lint_check_calls_the_shared_action_under_the_required_context() -> None:
+    """The commitlint job is the thin caller radiusred/.github documents: a depth-0
+    checkout, then the shared action, from a job named exactly as the org ruleset
+    require-lint requires, with no commitlint config of this repo's own."""
+    text = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    job = re.search(r"\n  commitlint:\n(.*?)(?=\n  \w|\Z)", text, re.S)
+    assert job is not None, "ci.yml has no commitlint job"
+    assert "    name: Lint commit messages\n" in job.group(1)
+    assert "      pull-requests: read\n" in job.group(1)
+    blocks = steps("ci.yml")
+    checkout = the_step(blocks, "- uses: actions/checkout@", "fetch-depth: 0")
+    lint = the_step(blocks, "- uses: radiusred/.github/.github/actions/commitlint@")
+    assert checkout + 1 == lint
+    assert not list(WORKFLOWS.parent.parent.glob("commitlint.config.*"))

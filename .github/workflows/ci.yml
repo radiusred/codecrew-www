@@ -7,14 +7,21 @@ permissions:
   contents: read
 
 jobs:
+  # The thin caller radiusred/.github's CONTRIBUTING.md documents. The job
+  # name is the check context the org ruleset require-lint requires, so it
+  # stays exactly "Lint commit messages"; the action carries the commitlint
+  # config, so this repo has none.
   commitlint:
     name: Lint commit messages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v6
+      - uses: radiusred/.github/.github/actions/commitlint@main
 
   test:
     name: Tests

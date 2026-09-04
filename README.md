@@ -81,7 +81,9 @@ the Cloudflare zone configuration live as code in
 
 ## Commits
 
-Conventional commits, checked by commitlint on pull requests. This repo is
-a CodeCrew spoke of `radiusred/gh-codecrew` (see `.codecrew.yml`).
+Conventional commits, checked on pull requests through the shared commitlint
+action in [radiusred/.github](https://github.com/radiusred/.github) (the
+config lives there, not here). This repo is a CodeCrew spoke of
+`radiusred/gh-codecrew` (see `.codecrew.yml`).
 
 Licensed under [Apache 2.0](LICENSE).
