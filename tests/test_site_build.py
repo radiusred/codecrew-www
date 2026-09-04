@@ -8,8 +8,11 @@ the site source into a temp dir, runs the sync there, and builds in strict mode
 so any warning fails the build.
 
 The build needs the upstream on disk, since the nav and the hero's button both
-point into the synced section: the module skips without one. CI checks it out,
-so it never skips there.
+point into the synced section. Without one the module skips on a machine that
+never named a source, and fails when SYNC_SOURCE_BASE was set and points at
+nothing: CI sets it and checks the hub out under it, so an absence there is
+drift, and this strict build must not quietly stop running (see
+upstream_guard.py).
 """
 
 import html
@@ -22,28 +25,13 @@ from pathlib import Path
 
 import pytest
 
+from upstream_guard import absent_upstream, find_upstream
+
 ROOT = Path(__file__).resolve().parent.parent
-UPSTREAM_NAME = "gh-codecrew"
-
-
-def upstream_base() -> Path | None:
-    """The directory holding a radiusred/gh-codecrew checkout: what CI points
-    SYNC_SOURCE_BASE at, else the sibling directory a local clone sits in."""
-    configured = os.environ.get("SYNC_SOURCE_BASE")
-    candidate = Path(configured) if configured else ROOT.parent
-    if not candidate.is_absolute():
-        candidate = ROOT / candidate
-    return candidate.resolve() if (candidate / UPSTREAM_NAME).is_dir() else None
-
-
-UPSTREAM = upstream_base()
-pytestmark = pytest.mark.skipif(
-    UPSTREAM is None,
-    reason=(
-        "needs a radiusred/gh-codecrew checkout beside this repo (or "
-        "SYNC_SOURCE_BASE pointing at one): the docs section is synced from it"
-    ),
-)
+CONFIGURED = os.environ.get("SYNC_SOURCE_BASE") or None
+UPSTREAM = find_upstream(CONFIGURED, ROOT)
+if UPSTREAM is None:
+    pytestmark = pytest.mark.skip(reason=absent_upstream(CONFIGURED, ROOT))
 
 # Measured in headless Chromium at a 420px viewport (root font 20px, code
 # 12.8px JetBrains Mono, 16px of padding a side): the install block's code
