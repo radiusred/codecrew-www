@@ -44,6 +44,8 @@ STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 # The crew section's example routing table, the only fenced block on the home page.
+# Its identities are placeholders: the M8 rule keeps crew members off this page,
+# and the hub README carries the real table (operator, #19).
 TABLE_BLOCK = r'<div class="language-yaml highlight">.*?</div>'
 # The receipts: glyph, header, strapline, and the popover's detail with its link target.
 RECEIPTS = (
@@ -401,21 +403,18 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
     assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
     assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the overlap stays at the tile's padding
-    # The one place the page prints the bot logins is the example routing
-    # table below, where the block's own gloss makes them this project's
-    # routing choice rather than part of the framework. Everywhere else the
-    # M8 rule holds: role names in the copy, logins in link targets only.
-    outside_the_table = text(re.sub(TABLE_BLOCK, " ", home, flags=re.S)).lower()
+    lower = text(home).lower()
     for name in CREW_MEMBER_NAMES:
-        assert not re.search(rf"\b{name}\b", outside_the_table), name
+        assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
 
 
 def test_crew_section_shows_the_example_routing_table(home: str):
     """M10-R7: a concrete table where the seats are introduced.
 
-    It is an example, not a mirror — the hub's own table as it stands, and
-    another project's will not resemble it (the M10-R6 amendment on
-    radiusred/gh-codecrew#207). Nothing here compares it to a .codecrew.yml.
+    It is an example, not a mirror — what a routing table looks like, not
+    what any project runs (the M10-R6 amendment on radiusred/gh-codecrew#207,
+    and the operator's Decision on #19). Nothing here compares it to a
+    .codecrew.yml, and its identities are placeholders.
     """
     crew = section(home, "cc-crew")
     assert len(re.findall(TABLE_BLOCK, home, re.S)) == 1  # the page's only fenced block, and it is here
@@ -429,7 +428,9 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     assert tuple(seats) == CREW_ROLES  # a row per badge above, in the same order
     keys = {line.split(":")[0].strip() for line in lines[1:]}
     assert {"harness", "model", "identity"} <= keys  # what a row routes
-    assert "    identity: ~   # a human: the operator" in lines  # a seat a person holds
+    identities = [line.strip().removeprefix("identity: ").split("  ")[0] for line in lines if line.strip().startswith("identity:")]
+    assert identities == ["coder-bot", "review-bot", "qa-bot", "doc-bot", "~"]  # placeholders, and a seat a person holds
+    assert "    identity: ~   # a human: the operator" in lines  # the comment says so in the block
     too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
     assert not too_long, too_long  # the page's one ceiling for every code line
 
