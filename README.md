@@ -53,7 +53,10 @@ internal issue trackers or private repositories.
 defaulting to `../gh-codecrew` — so a sibling clone of the hub is all it
 needs. Without one it exits nonzero saying what to clone: the site cannot
 build without the section, because the home page's "Read the docs" button
-targets it. The site-build tests skip for the same reason.
+targets it. The site-build tests skip for the same reason when
+`SYNC_SOURCE_BASE` is unset; set it to a directory holding no checkout and
+they fail instead, since that is how CI runs them and a skip there would
+be the strict build quietly not running.
 
 ```sh
 uv sync
@@ -67,8 +70,10 @@ uv run pytest
 
 `.github/workflows/site.yml` runs on every push to `main`, daily at 00:05
 UTC, and on demand. It checks `radiusred/gh-codecrew` out under `_sources/`,
-runs the sync, builds with Zensical and publishes `site/` to GitHub Pages —
-so a docs change upstream reaches the site on the next scheduled build. `docs/CNAME` keeps the custom domain attached across deploys.
+runs the sync, builds with Zensical in strict mode and publishes `site/` to
+GitHub Pages — so a docs change upstream reaches the site on the next
+scheduled build, and one that breaks a link fails that build rather than
+publishing it. `docs/CNAME` keeps the custom domain attached across deploys.
 
 DNS for `codecrew.works` (a proxied CNAME to `radiusred.github.io`) and
 the Cloudflare zone configuration live as code in
