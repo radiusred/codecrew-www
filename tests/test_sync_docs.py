@@ -62,6 +62,7 @@ UPSTREAM = {
     "docs/identities.md": "# Identities: running solo, staffing a crew\n",
     "docs/extensions.md": "# Local extensions — `roles/<role>.local.md`\n",
     "docs/platform-interop.md": "# Platform interop: hosting a crew on a platform\n",
+    "docs/working-offline.md": "# Working offline\n",
     "docs/founding-decisions.md": "# Founding decisions\n",
     "docs/gsd-vs-frontier-orchestration.md": (
         '# GSD vs. "just let the model orchestrate": an assessment\n'
@@ -129,6 +130,7 @@ def test_the_docs_tree_and_the_four_root_files_land_the_readme_does_not(upstream
         "platform-interop.md",
         "security.md",
         "spec.md",
+        "working-offline.md",
     ]
     # introduction.md became the section index; README and AGENTS never synced.
     assert page("index.md").startswith("# CodeCrew, precisely")
@@ -270,6 +272,7 @@ def test_the_nav_block_holds_the_whole_section_in_order(upstream):
         '    { "Founding decisions" = "docs/founding-decisions.md" },',
         '    { "GSD vs. \\"just let the model orchestrate\\"" = "docs/gsd-vs-frontier-orchestration.md" },',
         '    { "CodeCrew CLI reference" = "docs/cli.md" },',
+        '    { "Working offline" = "docs/working-offline.md" },',
         '    { "CodeCrew Protocol Specification" = "docs/spec.md" },',
         '    { "Kept" = "docs/milestones-archive/kept.md" },',
         '    { "Contributing" = "docs/contributing.md" },',
@@ -283,17 +286,21 @@ def test_the_nav_block_holds_the_whole_section_in_order(upstream):
     assert config.index('"Home"') < config.index('"Docs"') < config.index('"Blog"')
 
 
-def test_the_reference_is_top_level_and_immediately_before_the_spec(upstream):
-    # M16-R2: the reference publishes top-level in the navigation, in the
-    # reading order docs/introduction.md prescribes — before the SPEC, not
-    # nested under it and not appended alphabetically after it.
+def test_the_reference_and_the_offline_page_run_top_level_up_to_the_spec(upstream):
+    # M16-R2 and M16-R4: both pages publish top-level in the navigation, in the
+    # reading order docs/introduction.md prescribes — 6. CLI.md, 7. Working
+    # offline, 8. SPEC.md — not nested and not appended alphabetically after
+    # the SPEC, which is where a page PAGE_ORDER does not know would land.
     sync()
     entries = nav_entries(DEST)
     targets = [target for _, target in entries]
     assert all(not isinstance(target, list) for target in targets)  # no sub-menu
-    assert targets.index("docs/cli.md") + 1 == targets.index("docs/spec.md")
-    label = next(label for label, target in entries if target == "docs/cli.md")
-    assert label == "CodeCrew CLI reference"  # the file's own H1
+    # One assertion per adjacency, so a regression names the pair that broke.
+    assert targets.index("docs/cli.md") + 1 == targets.index("docs/working-offline.md")
+    assert targets.index("docs/working-offline.md") + 1 == targets.index("docs/spec.md")
+    labels = dict((target, label) for label, target in entries)
+    assert labels["docs/cli.md"] == "CodeCrew CLI reference"  # each file's own H1
+    assert labels["docs/working-offline.md"] == "Working offline"
 
 
 def test_guide_labels_drop_a_subtitle(upstream):
