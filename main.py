@@ -98,14 +98,22 @@ def _published_posts():
 
 
 def regenerate_nav():
-    """Rewrite the blog-posts block in zensical.toml between sentinel markers."""
+    """Rewrite the blog-posts block in zensical.toml between sentinel markers.
+
+    The label is the post title and nothing else. A nav entry's key is the
+    page's nav title, and the theme reuses that for the document <title>,
+    the <h1> and the Open Graph and Twitter card titles -- so markup here
+    reaches the browser tab, the search result and the social preview as
+    literal text. The date belongs to the theme's rr-page-meta block, which
+    already prints "published on: ..." under the heading; the archive page
+    and the Atom feed carry it too.
+    """
     posts = _published_posts()
     visible = list(reversed(posts[:NAV_LIMIT]))
 
     new_lines = [f"{NAV_INDENT}{NAV_BEGIN}"]
-    for d, title, fname in visible:
-        safe_title = title.replace('"', '\\"')
-        label = f'{safe_title} <small class=\\"muted\\">({d.isoformat()})</small>'
+    for _, title, fname in visible:
+        label = title.replace('"', '\\"')
         new_lines.append(
             f'{NAV_INDENT}{{ "{label}" = "blog/posts/{fname}" }},'
         )

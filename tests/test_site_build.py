@@ -21,7 +21,9 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -485,6 +487,52 @@ def test_blog_keeps_the_default_layout(blog: str):
     assert "cc-button" not in blog
     assert "cc-section" not in blog
     assert "cc-footer" not in blog
+
+
+class Post(NamedTuple):
+    title: str  # as the front matter declares it
+    date: date  # likewise
+    page: str   # the built HTML
+
+
+@pytest.fixture(scope="module")
+def post(site: Path) -> Post:
+    """The newest published blog post: its front matter, and the page built from it."""
+    sources = sorted((ROOT / "docs" / "blog" / "posts").glob("*.md"))
+    assert sources, "no published post to render"
+    source = sources[-1]
+    front = source.read_text()
+    title = re.search(r"^title:\s*(.+?)\s*$", front, re.M).group(1).strip("\"'")
+    published = date.fromisoformat(re.search(r"^date:\s*(\S+)\s*$", front, re.M).group(1))
+    built = site / "blog" / "posts" / source.stem / "index.html"
+    return Post(title, published, built.read_text())
+
+
+def test_a_post_titles_itself_from_its_front_matter_and_carries_no_nav_markup(post: Post):
+    """The nav key is the page's title, so HTML in it lands in the tab, the
+    heading and the social card as literal text. main.py keeps the key plain;
+    the date is the rr-page-meta block's alone. Whether the theme prefers the
+    key or the front matter varies by zensical version, so the page-wide
+    <small check is what holds this whichever version resolves."""
+    title, page = post.title, post.page
+    assert "<small" not in page
+
+    doc_title = html.unescape(re.search(r"<title>(.*?)</title>", page, re.S).group(1)).strip()
+    assert doc_title == f"{title} - CodeCrew"
+
+    h1 = re.search(r"<h1[^>]*>(.*?)</h1>", page, re.S).group(1)
+    assert text(re.sub(r'<a class="headerlink".*?</a>', "", h1, flags=re.S)).strip() == title
+
+    for attr, name in (("property", "og:title"), ("name", "twitter:title")):
+        content = re.search(rf'{attr}="{name}" content="([^"]*)"', page).group(1)
+        assert html.unescape(content) == f"{title} - CodeCrew"
+
+
+def test_the_post_still_shows_its_date_once_in_the_meta_block(post: Post):
+    """Dropping the date from the nav loses nothing: the theme still prints it."""
+    meta = text(re.search(r'<div class="rr-page-meta">(.*?)</div>', post.page, re.S).group(1))
+    assert "published on:" in meta
+    assert post.date.strftime("%B") in meta and str(post.date.year) in meta
 
 
 @pytest.fixture(scope="module")
