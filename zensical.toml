@@ -18,6 +18,7 @@ nav = [
     { "Platform interop" = "docs/platform-interop.md" },
     { "Founding decisions" = "docs/founding-decisions.md" },
     { "GSD vs. \"just let the model orchestrate\"" = "docs/gsd-vs-frontier-orchestration.md" },
+    { "CodeCrew CLI reference" = "docs/cli.md" },
     { "CodeCrew Protocol Specification" = "docs/spec.md" },
     { "Contributing" = "docs/contributing.md" },
     { "Security" = "docs/security.md" },

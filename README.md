@@ -7,8 +7,8 @@ reports. A lightweight marketing site, nothing more.
 The product itself lives in
 [radiusred/gh-codecrew](https://github.com/radiusred/gh-codecrew), which
 stays the single source of truth for its documentation: `sync_docs.py`
-builds that repo's `docs/` tree, `SPEC.md`, `CONTRIBUTING.md` and
-`SECURITY.md` into `/docs/` here on every deploy. Nothing synced is
+builds that repo's `docs/` tree, `CLI.md`, `SPEC.md`, `CONTRIBUTING.md`
+and `SECURITY.md` into `/docs/` here on every deploy. Nothing synced is
 committed. `www.radiusred.uk` carries only the README as a project landing
 page and points here for the rest.
 

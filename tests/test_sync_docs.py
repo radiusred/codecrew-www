@@ -31,8 +31,17 @@ UPSTREAM = {
     "SPEC.md": (
         "# CodeCrew Protocol Specification\n\n"
         "See [founding decisions](docs/founding-decisions.md), the\n"
-        "[coordinator contract](roles/coordinator.md) and\n"
-        "[an agent](agent://<agent id>).\n"
+        "[coordinator contract](roles/coordinator.md), the\n"
+        "[CLI reference](CLI.md) and [an agent](agent://<agent id>).\n"
+    ),
+    # The reference's real link shapes: the refusal catalogue it cites on
+    # every verb, its own in-page anchors, and the licence, which does not sync.
+    "CLI.md": (
+        "# CodeCrew CLI reference\n\n"
+        "The protocol is [SPEC.md](SPEC.md); the codes are\n"
+        "[SPEC §10](SPEC.md#10-the-cli). Jump to\n"
+        "[`init`](#gh-codecrew-init) or the [common refusals](#common-refusals).\n"
+        "Licensed under [Apache 2.0](LICENSE).\n"
     ),
     "CONTRIBUTING.md": "# Contributing\n",
     "SECURITY.md": "# Security\n",
@@ -41,7 +50,8 @@ UPSTREAM = {
         "# CodeCrew, precisely\n\n"
         "The [landing page](../README.md), the [table](../README.md#the-routing-table),\n"
         "the [install](../README.md#start-now) and the [receipts](../README.md#the-receipts).\n"
-        "Read [the spec](../SPEC.md#roles), [identities](identities.md) and the\n"
+        "Read [the spec](../SPEC.md#roles), [the reference](../CLI.md),\n"
+        "[identities](identities.md) and the\n"
         "[records](milestones/) and [one record](milestones/1-first.md); the\n"
         "[changelog](../CHANGELOG.md), the [licence](../LICENSE) and the\n"
         "[logo](../assets/logo.webp) stay upstream.\n"
@@ -104,9 +114,10 @@ def nav_block(root):
     return text[start : text.index(sync_docs.NAV_END, start)].rstrip()
 
 
-def test_the_docs_tree_and_the_three_root_files_land_the_readme_does_not(upstream):
+def test_the_docs_tree_and_the_four_root_files_land_the_readme_does_not(upstream):
     assert sync() is True
     assert synced() == [
+        "cli.md",
         "contributing.md",
         "extensions.md",
         "first-milestone.md",
@@ -134,6 +145,30 @@ def test_links_between_synced_pages_resolve_on_site(upstream):
     assert "[identities](identities.md)" in index
     # SPEC.md sits at the repo root, so its docs/ links flatten into the section.
     assert "[founding decisions](founding-decisions.md)" in page("spec.md")
+
+
+def test_the_cli_reference_lands_beside_the_spec_and_its_links_resolve(upstream):
+    sync()
+    reference = page("cli.md")
+    assert reference.startswith("# CodeCrew CLI reference")
+    # Two root files at the same depth: the reference reaches the catalogue it
+    # cites on every verb, fragment intact.
+    assert "[SPEC §10](spec.md#10-the-cli)" in reference
+    assert "[SPEC.md](spec.md)" in reference
+    # Its own in-page anchors are anchors, not paths, and are left alone.
+    assert "[`init`](#gh-codecrew-init)" in reference
+    assert "[common refusals](#common-refusals)" in reference
+    # The licence does not sync, so it goes to GitHub like any other such file.
+    assert f"[Apache 2.0]({GITHUB}/blob/main/LICENSE)" in reference
+
+
+def test_links_to_the_reference_stop_going_to_github(upstream):
+    # The other direction: the hub's pages cite CLI.md throughout, and once it
+    # syncs those links resolve on-site rather than sending a reader to GitHub.
+    sync()
+    assert "[the reference](cli.md)" in page("index.md")  # ../CLI.md from docs/
+    assert "[CLI reference](cli.md)" in page("spec.md")  # CLI.md from the root
+    assert "blob/main/CLI.md" not in page("index.md") + page("spec.md")
 
 
 def test_a_page_in_a_subdirectory_reaches_the_index_and_the_home_page(upstream):
@@ -234,6 +269,7 @@ def test_the_nav_block_holds_the_whole_section_in_order(upstream):
         '    { "Platform interop" = "docs/platform-interop.md" },',
         '    { "Founding decisions" = "docs/founding-decisions.md" },',
         '    { "GSD vs. \\"just let the model orchestrate\\"" = "docs/gsd-vs-frontier-orchestration.md" },',
+        '    { "CodeCrew CLI reference" = "docs/cli.md" },',
         '    { "CodeCrew Protocol Specification" = "docs/spec.md" },',
         '    { "Kept" = "docs/milestones-archive/kept.md" },',
         '    { "Contributing" = "docs/contributing.md" },',
@@ -245,6 +281,19 @@ def test_the_nav_block_holds_the_whole_section_in_order(upstream):
     # The Docs tab sits between Home and Blog, and nothing outside the markers moved.
     config = (upstream / "zensical.toml").read_text(encoding="utf-8")
     assert config.index('"Home"') < config.index('"Docs"') < config.index('"Blog"')
+
+
+def test_the_reference_is_top_level_and_immediately_before_the_spec(upstream):
+    # M16-R2: the reference publishes top-level in the navigation, in the
+    # reading order docs/introduction.md prescribes — before the SPEC, not
+    # nested under it and not appended alphabetically after it.
+    sync()
+    entries = nav_entries(DEST)
+    targets = [target for _, target in entries]
+    assert all(not isinstance(target, list) for target in targets)  # no sub-menu
+    assert targets.index("docs/cli.md") + 1 == targets.index("docs/spec.md")
+    label = next(label for label, target in entries if target == "docs/cli.md")
+    assert label == "CodeCrew CLI reference"  # the file's own H1
 
 
 def test_guide_labels_drop_a_subtitle(upstream):
