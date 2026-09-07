@@ -5,8 +5,15 @@
   <link href="https://codecrew.works/blog/atom.xml" rel="self" />
   <link href="https://codecrew.works/blog/" rel="alternate" />
   <id>https://codecrew.works/blog/</id>
-  <updated>2026-09-02T16:04:30.832081Z</updated>
+  <updated>2026-09-07T00:00:00Z</updated>
   <author>
     <name>Radius Red Ltd.</name>
   </author>
+  <entry>
+    <title>Protocol 2.0: CodeCrew Moves Out of Your Repository's Root</title>
+    <link href="https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/" rel="alternate" />
+    <id>https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/</id>
+    <updated>2026-09-07T00:00:00Z</updated>
+    <summary>CodeCrew's first protocol major moves every file it owns under .codecrew/, refuses the old layout outright rather than shipping a compatibility shim, and hands adopters a one-shot migrate verb — here is why it broke, what you run, and what an evening of migrating a ten-repository fleet taught the release that followed.</summary>
+  </entry>
 </feed>
