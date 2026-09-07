@@ -10,6 +10,7 @@ What lands where (repo-root-relative source -> path under docs/docs/):
 
     docs/introduction.md   -> index.md          (/docs/)
     docs/**                -> **                (/docs/**, minus EXCLUDE)
+    CLI.md                 -> cli.md
     SPEC.md                -> spec.md
     CONTRIBUTING.md        -> contributing.md
     SECURITY.md            -> security.md
@@ -70,6 +71,7 @@ EXCLUDE = ("milestones/",)
 
 # Root-of-repo files that sync alongside the docs/ tree.
 ROOT_FILE_MAP = {
+    "CLI.md": "cli.md",
     "SPEC.md": "spec.md",
     "CONTRIBUTING.md": "contributing.md",
     "SECURITY.md": "security.md",
@@ -126,6 +128,7 @@ PAGE_ORDER = (
     "platform-interop.md",
     "founding-decisions.md",
     "gsd-vs-frontier-orchestration.md",
+    "cli.md",
     "spec.md",
 )
 TRAILING_PAGES = (("contributing.md", "Contributing"), ("security.md", "Security"))

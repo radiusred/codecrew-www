@@ -571,6 +571,7 @@ def test_every_docs_nav_target_has_a_built_page(site: Path):
     targets = re.findall(r'"(docs/[^"]+\.md)"', block)
     assert len(targets) >= 10, targets  # the whole section, not a stub
     assert "docs/spec.md" in targets and "docs/contributing.md" in targets
+    assert targets.index("docs/cli.md") + 1 == targets.index("docs/spec.md")  # M16-R2
     assert not any("milestones" in target for target in targets)  # excluded
     for target in targets:
         rel = target.removesuffix(".md").removesuffix("/index")
@@ -589,6 +590,7 @@ def test_the_synced_links_resolve_on_site(docs_index: str, home: str):
         assert fragment in HOME_ANCHORS.values(), fragment
         assert f'id="{fragment[1:]}"' in home, fragment
     assert '<a href="spec/">' in docs_index  # ../SPEC.md, now on-site
+    assert '<a href="cli/">' in docs_index  # ../CLI.md, likewise
     # A file that did not sync still points at the repo.
     assert "github.com/radiusred/gh-codecrew/blob/main/CHANGELOG.md" in docs_index
     assert "README.md" not in docs_index
