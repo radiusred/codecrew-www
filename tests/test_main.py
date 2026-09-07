@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -61,3 +62,15 @@ def test_empty_blog_still_generates(site: Path):
     main.main()
     assert (site / "docs/blog/archive.md").exists()
     assert "<feed" in (site / "docs/blog/atom.xml").read_text()
+
+
+def test_nav_label_is_the_plain_title_with_no_markup(site: Path):
+    """A nav key becomes the page's <title> and <h1>, so it carries no HTML."""
+    today = date.today()
+    post(site / "docs/blog/posts/2026-03-01-plain.md", "A Plain Title", today)
+    main.regenerate_nav()
+    cfg = (site / "zensical.toml").read_text()
+    label = re.search(r'\{ "(.*)" = "blog/posts/2026-03-01-plain\.md" \}', cfg).group(1)
+    assert label == "A Plain Title"
+    assert "<" not in label and "small" not in label
+    assert today.isoformat() not in label
