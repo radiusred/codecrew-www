@@ -129,6 +129,7 @@ PAGE_ORDER = (
     "founding-decisions.md",
     "gsd-vs-frontier-orchestration.md",
     "cli.md",
+    "working-offline.md",
     "spec.md",
 )
 TRAILING_PAGES = (("contributing.md", "Contributing"), ("security.md", "Security"))

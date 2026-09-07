@@ -571,7 +571,10 @@ def test_every_docs_nav_target_has_a_built_page(site: Path):
     targets = re.findall(r'"(docs/[^"]+\.md)"', block)
     assert len(targets) >= 10, targets  # the whole section, not a stub
     assert "docs/spec.md" in targets and "docs/contributing.md" in targets
-    assert targets.index("docs/cli.md") + 1 == targets.index("docs/spec.md")  # M16-R2
+    # The reading order docs/introduction.md prescribes: M16-R2 put the
+    # reference before the SPEC, M16-R4 the offline page between the two.
+    assert targets.index("docs/cli.md") + 1 == targets.index("docs/working-offline.md")
+    assert targets.index("docs/working-offline.md") + 1 == targets.index("docs/spec.md")
     assert not any("milestones" in target for target in targets)  # excluded
     for target in targets:
         rel = target.removesuffix(".md").removesuffix("/index")
