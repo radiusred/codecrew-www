@@ -21,7 +21,7 @@ What Projects does well, from the announcement, is exactly the part of the job t
 
 CodeCrew was never the orchestrator. Paperclip runs our crew; so does a cron job; so does an operator at a terminal typing `codex exec`. CodeCrew is [the protocol](https://github.com/radiusred/gh-codecrew/blob/main/SPEC.md) those runs follow, and the announcement leaves the protocol's actual claims exactly where they were. Four of them are worth spelling out.
 
-**The record lives in the open.** Projects build memory: Claude "remembers project details, decisions, and communication preferences," and a Library collects files and artefacts. Useful. Also per-account and opaque. CodeCrew's plan, decisions, gates and verdicts are issue comments and pull-request reviews, written the moment they happen, readable by anyone with access to the repository and by any other vendor's agent that gets dispatched there. When this post says "the operator decided", there is a comment with a timestamp behind it. That is not a property you can add to a memory system later; it is a choice about where the truth lives.
+**The record lives in the open.** Projects build memory: over time Claude "learns more about the project details", can remember "why the export was dropped", and "also remembers your working and communication style"; a Library collects files and artefacts. Useful. Also per-account and opaque. CodeCrew's plan, decisions, gates and verdicts are issue comments and pull-request reviews, written the moment they happen, readable by anyone with access to the repository and by any other vendor's agent that gets dispatched there. When this post says "the operator decided", there is a comment with a timestamp behind it. That is not a property you can add to a memory system later; it is a choice about where the truth lives.
 
 **Nobody reviews their own work.** Read that quoted sentence again: the coordinator delegates the work and then "reviews the outputs." The same actor. CodeCrew's rule, from the first milestone, is that the implementer never verifies or approves what it built, and since protocol 2.0 that rule is enforced by GitHub rather than by good intentions: the reviewer and QA seats hold [typed identities](https://github.com/radiusred/gh-codecrew/blob/main/docs/identities.md), an approval from the wrong login does not satisfy the gate, and `task finish` refuses rather than merges. A coordinator that reviews its own threads' output is a reasonable product default. It is not separation of duties.
 
@@ -29,7 +29,7 @@ CodeCrew was never the orchestrator. Paperclip runs our crew; so does a cron job
 
 **Asking a human is a protocol event, not a UI affordance.** Projects lets you steer from mobile and set how often Claude checks in. CodeCrew raises `cc:needs-decision`, and every seat, on every orchestrator, stops when it sees it. That label is a contract an orchestrator can branch on. A notification is something a person may or may not read.
 
-There is one more, smaller point for the readers this site is actually written for. The beta is Pro and Max only; Team and Enterprise come "later". The people most likely to need auditable separation of duties are, for now, the people who cannot switch it on.
+There is one more, smaller point for the readers this site is actually written for. The beta is Pro and Max only; Team and Enterprise plans "come after that". The people most likely to need auditable separation of duties are, for now, the people who cannot switch it on.
 
 ## The experiment we want to run
 
