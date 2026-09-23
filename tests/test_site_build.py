@@ -203,6 +203,8 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert "Agent-driven software delivery" in hero
     assert "CodeCrew is an engineering process framework, and a small one" in hero
     assert "the answer is in a chat transcript nobody saved" in hero  # the antecedent
+    assert "the record and the separation of duties are not" in hero  # M17-R2, the post's line
+    assert 'href="blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/"' in hero
     assert "Decisions and deviations" not in hero  # said once, in the Why panel
     assert 'href="#start-now"' in hero  # primary call to action
     assert 'href="docs/"' in hero  # the docs on this site, not the README on GitHub

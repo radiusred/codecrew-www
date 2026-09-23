@@ -19,7 +19,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 # Agent-driven software delivery, with the receipts kept in GitHub. { .cc-hero__headline }
 
-<p class="cc-hero__sub" markdown="span">You have run a coding agent on a real codebase. Three weeks later somebody asks why the retry logic looks like that, and the answer is in a chat transcript nobody saved. CodeCrew is an engineering process framework, and a small one: **the record is the work.**</p>
+<p class="cc-hero__sub" markdown="span">You have run a coding agent on a real codebase. Three weeks later somebody asks why the retry logic looks like that, and the answer is in a chat transcript nobody saved. The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); the record and the separation of duties are not. CodeCrew is an engineering process framework, and a small one: **the record is the work.**</p>
 
 <p class="cc-cta" markdown="span">[Start now](#start-now){ .cc-button .cc-button--primary } [Read the docs](docs/index.md){ .cc-button }</p>
 
