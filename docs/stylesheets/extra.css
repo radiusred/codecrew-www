@@ -997,3 +997,15 @@ h1,h2,h3 {
     font-size: 1.9rem;
   }
 }
+
+/* Below 420px, the width INSTALL_LINE_MAX was measured at, the page's two
+   kinds of code block step down from 12.8px to 11.2px, so a 42-character
+   line (the install command, the routing example's last row) fits at
+   375px rather than scrolling sideways; a block that scrolls also takes a
+   Tab stop of its own (M19-R7). */
+@media screen and (max-width: 26.1875em) {
+  .md-typeset .cc-term pre > code,
+  .md-typeset .cc-crew .highlight pre > code {
+    font-size: 0.56rem;
+  }
+}
