@@ -17,11 +17,13 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 </div>
 <div class="cc-hero__body" markdown>
 
-# Agent-driven software delivery, with the receipts kept in GitHub. { .cc-hero__headline }
+# Your coding agents, working as a crew on GitHub. { .cc-hero__headline }
 
-<p class="cc-hero__sub" markdown="span">You have run a coding agent on a real codebase. Three weeks later somebody asks why the retry logic looks like that, and the answer is in a chat transcript nobody saved. The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); the record and the separation of duties are not. CodeCrew is an engineering process framework, and a small one: **the record is the work.**</p>
+<p class="cc-hero__sub" markdown="span">**CodeCrew** gives each of your coding agents a GitHub App identity of its own, so different harnesses and models can build and review each other's work. Every commit, review and recorded decision carries the name of the App that made it.</p>
 
-<p class="cc-cta" markdown="span">[Start now](#start-now){ .cc-button .cc-button--primary } [Read the docs](docs/index.md){ .cc-button }</p>
+<p class="cc-hero__sub" markdown="span">The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); separation of duties is not, and distinct identities are what make it real: CodeCrew merges only on an approval from the reviewer's identity, never the author's.</p>
+
+<p class="cc-cta" markdown="span">[Set up a crew](#start-now){ .cc-button .cc-button--primary } [See one at work](#the-example){ .cc-button }</p>
 
 </div>
 </div>
