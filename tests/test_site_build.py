@@ -1007,6 +1007,38 @@ def test_the_shut_home_drawer_is_out_of_the_tab_order(home: str, blog: str, docs
     assert "visibility 0s 0.2s" in shut  # hidden only once it has slid out
 
 
+def test_the_home_burger_is_a_keyboard_control(home: str, blog: str, docs_index: str):
+    """Below the breakpoint the theme's burger is a <label for="__drawer"> with no Tab stop,
+    so a keyboard could not open the drawer. On the home page a script makes it a button
+    that controls the drawer and keeps its expanded state (M19-R7); the other pages keep
+    the theme's burger (#58). Without JavaScript the markup is the theme's, unchanged."""
+    assert 'id="cc-drawer"' in re.search(r'<div class="md-sidebar md-sidebar--primary[^>]*>', home).group(0)
+    burger = re.search(r'<label class="md-header__button md-icon" for="__drawer"[^>]*>', home).group(0)
+    assert 'aria-label="' in burger  # the theme's accessible name stays
+    assert "tabindex" not in burger and "role=" not in burger  # added at runtime, so no-JS is as before
+    footer = home[home.index('<footer class="md-footer cc-footer">') :]
+    script = re.search(r"<script>(.*?)</script>", footer, re.S).group(1)
+    for hook in (
+        'label.md-header__button[for="__drawer"]',  # the theme's burger
+        'getElementById("__drawer")',  # the theme's toggle
+        'setAttribute("role", "button")',
+        'setAttribute("tabindex", "0")',
+        'setAttribute("aria-controls", "cc-drawer")',
+        '"aria-expanded"',
+        '"change"',  # kept in step however the toggle moves (burger, overlay)
+        'event.key === "Enter" || event.key === " "',
+        'event.key === "Escape"',
+        "p.burger.focus()",  # Escape hands focus back to the burger
+        "window.document$",  # re-run on instant navigation, and undone off the home page
+        "removeAttribute",
+    ):
+        assert hook in script, hook
+    # Inside the container, whose scripts the theme re-runs on instant navigation.
+    assert home.index("<script>", home.index('class="md-footer cc-footer"')) < home.index('<div class="md-dialog"')
+    for page in (blog, docs_index):
+        assert "cc-drawer" not in page and 'aria-controls="cc-drawer"' not in page
+
+
 def test_no_page_offers_a_burger_with_nothing_behind_it(home: str, blog: str, docs_index: str):
     # The bug in #9 was exactly this pair coming apart on one page: the header
     # renders the toggle unconditionally, the template decided the panel.
