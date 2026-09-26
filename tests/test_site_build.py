@@ -53,7 +53,7 @@ EXAMPLE_CREW = ("cody", "checky")
 # Its identities are made-up, typed placeholders: the M8 rule keeps crew members off
 # this page, and the page no longer points at the hub's real table (M19-R1, #44).
 TABLE_BLOCK = r'<div class="language-yaml highlight">.*?</div>'
-# The receipts: glyph, header, strapline, and the popover's detail with its link target.
+# The receipts: glyph, header, strapline, and the visible detail with its link target (M19-R4).
 RECEIPTS = (
     ("milestone", "Every milestone shipped this way.", "Agent-authored, independently reviewed.",
      "deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each", "https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones"),
@@ -64,6 +64,17 @@ RECEIPTS = (
     ("network", "It scales from solo, to a team, to an orchestration platform.", "Same protocol, any routing table.",
      "with a dedicated coordinator agent from the first event", "https://github.com/radiusred/gh-codecrew/issues/164"),
 )
+# The PR the proof's screenshots show, and the GitHub events its visible text links (#48).
+PROOF_PR = "https://github.com/radiusred/snake/pull/6"
+PROOF_LINKS = {
+    "change request": PROOF_PR + "#pullrequestreview-5058697880",
+    "fix commit": PROOF_PR + "/commits/c1c26e581b4843830c5c9ebd16f69648bf281865",
+    "fix answer": PROOF_PR + "#issuecomment-5463789260",
+    "approval": PROOF_PR + "#pullrequestreview-5058716626",
+}
+PROOF_AUTHOR, PROOF_REVIEWER = "radiusred-cody[bot]", "radiusred-checky[bot]"
+# Character-exact from the change-request review.
+PROOF_FINDING_QUOTE = "Two plan-level assertions are weakened in the shipped tests"
 # The crew popovers: the opening of each contract in radiusred/gh-codecrew's roles/<role>.md,
 # reused verbatim (copied at the hub's main of 2026-09-03; the hub is not on CI's disk).
 ROLE_OPENINGS = {
@@ -380,24 +391,65 @@ def squash(s: str) -> str:
     return re.sub(r" ([.,;:])", r"\1", " ".join(s.split()))
 
 
-def test_proof_caption_heading_and_uniform_receipt_cards(home: str):
+def test_proof_names_the_pr_its_apps_the_finding_and_the_fix(home: str):
+    """M19-R4: the proof can be checked without hovering. Visible text under the screenshots
+    names the PR, its author App and reviewer App, the finding and the fix, and links the review."""
     proof = section(home, "cc-proof")
     assert re.search(r'<h2 id="codecrew-works">CodeCrew Works<a class="headerlink"', proof)  # nothing linked the old id
-    caption = re.search(r'<p class="cc-captures__caption">(.*?)</p>', proof, re.S).group(1)
-    assert squash(text(caption)) == "A pull request merged after a change request. Author and reviewer are CodeCrew App identities."
-    assert '<a href="#the-crew">CodeCrew App identities</a>' in caption
-    assert 'id="the-crew"' in section(home, "cc-crew")
-    cards = re.split(r'<div class="cc-receipt cc-pop" tabindex="0">', proof)[1:]
-    assert len(cards) == 4 and proof.count('class="cc-receipt ') == 4 and 'class="cc-receipt"' not in proof  # every receipt is a trigger
+    assert "cc-captures__caption" not in proof  # the generic caption is gone
+    case = proof_case(proof)
+    assert proof.index('class="cc-captures"') < proof.index('class="cc-proof__case"') < proof.index('class="cc-receipts"')
+    words = squash(text(case))
+    assert f'href="{PROOF_PR}"' in case and "radiusred/snake#6" in words  # the PR, named and linked
+    assert f"written by the App {PROOF_AUTHOR}" in words
+    assert f"reviewed by the App {PROOF_REVIEWER}" in words
+    for what, href in PROOF_LINKS.items():
+        assert f'href="{href}"' in case, what  # straight to each event on GitHub
+    finding = squash(text(re.search(r'<li class="cc-proof__finding">(.*?)</li>', case, re.S).group(1)))
+    assert f"\u201c{PROOF_FINDING_QUOTE}\u201d" in finding  # quoted exactly
+    assert "Score: 1" in finding and "moved up" in finding  # both findings, in words
+    fix = squash(text(re.search(r'<li class="cc-proof__fix">(.*?)</li>', case, re.S).group(1)))
+    assert "Score: 1" in fix and "(10,10) to (10,9)" in fix
+    approval = squash(text(re.search(r'<li class="cc-proof__approval">(.*?)</li>', case, re.S).group(1)))
+    assert "c1c26e5" in approval and "approved" in approval
+    assert '<a href="#the-example">' in case and 'id="the-example"' in section(home, "cc-example")  # what it proves
+    for model in ("Claude", "Codex", "GPT", "Opus", "Sonnet"):
+        assert model not in words, model  # no harness or model claimed for a PR that does not record one
+
+
+def test_proof_receipts_are_visible_text(home: str):
+    """M19-R4: every receipt's substance is on the page, not in a pop-over."""
+    proof = section(home, "cc-proof")
+    assert "cc-pop" not in proof and "tabindex" not in proof  # nothing in the proof hides behind hover or focus
+    cards = re.split(r'<div class="cc-receipt">', proof)[1:]
+    assert len(cards) == 4 and proof.count('class="cc-receipt"') == 4
     for card, (glyph, header, strap, detail, href) in zip(cards, RECEIPTS):
         glyph_p = re.search(r'<p class="cc-receipt__glyph">(.*?)</p>', card, re.S).group(1)
         assert glyph_p.count('<span class="twemoji">') == 1
         assert f"<p><strong>{header}</strong></p>" in card
         assert f'<p class="cc-receipt__strap">{strap}</p>' in card
-        panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', card, re.S).group(1)
-        assert detail in squash(text(panel)) and f'href="{href}"' in panel
-        assert card.index("cc-receipt__glyph") < card.index("<strong>") < card.index("cc-receipt__strap") < card.index("cc-pop__panel")
-    assert "cody" not in text(proof).lower() and "checky" not in text(proof).lower()  # role names only
+        body = re.search(r'<div class="cc-receipt__detail">(.*?)</div>', card, re.S).group(1)
+        assert detail in squash(text(body)) and f'href="{href}"' in body
+        assert card.index("cc-receipt__glyph") < card.index("<strong>") < card.index("cc-receipt__strap") < card.index("cc-receipt__detail")
+    staffed = squash(text(cards[2]))
+    assert "on a private repo, branch protection needs a paid GitHub plan" in staffed  # the claim's plan-tier qualifier
+    orchestrator = cards[3]
+    for href in ("https://github.com/radiusred/numberguess", "https://github.com/radiusred/snake",
+                 "https://github.com/radiusred/gh-codecrew/issues/119", "https://github.com/radiusred/gh-codecrew/issues/164"):
+        assert f'href="{href}"' in orchestrator, href  # the orchestrator receipt, visible with its links
+    assert "radiusred/numberguess" in text(orchestrator) and "radiusred/snake" in text(orchestrator)
+    words = text(re.sub(r'<div class="cc-proof__case">.*?</div>', "", proof, flags=re.S)).lower()
+    assert "cody" not in words and "checky" not in words  # the receipts keep to role names
+    not_yet = re.search(r'<p class="cc-proof__not-yet">(.*?)</p>', proof, re.S).group(1)
+    assert squash(text(not_yet)) == "Not yet: any backend other than GitHub, or GitHub Enterprise Server."
+    assert proof.index("cc-receipts") < proof.index("cc-proof__not-yet")
+
+
+def proof_case(proof: str) -> str:
+    """The proof's case block: the visible account of the PR the screenshots show."""
+    match = re.search(r'<div class="cc-proof__case">(.*?)</div>', proof, re.S)
+    assert match, "cc-proof__case"
+    return match.group(1)
 
 
 def test_crew_badges_open_popovers_quoting_the_contracts(home: str):
@@ -421,13 +473,12 @@ def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, 
     lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
     assert "z-index: 5" in lift  # ...and the open trigger, a stacking context, ranks above them all
     assert "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift  # the crew badges' ring, unchanged
-    receipts_lift = rule(css, ".cc-receipts .cc-pop:hover, .cc-receipts .cc-pop:focus-within")
-    assert receipts_lift.strip() == "outline-color: transparent;"  # the receipts lose the ring and keep the lift
+    assert ".cc-receipts .cc-pop" not in css  # the receipts carry no pop-over now (M19-R4)
     assert "background: #ffffff" in panel and "box-shadow: 0 0.8rem 2rem #0a001259" in panel  # raised: white, firmer shadow
     assert "background: var(--cc-purple-light)" in rule(css, '[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel')
     assert "font-size: 0.95rem" in panel
-    assert "top: calc(100% - 1.5rem)" in panel  # overlaps the card's bottom rather than gapping below it
-    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the tile's padding only
+    assert "top: calc(100% - 0.5rem)" in panel  # overlaps the badge tile's padding only
+    assert "calc(100% - 1.5rem)" not in css  # the receipts' deeper overlap went with their pop-overs
     assert "translateY(-2px)" in lift and "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift
     assert ".cc-pop:focus-visible" not in css  # no state brighter than the sustained one
     assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
@@ -447,16 +498,22 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     badge = rule(css, ".md-typeset .cc-crew__badge img")
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
     assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
-    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the overlap stays at the tile's padding
+    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-pop .cc-pop__panel")  # the overlap stays at the tile's padding
     # The M8 rule keeps crew members off the product page, bot logins in link targets only.
     # The operator's approval of M19-R3 lifts it for Cody and Checky in the worked example
-    # alone (#46); everywhere else, and for the other two everywhere, it stands.
-    elsewhere = text(home.replace(section(home, "cc-example"), "")).lower()
+    # alone (#46), and for their two Apps in the proof's case block, which names the PR's
+    # author and reviewer (M19-R4, #48); everywhere else, and for the other two everywhere,
+    # it stands.
+    case = proof_case(section(home, "cc-proof"))
+    elsewhere = text(home.replace(section(home, "cc-example"), "").replace(case, "")).lower()
     for name in CREW_MEMBER_NAMES:
         assert not re.search(rf"\b{name}\b", elsewhere), name
     example = text(section(home, "cc-example")).lower()
     for name in CREW_MEMBER_NAMES:
         assert bool(re.search(rf"\b{name}\b", example)) == (name in EXAMPLE_CREW), name
+    apps = re.findall(r"\bradiusred-(\w+)\[bot\]", text(case))
+    assert set(apps) == set(EXAMPLE_CREW)  # the case block names the two Apps, by login
+    assert not re.search(r"\b(testy|wordy)\b", text(case).lower())
 
 
 def test_crew_section_shows_the_example_routing_table(home: str):
