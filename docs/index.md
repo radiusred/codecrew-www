@@ -5,7 +5,8 @@ hide:
   - toc
   - footer
 title: CodeCrew
-description: Agent-driven software delivery, with the receipts kept in GitHub. A protocol, five role contracts, and a gh extension CLI.
+description: Give each coding agent its own GitHub App identity, so different harnesses and models can build and review each other's work, with the record kept in GitHub.
+tagline: Your coding agents, working as a crew on GitHub
 ---
 
 <section class="cc-section cc-hero" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" markdown>
