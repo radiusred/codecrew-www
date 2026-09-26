@@ -231,56 +231,68 @@ One repo is the hub: the contracts, the routing table and the milestone issues. 
 <figure class="cc-capture"><img src="assets/images/proof/pr-review-bottom.webp" alt="The lower half of the same pull request: the reviewer App's two findings and the implementer App's answer to both." width="1626" height="1647" loading="lazy"></figure>
 </div>
 
-<p class="cc-captures__caption" markdown="span">A pull request merged after a change request. Author and reviewer are [CodeCrew App identities](#the-crew).</p>
+<div class="cc-proof__case" markdown>
+
+<p class="cc-proof__lead" markdown="span">The pull request above is [radiusred/snake#6](https://github.com/radiusred/snake/pull/6), written by the App `radiusred-cody[bot]` and reviewed by the App `radiusred-checky[bot]`. Every step is on GitHub:</p>
+
+<ul class="cc-proof__steps" markdown>
+<li class="cc-proof__finding" markdown="span">**The finding.** [The review requested changes](https://github.com/radiusred/snake/pull/6#pullrequestreview-5058697880): “Two plan-level assertions are weakened in the shipped tests”. The game-over test accepted any final score where the task's plan promised `Score: 1`, and the ArrowUp test only checked that the score stayed at 0, never that the snake moved up.</li>
+<li class="cc-proof__fix" markdown="span">**The fix.** [A second commit](https://github.com/radiusred/snake/pull/6/commits/c1c26e581b4843830c5c9ebd16f69648bf281865), [explained on the PR](https://github.com/radiusred/snake/pull/6#issuecomment-5463789260): the test harness now places food deterministically, so the test asserts exactly `Score: 1`, and it records what the game draws, so the test asserts the head moves from (10,10) to (10,9).</li>
+<li class="cc-proof__approval" markdown="span">**The approval.** [Re-reviewed at `c1c26e5` and approved](https://github.com/radiusred/snake/pull/6#pullrequestreview-5058716626), then merged.</li>
+</ul>
+
+<p class="cc-proof__example" markdown="span">It is the loop [the worked example](#the-example) walks through, on a real repository.</p>
+
+</div>
 
 <div class="cc-receipts" markdown>
-<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<div class="cc-receipt" markdown>
 <p class="cc-receipt__glyph" markdown="span">:lucide-milestone:</p>
 
 **Every milestone shipped this way.**
 
 <p class="cc-receipt__strap" markdown="span">Agent-authored, independently reviewed.</p>
 
-<div class="cc-pop__panel" markdown>
+<div class="cc-receipt__detail" markdown>
 
 Agent-authored PRs under GitHub App identities, independent review, deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
 
 </div>
 </div>
-<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<div class="cc-receipt" markdown>
 <p class="cc-receipt__glyph" markdown="span">:lucide-megaphone:</p>
 
 **The first spoke published its own announcement.**
 
 <p class="cc-receipt__strap" markdown="span">Driven from the hub, in public.</p>
 
-<div class="cc-pop__panel" markdown>
+<div class="cc-receipt__detail" markdown>
 
 [radiusred/www](https://github.com/radiusred/www) is driven from the hub through the installed extension; its first delivery was [a blog post introducing CodeCrew, delivered by the protocol it describes](https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/).
 
 </div>
 </div>
-<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<div class="cc-receipt" markdown>
 <p class="cc-receipt__glyph" markdown="span">:lucide-bot:</p>
 
 **This project is agent-staffed, and you can check.**
 
 <p class="cc-receipt__strap" markdown="span">Four seats, four App identities.</p>
 
-<div class="cc-pop__panel" markdown>
+<div class="cc-receipt__detail" markdown>
 
-Four App identities hold the four seats. A reviewer App minted with write access satisfies GitHub's own required-review rule, which is what makes a fully agent-gated merge possible. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
+Four App identities hold the four seats. A reviewer App minted with write access satisfies GitHub's own required-review rule, which is what makes a fully agent-gated merge possible; on a private repo, branch protection needs a paid GitHub plan. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
 
 </div>
 </div>
-<div class="cc-receipt cc-pop" tabindex="0" markdown>
+<div class="cc-receipt" markdown>
 <p class="cc-receipt__glyph" markdown="span">:lucide-network:</p>
 
 **It scales from solo, to a team, to an orchestration platform.**
 
 <p class="cc-receipt__strap" markdown="span">Same protocol, any routing table.</p>
 
-<div class="cc-pop__panel" markdown>
+<div class="cc-receipt__detail" markdown>
 
 A Paperclip company — four role agents under a CEO, each on its own App identity — ran three milestones on [radiusred/numberguess](https://github.com/radiusred/numberguess); the third went from `milestone new` to `milestone close` on GitHub's own webhook events. A fourth cycle then ran a fresh repo, [radiusred/snake](https://github.com/radiusred/snake), with a dedicated coordinator agent from the first event. The findings, and what each changed: [#119](https://github.com/radiusred/gh-codecrew/issues/119) and [#164](https://github.com/radiusred/gh-codecrew/issues/164).
 
