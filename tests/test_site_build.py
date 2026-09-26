@@ -7,8 +7,8 @@ default layout. `zensical build` has no site-dir option, so the fixture copies
 the site source into a temp dir, runs the sync there, and builds in strict mode
 so any warning fails the build.
 
-The build needs the upstream on disk, since the nav and the hero's button both
-point into the synced section. Without one the module skips on a machine that
+The build needs the upstream on disk, since the nav points into the synced
+section. Without one the module skips on a machine that
 never named a source, and fails when SYNC_SOURCE_BASE was set and points at
 nothing: CI sets it and checks the hub out under it, so an absence there is
 drift, and this strict build must not quietly stop running (see
@@ -219,15 +219,54 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert 'class="cc-logo"' in hero
     assert 'class="cc-hero__body"' in hero
     assert "cc-hero__headline" in hero
-    assert "Agent-driven software delivery" in hero
-    assert "CodeCrew is an engineering process framework, and a small one" in hero
-    assert "the answer is in a chat transcript nobody saved" in hero  # the antecedent
-    assert "the record and the separation of duties are not" in hero  # M17-R2, the post's line
-    assert 'href="blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/"' in hero
     assert "Decisions and deviations" not in hero  # said once, in the Why panel
-    assert 'href="#start-now"' in hero  # primary call to action
-    assert 'href="docs/"' in hero  # the docs on this site, not the README on GitHub
+    assert "the record is the work" not in text(hero).lower()  # the Why panel's heading carries it
     assert "github.com" not in hero
+    # Two buttons, in order: setup first, the worked example second (M19-R2). The docs
+    # stay one click away in the header's Docs tab and the drawer, not in the hero.
+    buttons = [
+        (re.search(r'href="([^"]*)"', a).group(1), re.search(r'class="([^"]*)"', a).group(1))
+        for a in re.findall(r"<a [^>]*cc-button[^>]*>", hero)
+    ]
+    assert buttons == [("#start-now", "cc-button cc-button--primary"), ("#the-example", "cc-button")]
+    assert 'id="start-now"' in section(home, "cc-start")
+    assert 'id="the-example"' in section(home, "cc-example")
+    assert 'href="docs/"' not in hero
+
+
+def test_hero_leads_with_the_crew(home: str):
+    """M19-R2: the hero's visible text names GitHub App identities and says that
+    different harnesses and models build and review, before any section below it."""
+    hero = section(home, "cc-hero")
+    headline = squash(text(re.search(r"<h1[^>]*>(.*?)</h1>", hero, re.S).group(1)))
+    assert "crew" in headline.lower()
+    subs = [squash(text(p)) for p in re.findall(r'<p class="cc-hero__sub">(.*?)</p>', hero, re.S)]
+    lead = subs[0]
+    assert "GitHub App identity" in lead
+    assert "different harnesses and models" in lead and "build and review" in lead
+    # The worked example says, once, who starts the sessions and that review runs fresh;
+    # the hero does not repeat it, and names no crew member (R3's example does).
+    visible = squash(text(hero))
+    for claim in (WHO_STARTS_SESSIONS, FRESH_SESSION):
+        assert claim not in visible, claim
+    for name in CREW_MEMBER_NAMES:
+        assert not re.search(rf"\b{name}\b", visible.lower()), name
+
+
+def test_hero_keeps_the_commodity_line_aimed_at_separation_of_duties(home: str):
+    """M17-R2's sentence survives M19-R2, re-aimed: distinct identities make separation
+    of duties real, and that is the point the coordinator's commodity status leaves."""
+    hero = section(home, "cc-hero")
+    sentence = next(
+        p for p in re.findall(r'<p class="cc-hero__sub">(.*?)</p>', hero, re.S) if "commodity" in p
+    )
+    link = '<a href="blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/">a commodity now</a>'
+    assert link in sentence  # on-site, on the words the M17 record names
+    words = squash(text(sentence))
+    assert "The coordinator running your agents is a commodity now" in words
+    assert "separation of duties is not" in words
+    assert "distinct identities" in words
+    assert "the reviewer's identity, never the author's" in words
 
 
 def test_home_has_exactly_one_install_block(home: str):
@@ -673,8 +712,9 @@ def test_docs_tab_sits_between_home_and_blog(home: str):
     assert tabs == ["Home", "Docs", "Blog"]
 
 
-def test_the_hero_button_lands_on_the_docs_index(site: Path, home: str):
-    assert 'href="docs/"' in section(home, "cc-hero")
+def test_the_docs_tab_lands_on_the_docs_index(site: Path, home: str):
+    # The hero's docs button went in M19-R2; the header tab is the way in from the home page.
+    assert re.search(r'<a href="(\./)?docs/" class="md-tabs__link', home)
     assert (site / "docs" / "index.html").is_file()  # what that href resolves to
 
 
