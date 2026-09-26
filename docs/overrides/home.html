@@ -38,6 +38,11 @@
      attributes again. Without
      JavaScript the page is as before. Above the breakpoint the theme
      hides the burger, so desktop is unchanged.
+     The same script keeps the shut search panel out of the tab order
+     (M19-R7): the theme's search sits in a shadow root this page's CSS
+     cannot reach, so the script adds a `visibility: hidden` rule for the
+     theme's shut-panel classes inside it, and takes it out again on any
+     other page reached by instant navigation.
    - htmltitle, extrahead: main.html's markup, rendered with the page's
      own `tagline` front matter in place of the site-wide one, so the
      title, og:title and twitter:title carry the home page's pitch
@@ -101,8 +106,56 @@
           drawer: document.getElementById("cc-drawer")
         };
       }
+      // The theme's search is a panel in an open shadow root on a <div> it
+      // appends to <body>. Shut, the panel and its filter pane are only
+      // faded out (opacity 0, pointer-events none), so Tab still walks
+      // into them. Page CSS cannot reach into a shadow root, so this adds
+      // one rule there: visibility hidden on the theme's own shut classes,
+      // delayed past its fade. The theme's open/shut state lives inside
+      // that tree (#__search stays unchecked), which is why the rule keys
+      // off its classes and not the toggle.
+      var SEARCH_SHUT =
+        ".l.d{visibility:hidden;transition:transform .25s .15s,opacity .15s,visibility 0s .4s}" +
+        ".a.d{visibility:hidden;transition:width .35s cubic-bezier(.16,1,.3,1),opacity .1s,visibility 0s .35s}";
+      var searchWait = null;
+      function searchRoot() {
+        var kids = document.body.children;
+        for (var i = 0; i < kids.length; i++) {
+          var root = kids[i].shadowRoot;
+          var sheet = root && root.querySelector("style");
+          if (sheet && sheet.textContent.indexOf(".l.d{") !== -1) return root;
+        }
+        return null;
+      }
+      function quietSearch(home) {
+        var root = searchRoot();
+        if (!root) {
+          // The theme may not have mounted search yet: wait for it once.
+          if (home && !searchWait) {
+            searchWait = new MutationObserver(function () {
+              if (searchRoot()) {
+                searchWait.disconnect();
+                searchWait = null;
+                quietSearch(!!document.getElementById("cc-drawer"));
+              }
+            });
+            searchWait.observe(document.body, { childList: true });
+          }
+          return;
+        }
+        var mine = root.getElementById("cc-search-shut");
+        if (home && !mine) {
+          mine = document.createElement("style");
+          mine.id = "cc-search-shut";
+          mine.textContent = SEARCH_SHUT;
+          root.appendChild(mine);
+        } else if (!home && mine) {
+          mine.remove();
+        }
+      }
       function setup() {
         var p = parts();
+        quietSearch(!!p.drawer);
         if (!p.toggle || !p.burger) return;
         if (!p.drawer) {
           ATTRS.forEach(function (name) { p.burger.removeAttribute(name); });
