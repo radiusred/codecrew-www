@@ -41,12 +41,14 @@ if UPSTREAM is None:
 # column holds 43 characters before it scrolls sideways. The longest command
 # is 42. Longer lines scroll on a phone.
 INSTALL_LINE_MAX = 42
-# One rule for every code line on the page: the step lines (longest 33) and
-# the YAML are held to the same 42. The crew section's `identity new` is the
+# One rule for every code line on the page: the worked example's verbs (longest 23)
+# and the YAML are held to the same 42. The crew section's `identity new` is the
 # exception: with the `--name` protocol 2.1 requires it is 54, so it wraps (#44).
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
+# The two the operator's approval of M19-R3 (2026-09-26) lets the worked example name, and only it.
+EXAMPLE_CREW = ("cody", "checky")
 # The crew section's example routing table, the only fenced block on the home page.
 # Its identities are made-up, typed placeholders: the M8 rule keeps crew members off
 # this page, and the page no longer points at the hub's real table (M19-R1, #44).
@@ -71,13 +73,17 @@ ROLE_OPENINGS = {
     "doc-synthesizer": "You write the milestone document — the record that lets someone in three months understand why the system is the way it is. You compile what was recorded; you do not invent what wasn't.",
     "coordinator": "You run the delivery loop for a CodeCrew project and hold no seat in it. You open the milestones and the tasks, dispatch the crew seats by the routing table, own the review loop in both directions, raise the gates only a human can answer, and drive the milestone verbs. You never write code, review, verdict or merge: your product is the record on GitHub and one correct dispatch per transition.",
 }
-# The conversation under each step: the human's line and the verb the agent runs.
-STEP_CHAT = (
-    ("Let's add a new feature.", "gh codecrew milestone new"),
-    ("Plan it and get started.", "gh codecrew task start"),
-    ("Reviewed and approved.", "gh codecrew task finish"),
-    ("That's everything. Close it.", "gh codecrew milestone close"),
-)
+# The worked example's turns, in order: who speaks, and for the two agents the harness,
+# the App and the crew artwork they wear. The loop is build, change request, fix,
+# approval, finish (M19-R3).
+EXAMPLE_SPEAKERS = ("you", "cody", "checky", "cody", "checky", "cody")
+EXAMPLE_AGENTS = {
+    "cody": ("Cody", "Claude Code", "radiusred-cody[bot]", "assets/images/crew/codecrew-code-t.png"),
+    "checky": ("Checky", "Codex", "radiusred-checky[bot]", "assets/images/crew/codecrew-review-t.png"),
+}
+# Said once on the page, in the example's lead (M19-R3).
+WHO_STARTS_SESSIONS = "the operator or an orchestrator starts every session"
+FRESH_SESSION = "review runs in a fresh session"
 INSTALL_COMMANDS = (
     "gh --version",
     "gh extension install radiusred/gh-codecrew",
@@ -189,10 +195,11 @@ def test_home_keeps_the_header(home: str):
 
 
 def test_home_has_the_product_page_flow(home: str):
-    order = ("cc-hero", "cc-how", "cc-crew", "cc-why", "cc-proof", "cc-start")
+    order = ("cc-hero", "cc-example", "cc-crew", "cc-why", "cc-proof", "cc-start")
     positions = [home.index(f"cc-section {name}") for name in order]
-    assert positions == sorted(positions)  # the crew sits between How it works and Why
+    assert positions == sorted(positions)  # the example sits where How it works did, the crew after it
     assert 'id="start-now"' in home
+    assert 'id="the-example"' in section(home, "cc-example")  # the anchor the hero's second call to action needs (M19-R2)
 
 
 def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
@@ -264,38 +271,70 @@ def test_terminal_prompt_and_output_are_generated_content(css: str):
     assert "width: fit-content" in window and "max-width: 100%" in window and "margin: 0 auto" in window
 
 
-def test_how_it_works_leads_with_the_three_moments_and_marks_each_speaker(home: str):
-    how = section(home, "cc-how")
-    lead = "You are needed at three moments"
-    assert lead in how
-    assert how.index('class="cc-how__lead"') < how.index('class="cc-steps"')
-    assert lead not in section(home, "cc-start")
-    assert "the bubble on the right is the one it runs" in how  # the lead describes the bubbles
-    steps = re.split(r'<div class="cc-step(?: [^"]*)?"[^>]*>', how)[1:]  # not .cc-steps
-    assert len(steps) == 4
-    for step, (line, verb) in zip(steps, STEP_CHAT):
-        heading = re.search(r"<h3[^>]*>(.*?)</h3>", step, re.S).group(1)
-        assert '<span class="twemoji">' in heading  # the Lucide glyph before the step's name
-        chat = re.search(r'<div class="cc-chat">(.*?)</div>', step, re.S).group(1)
-        you = re.search(r'<p class="cc-bubble cc-bubble--you">(.*?)</p>', chat, re.S).group(1)
-        agent = re.search(r'<p class="cc-bubble cc-bubble--agent">(.*?)</p>', chat, re.S).group(1)
-        assert chat.index("cc-bubble--you") < chat.index("cc-bubble--agent")  # the human speaks first
-        assert '<span class="twemoji">' in you and "<title>" not in you  # the lucide person glyph
-        assert text(you).strip() == line  # one short line of speech
-        assert '<span class="twemoji">' in agent and "<title>Claude</title>" in agent  # the Claude glyph
-        snippets = [html.unescape(m) for m in re.findall(r"<code>(.*?)</code>", agent)]
-        assert snippets == [verb]  # exactly one code line, the verb unchanged
-        assert len(verb) <= STEP_CODE_MAX
-        assert text(agent).strip() == verb  # nothing in the agent's bubble but the verb
+def test_the_worked_example_is_two_agents_in_a_review_loop(home: str):
+    """M19-R3: a build, change request, fix and approval loop, told through CodeCrew's own
+    crew and labelled as an example. It replaced the single-agent "How it works" tour."""
+    example = section(home, "cc-example")
+    assert "cc-how" not in home and "How it works" not in text(home)  # the tour is gone
+    assert "cc-step" not in home and "cc-bubble--agent" not in home  # and its bubbles with it
+    label = example.index('<p class="cc-example__label">A worked example</p>')
+    heading = re.search(r'<h2 id="the-example">(.*?)<a class="headerlink"', example).group(1)
+    assert heading == "One agent builds. Another checks the work."
+    assert label < example.index("<h2")  # labelled before it starts
+    lead = squash(text(re.search(r'<p class="cc-example__lead">(.*?)</p>', example, re.S).group(1)))
+    assert "Cody, on Claude Code, writes the code, and Checky, on Codex, reviews it" in lead
+    assert "each acting on GitHub as its own App" in lead
+    assert "The change is made up" in lead  # an example, not a transcript
+    page = squash(text(home))
+    for claim in (WHO_STARTS_SESSIONS, FRESH_SESSION):
+        assert claim in lead and page.count(claim) == 1, claim  # stated once, in the lead
+
+    turns = re.findall(r'<li class="cc-turn cc-turn--(\w+)">(.*?)</li>', example, re.S)
+    assert tuple(speaker for speaker, _ in turns) == EXAMPLE_SPEAKERS
+    assert "<title>Claude</title>" not in example  # no one icon standing for every agent
+    bubbles = []
+    for speaker, turn in turns:
+        who = squash(text(re.search(r'<p class="cc-turn__who">(.*?)</p>', turn, re.S).group(1)))
+        avatar = re.search(r'<\w+ class="cc-turn__avatar"[^>]*>', turn).group(0)
+        if speaker == "you":
+            assert who.startswith("You")
+            assert "<img" not in turn and "lucide-user" in turn  # the person glyph, as in the tour
+        else:
+            name, harness, app, art = EXAMPLE_AGENTS[speaker]
+            assert who == f"{name} · {harness} · {app}"  # the agent, its harness and its App
+            assert avatar.startswith("<img") and f'src="{art}"' in avatar  # its own crew artwork
+        bubbles.append(re.search(r'<p class="cc-bubble">(.*?)</p>', turn, re.S).group(1))
+    goal, build, request, fix, approval, finish = (squash(text(b)) for b in bubbles)
+    assert "Requirement:" in goal
+    assert "PR is open" in build
+    assert request.startswith("Changes requested.")
+    assert fix.startswith("Fixed in a new commit")
+    assert approval.endswith("Approved.")
+    assert [html.unescape(c) for c in re.findall(r"<code>(.*?)</code>", bubbles[-1])] == ["gh codecrew task finish"]
+    assert finish == "gh codecrew task finish"  # the owner merges through the gatekeeper
+    verbs = [html.unescape(c) for c in re.findall(r"<code>(.*?)</code>", example)]
+    too_long = [verb for verb in verbs if len(verb) > STEP_CODE_MAX]
+    assert not too_long, too_long
+
+    close = re.findall(r'<p class="cc-example__close">(.*?)</p>', example, re.S)
+    assert len(close) == 1 and example.index("cc-example__close") > example.index("</ol>")  # one line, after the loop
+    close = squash(text(close[0]))
+    assert "QA checks what was built against each requirement" in close
+    assert "the recorded decisions become the milestone's document" in close
+    assert "any question only you can answer" in close  # the human's gate stays in view
 
 
-def test_steps_are_plain_cards_with_no_grab(css: str, home: str, site: Path):
-    assert "content: counter(cc-step)" in rule(css, ".md-typeset .cc-step h3::before")  # the accent number
-    assert "var(--md-accent-fg-color)" in rule(css, ".md-typeset .cc-step h3 .twemoji")  # the accent glyph
-    assert "cc-step--bg" not in home
+def test_the_example_wears_the_crew_artwork_and_tints_each_speaker(css: str, home: str, site: Path):
+    avatar = rule(css, ".md-typeset .cc-example .cc-turn__avatar")
+    assert "background: var(--cc-purple)" in avatar and "border-radius: 50%" in avatar  # white marks need a ground
+    for art in ("codecrew-code-t.png", "codecrew-review-t.png"):
+        assert (site / "assets" / "images" / "crew" / art).is_file()
+    assert "var(--cc-cyan-tint)" in rule(css, ".md-typeset .cc-turn--cody .cc-bubble")
+    assert "var(--cc-pink)" in rule(css, ".md-typeset .cc-turn--checky .cc-bubble")  # the review seat's colour
+    assert "var(--md-default-fg-color--lightest)" in rule(css, ".md-typeset .cc-turn--you .cc-bubble")
+    assert ".cc-step" not in css and "cc-how" not in css  # the tour's rules went with it
     assert "steps/" not in home  # no step image referenced
     assert not (site / "assets" / "images" / "steps").exists()
-    assert "cc-step--bg" not in css  # the rules went with the images
 
 
 def media_block(css: str, query: str) -> str:
@@ -409,9 +448,15 @@ def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
     assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
     assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-crew__badge .cc-pop__panel")  # the overlap stays at the tile's padding
-    lower = text(home).lower()
+    # The M8 rule keeps crew members off the product page, bot logins in link targets only.
+    # The operator's approval of M19-R3 lifts it for Cody and Checky in the worked example
+    # alone (#46); everywhere else, and for the other two everywhere, it stands.
+    elsewhere = text(home.replace(section(home, "cc-example"), "")).lower()
     for name in CREW_MEMBER_NAMES:
-        assert not re.search(rf"\b{name}\b", lower), name  # bot logins may live in link targets only
+        assert not re.search(rf"\b{name}\b", elsewhere), name
+    example = text(section(home, "cc-example")).lower()
+    for name in CREW_MEMBER_NAMES:
+        assert bool(re.search(rf"\b{name}\b", example)) == (name in EXAMPLE_CREW), name
 
 
 def test_crew_section_shows_the_example_routing_table(home: str):
