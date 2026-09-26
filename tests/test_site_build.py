@@ -244,6 +244,10 @@ def test_hero_leads_with_the_crew(home: str):
     lead = subs[0]
     assert "GitHub App identity" in lead
     assert "different harnesses and models" in lead and "build and review" in lead
+    # Apps are optional (user:, team:, operator-held seats): the attribution claim is
+    # conditional on the agent acting under its App, not said of every commit (#54's review).
+    assert "Anything an agent does under its App" in lead
+    assert "Every commit, review and recorded decision carries" not in lead
     # The worked example says, once, who starts the sessions and that review runs fresh;
     # the hero does not repeat it, and names no crew member (R3's example does).
     visible = squash(text(hero))
@@ -266,7 +270,9 @@ def test_hero_keeps_the_commodity_line_aimed_at_separation_of_duties(home: str):
     assert "The coordinator running your agents is a commodity now" in words
     assert "separation of duties is not" in words
     assert "distinct identities" in words
-    assert "the reviewer's identity, never the author's" in words
+    # Bounded to the tier where it holds: a routed reviewer App (SPEC §4, NO_HOLDER_REVIEW).
+    # An operator-held reviewer seat or pure solo counts other things (#54's review).
+    assert "route the reviewer to its own App, and CodeCrew merges only on that App's approval, never the author's" in words
 
 
 def test_home_has_exactly_one_install_block(home: str):
