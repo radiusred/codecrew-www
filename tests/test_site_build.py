@@ -39,8 +39,11 @@ if UPSTREAM is None:
 # Measured in headless Chromium at a 420px viewport (root font 20px, code
 # 12.8px JetBrains Mono, 16px of padding a side): the install block's code
 # column holds 43 characters before it scrolls sideways. The longest command
-# is 42. Longer lines scroll on a phone.
+# is 42. Longer lines scroll on a phone. Below 420px the terminals and the
+# routing example step down to 11.2px (NARROW_CODE), which keeps 42 characters
+# and the prompt inside the block at 375px (M19-R7).
 INSTALL_LINE_MAX = 42
+NARROW_CODE = ("(max-width: 26.1875em)", "font-size: 0.56rem")
 # One rule for every code line on the page: the worked example's verbs (longest 23)
 # and the YAML are held to the same 42. The crew section's `identity new` is the
 # exception: with the `--name` protocol 2.1 requires it is 54, so it wraps (#44).
@@ -543,6 +546,18 @@ def media_block(css: str, query: str) -> str:
             if depth == 0:
                 return css[start:i]
         i += 1
+
+
+def test_code_blocks_step_down_below_420px_so_42_characters_fit_at_375(css: str, home: str):
+    """At 375px the install terminal's longest line and the routing example's last row
+    scrolled sideways at 12.8px, and a block that scrolls takes a Tab stop (M19-R7)."""
+    query, size = NARROW_CODE
+    block = media_block(css, f"screen and {query}")
+    for selector in (".md-typeset .cc-term pre > code", ".md-typeset .cc-crew .highlight pre > code"):
+        assert selector in block, selector
+    assert size in block
+    assert 'class="cc-term__code"' in section(home, "cc-start")  # the selectors still find their blocks
+    assert re.search(TABLE_BLOCK, section(home, "cc-crew"), re.S)
 
 
 def test_proof_captures_are_two_halves_of_one_review(css: str, home: str, site: Path):
