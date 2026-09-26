@@ -1030,3 +1030,18 @@ h1,h2,h3 {
     font-size: 0.56rem;
   }
 }
+
+/* The phone drawer, shut. Below the tab-collapse breakpoint the theme
+   parks the primary sidebar off-canvas but leaves it in the tab order, so
+   Tab walked through its links with the focus ring drawn off-screen. On
+   the home page (cc-drawer, set by home.html) it is hidden while the
+   toggle is unchecked, which takes its links out of the tab order; the
+   theme's own checked rule lists no visibility transition, so opening
+   shows it at once, and the delay here lets it slide out before hiding.
+   Desktop, where the sidebar is `hidden` anyway, is untouched (M19-R7). */
+@media screen and (max-width: 76.234375em) {
+  [data-md-toggle="drawer"]:not(:checked) ~ .md-container .md-sidebar--primary.cc-drawer {
+    visibility: hidden;
+    transition: transform 0.2s cubic-bezier(0.5, 0, 0.5, 0), box-shadow 0.2s, visibility 0s 0.2s;
+  }
+}

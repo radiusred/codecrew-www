@@ -179,7 +179,7 @@ def rule(css: str, selector: str) -> str:
 
 def drawer(page: str) -> str:
     """The markup of the primary sidebar: what the header's burger opens."""
-    start = page.index('<div class="md-sidebar md-sidebar--primary"')
+    start = page.index('<div class="md-sidebar md-sidebar--primary')
     return page[start : page.index("</main>", start)]
 
 
@@ -214,7 +214,7 @@ def test_home_drops_the_desktop_sidebars_and_the_footer_nav(home: str):
     # tab-collapse breakpoint, so this one element is both the desktop sidebar
     # M8-R1 drops and the drawer its retained tabs collapse into. It used to be
     # removed outright, which left the burger opening an empty overlay (#9).
-    sidebar = re.search(r'<div class="md-sidebar md-sidebar--primary"[^>]*>', home)
+    sidebar = re.search(r'<div class="md-sidebar md-sidebar--primary[^"]*"[^>]*>', home)
     assert sidebar and "hidden" in sidebar.group(0)
     assert "md-sidebar--secondary" not in home  # no "on this page" panel
     assert "md-footer__inner" not in home  # prev/next navigation
@@ -991,6 +991,20 @@ def test_the_home_drawer_reaches_every_tab(home: str):
     assert "md-nav--primary" in panel
     targets = set(re.findall(r'<a href="([^"]*)" class="md-nav__link', panel))
     assert {"", "./docs/", "./blog/"} <= targets, sorted(targets)
+
+
+def test_the_shut_home_drawer_is_out_of_the_tab_order(home: str, blog: str, docs_index: str, css: str):
+    """Below the breakpoint the theme parks the shut drawer off-canvas but leaves its links
+    in the tab order, focus rings off-screen. On the home page it is hidden until the
+    drawer toggle is checked (M19-R7); the other pages keep the theme's drawer (#58)."""
+    sidebar = re.search(r'<div class="(md-sidebar md-sidebar--primary[^"]*)"', home).group(1)
+    assert sidebar.split() == ["md-sidebar", "md-sidebar--primary", "cc-drawer"]
+    for page in (blog, docs_index):
+        assert "cc-drawer" not in page
+    block = media_block(css, "screen and (max-width: 76.234375em)")  # the theme's drawer breakpoint
+    shut = rule(block, '  [data-md-toggle="drawer"]:not(:checked) ~ .md-container .md-sidebar--primary.cc-drawer')
+    assert "visibility: hidden" in shut
+    assert "visibility 0s 0.2s" in shut  # hidden only once it has slid out
 
 
 def test_no_page_offers_a_burger_with_nothing_behind_it(home: str, blog: str, docs_index: str):

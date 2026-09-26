@@ -16,6 +16,8 @@
      drawer M8-R1's retained tabs turn into — and emitting it hidden gets
      both. Removing it instead (this block was once empty) left the burger
      opening an empty overlay on every phone: #9.
+     It carries cc-drawer so extra.css can take the drawer out of the
+     keyboard's reach while it is shut (M19-R7).
    - container: full-bleed. No breadcrumbs (partials/path.html), no
      partials/content.html (so the "published on" override and the actions
      strip never apply), no md-content__inner reading column. The sections
@@ -47,7 +49,7 @@
 {% block site_nav %}
   {% if nav %}
     {#- Hidden above the breakpoint, the drawer below it. Never the toc. -#}
-    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+    <div class="md-sidebar md-sidebar--primary cc-drawer" data-md-component="sidebar" data-md-type="navigation" hidden>
       <div class="md-sidebar__scrollwrap">
         <div class="md-sidebar__inner">
           {% include "partials/nav.html" %}
