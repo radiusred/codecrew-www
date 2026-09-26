@@ -321,6 +321,15 @@ def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
     assert 'href="docs/"' not in hero
 
 
+def test_the_logo_steps_down_on_a_phone(css: str):
+    """At 375px a 13rem logo pushed the pitch halfway down the first screen; below 45em it
+    is 7rem, so the headline and the first paragraph land above the fold (M19-R7)."""
+    assert "max-width: 13rem" in rule(css, ".md-typeset .cc-logo")
+    narrow = media_block(css, "screen and (max-width: 44.9375em)")
+    assert re.search(r"\.md-typeset \.cc-logo \{\s*max-width: 7rem;", narrow)
+    assert "max-width: 19rem" in media_block(css, "screen and (min-width: 60em)")  # the desktop logo is unchanged
+
+
 def test_hero_leads_with_the_crew(home: str):
     """M19-R2: the hero's visible text names GitHub App identities and says that
     different harnesses and models build and review, before any section below it."""

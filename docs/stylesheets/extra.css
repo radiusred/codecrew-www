@@ -1004,6 +1004,12 @@ h1,h2,h3 {
   .md-typeset .cc-hero .cc-hero__headline {
     font-size: 1.9rem;
   }
+  /* On a phone the pitch, not the artwork, fills the first screen: at
+     375px the headline and the whole first paragraph sit above the fold
+     (M19-R7). The header already carries the name. */
+  .md-typeset .cc-logo {
+    max-width: 7rem;
+  }
 }
 
 /* Below 420px, the width INSTALL_LINE_MAX was measured at, the page's two
