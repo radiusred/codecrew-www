@@ -358,6 +358,9 @@ def test_start_goes_from_solo_to_an_agent_reviewer(home: str, site: Path):
     assert "gh codecrew init routes every seat to you" in lead
     assert "not a cut-down CodeCrew" in lead
     assert "approve your own pull request" in lead and "task finish" in lead and "confirmation" in lead  # the one thing solo changes
+    # ...and the flag that does it: without it the gate refuses NO_NONDOER_APPROVAL (hub CLI.md, SPEC §4).
+    assert "task finish --operator-confirm" in lead
+    assert "<code>task finish --operator-confirm</code>" in solo  # readable as a command, not prose
     # The reviewer's App: one command, in a terminal of its own, copied as one shell command.
     assert 'class="cc-reviewer cc-term"' in reviewer
     lines = code_lines(reviewer)

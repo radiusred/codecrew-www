@@ -291,7 +291,7 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 
 ### First, work solo { #start-solo }
 
-<p class="cc-start__step-lead" markdown="span">`gh codecrew init` routes every seat to you, so the whole protocol runs on your own `gh` login from the first task, with your agent working under it. Solo is a routing configuration, not a cut-down CodeCrew. One thing changes: GitHub won't let you approve your own pull request, so `task finish` takes your recorded confirmation in place of a review.</p>
+<p class="cc-start__step-lead" markdown="span">`gh codecrew init` routes every seat to you, so the whole protocol runs on your own `gh` login from the first task, with your agent working under it. Solo is a routing configuration, not a cut-down CodeCrew. One thing changes: GitHub won't let you approve your own pull request, so you merge with `task finish --operator-confirm`, which records your confirmation in place of a review.</p>
 
 <div class="cc-start__pair" markdown>
 <div class="cc-install cc-term">
