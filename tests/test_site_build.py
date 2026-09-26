@@ -75,15 +75,28 @@ PROOF_LINKS = {
 PROOF_AUTHOR, PROOF_REVIEWER = "radiusred-cody[bot]", "radiusred-checky[bot]"
 # Character-exact from the change-request review.
 PROOF_FINDING_QUOTE = "Two plan-level assertions are weakened in the shipped tests"
-# The crew popovers: the opening of each contract in radiusred/gh-codecrew's roles/<role>.md,
-# reused verbatim (copied at the hub's main of 2026-09-03; the hub is not on CI's disk).
-ROLE_OPENINGS = {
-    "implementer": "You implement one CodeCrew task. Your work is judged by someone else — build for the reviewer, the QA agent, and the person reading the audit trail in three weeks.",
-    "reviewer": "You review one CodeCrew PR. You exist because self-evaluation shares the blind spots of the work itself — your value is independence, so form your own view before reading the implementer's narrative.",
-    "qa": "You exercise what was built against what was promised. The reviewer judges the diff; you judge the behaviour. Run the thing.",
-    "doc-synthesizer": "You write the milestone document — the record that lets someone in three months understand why the system is the way it is. You compile what was recorded; you do not invent what wasn't.",
-    "coordinator": "You run the delivery loop for a CodeCrew project and hold no seat in it. You open the milestones and the tasks, dispatch the crew seats by the routing table, own the review loop in both directions, raise the gates only a human can answer, and drive the milestone verbs. You never write code, review, verdict or merge: your product is the record on GitHub and one correct dispatch per transition.",
+# The crew badges: what each role does, in visible text written for the engineer reading
+# the page (M19-R5). They replaced pop-overs that quoted each contract's opening to the agent.
+ROLE_SUMMARIES = {
+    "implementer": "Plans the task on its issue, builds the change and opens the pull request.",
+    "reviewer": "Reads the diff in a fresh session, then requests changes or approves.",
+    "qa": "Runs what was built against each requirement and records a verdict.",
+    "doc-synthesizer": "Turns the milestone's recorded decisions into its document.",
+    "coordinator": "Opens the work and starts each role's session: you, or an orchestrator.",
 }
+# The contracts' openings speak to the agent that loads them; none of it is homepage copy now.
+CONTRACT_VOICE = ("You implement one", "You review one", "You exercise what", "You write the milestone", "You run the delivery loop")
+# Why: three benefits, in order (M19-R5). The second is the different-model reviewer, bounded.
+WHY_HEADINGS = (
+    "See who built it, and who checked it",
+    "A second model, with other blind spots",
+    "The record is the work",
+)
+# Character-exact from the reviewer contract's opening (hub .codecrew/roles/reviewer.md).
+REVIEWER_REASON = "self-evaluation shares the blind spots of the work itself"
+# Where the middle of the page sends a reader for principal types and topology (M19-R5).
+IDENTITIES_DOC = "docs/identities/"
+TOPOLOGY_DOC = "docs/spec/#3-topology-hub-and-spokes"
 # The worked example's turns, in order: who speaks, and for the two agents the harness,
 # the App and the crew artwork they wear. The loop is build, change request, fix,
 # approval, finish (M19-R3).
@@ -497,39 +510,35 @@ def proof_case(proof: str) -> str:
     return match.group(1)
 
 
-def test_crew_badges_open_popovers_quoting_the_contracts(home: str):
+def test_crew_badges_say_what_each_role_does(home: str):
+    """M19-R5: each badge carries its role and a visible summary, written for the reader."""
     crew = section(home, "cc-crew")
-    figures = re.findall(r'<figure class="cc-crew__badge cc-pop" tabindex="0">(.*?)</figure>', crew, re.S)
+    figures = re.findall(r'<figure class="cc-crew__badge">(.*?)</figure>', crew, re.S)
     assert len(figures) == 5
     for figure, role in zip(figures, CREW_ROLES):
-        assert re.search(rf"<figcaption>{role}</figcaption>", figure)
-        panel = re.search(r'<div class="cc-pop__panel">(.*?)</div>', figure, re.S).group(1)
-        assert squash(text(panel)) == ROLE_OPENINGS[role]  # verbatim from the contract's opening
+        caption = re.search(r"<figcaption>(.*?)</figcaption>", figure, re.S).group(1)
+        assert re.search(rf'<strong class="cc-crew__role">{role}</strong>', caption)
+        summary = squash(text(re.search(r'<span class="cc-crew__summary">(.*?)</span>', caption, re.S).group(1)))
+        assert summary == ROLE_SUMMARIES[role]
+    for summary in ROLE_SUMMARIES.values():
+        assert not summary.startswith("You"), summary  # about the role, to the reader, not to the agent
+        assert len(summary) <= 80, summary  # one line's worth under a badge
+    page = squash(text(home))
+    for opening in CONTRACT_VOICE:
+        assert opening not in page, opening  # the contracts' own voice stays in the contracts
 
 
-def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, home: str):
-    panel = rule(css, ".md-typeset .cc-pop .cc-pop__panel")
-    assert "visibility: hidden" in panel and "opacity: 0" in panel
-    shown = rule(css, ".cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel")
-    assert "visibility: visible" in shown and "opacity: 1" in shown
-    rest = rule(css, ".cc-pop")
-    assert "outline: 0.08rem solid transparent" in rest  # resting outline: only the colour transitions, from nothing
-    assert "z-index" not in rest  # siblings rest at auto...
-    lift = rule(css, ".cc-pop:hover, .cc-pop:focus-within")
-    assert "z-index: 5" in lift  # ...and the open trigger, a stacking context, ranks above them all
-    assert "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift  # the crew badges' ring, unchanged
-    assert ".cc-receipts .cc-pop" not in css  # the receipts carry no pop-over now (M19-R4)
-    assert "background: #ffffff" in panel and "box-shadow: 0 0.8rem 2rem #0a001259" in panel  # raised: white, firmer shadow
-    assert "background: var(--cc-purple-light)" in rule(css, '[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel')
-    assert "font-size: 0.95rem" in panel
-    assert "top: calc(100% - 0.5rem)" in panel  # overlaps the badge tile's padding only
-    assert "calc(100% - 1.5rem)" not in css  # the receipts' deeper overlap went with their pop-overs
-    assert "translateY(-2px)" in lift and "outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent)" in lift
-    assert ".cc-pop:focus-visible" not in css  # no state brighter than the sustained one
-    assert css.count("translateY(-2px)") == 1  # nothing without a popover lifts
+def test_nothing_on_the_home_page_hides_behind_hover(css: str, home: str):
+    """M19-R4 put the receipts on the page; M19-R5 does the same for the crew. The pop-over
+    mechanism, and every rule it needed, is gone."""
+    sections = "".join(section(home, name) for name in re.findall(r'<section class="cc-section (cc-[\w-]+)', home))
+    for marker in ("cc-pop", "tabindex", "cc-pop__panel"):  # the theme's own nav keeps its tabindex
+        assert marker not in sections, marker
+    assert ".cc-pop" not in css
+    assert "translateY(-2px)" not in css  # the lift only a pop-over trigger had
     phone = media_block(css, "screen and (max-width: 44.9375em)")
-    assert "position: fixed" in phone and "bottom: 1rem" in phone  # the sheet
-    for name in ("cc-crew", "cc-proof"):  # no JavaScript and no title tooltips for any of it
+    assert "position: fixed" not in phone  # the pop-over's bottom sheet on phones
+    for name in ("cc-crew", "cc-why", "cc-proof"):  # no JavaScript and no title tooltips for any of it
         markup = re.sub(r'<a class="headerlink"[^>]*>', "", section(home, name))  # Zensical's own heading anchors carry a title
         assert "<script" not in markup
         assert 'title="' not in markup
@@ -537,13 +546,12 @@ def test_popovers_are_css_only_hidden_at_rest_and_lift_their_triggers(css: str, 
 
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     crew = section(home, "cc-crew")
-    badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>(?:</p>)?\s*<figcaption>([^<]+)</figcaption>', crew)
+    badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption><strong class="cc-crew__role">([^<]+)</strong>', crew)
     assert tuple(badges) == CREW_ROLES
     assert "identity new reviewer" in crew
     badge = rule(css, ".md-typeset .cc-crew__badge img")
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
     assert "width: 6rem" in badge and "height: 6rem" in badge and "padding: 0.5rem" in badge  # doubled from 3rem
-    assert "top: calc(100% - 0.5rem)" in rule(css, ".md-typeset .cc-pop .cc-pop__panel")  # the overlap stays at the tile's padding
     # The M8 rule keeps crew members off the product page, bot logins in link targets only.
     # The operator's approval of M19-R3 lifts it for Cody and Checky in the worked example
     # alone (#46), and for their two Apps in the proof's case block, which names the PR's
@@ -575,6 +583,9 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     lead, _, rest = crew.partition('<div class="language-yaml highlight">')
     assert "routing table" in text(lead)  # it lands under the sentence that names one
     assert "illustrative" in text(lead)  # the gloss says it is an example (M19-R1)
+    gloss = squash(text(lead.split("<p>")[-1]))
+    assert "app:" in gloss and "~" in gloss  # the two forms the example uses...
+    assert "user:" not in gloss and "team:" not in gloss  # ...and not the ones it does not (M19-R5)
     # ...and no longer sends the reader to the hub's real table to read it against.
     assert "gh-codecrew#the-routing-table" not in home
     assert "2-four-seats" not in home
@@ -620,7 +631,43 @@ def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
         glyphs = re.findall(r'<p class="cc-panel__glyph">(.*?)</p>', panel, re.S)
         assert len(glyphs) == 1 and glyphs[0].count('<span class="twemoji">') == 1, panel[:80]
         assert panel.index("cc-panel__glyph") < panel.index("<h3")  # the glyph tops the panel
-    assert "One repo is the hub" in why
+
+
+def test_why_is_three_benefits_one_of_them_a_bounded_second_model(home: str):
+    """M19-R5: three benefits, including a bounded claim that a reviewer on a different model
+    does not share the author's blind spots. Bounded: fresh context is the other half of the
+    independence (hub docs/identities.md), a bot name proves an App and not a model, and no
+    review catches everything."""
+    why = section(home, "cc-why")
+    panels = why.split('<div class="cc-panel">')[1:]
+    headings = tuple(squash(text(re.search(r"<h3[^>]*>(.*?)<a class=\"headerlink\"", p, re.S).group(1))) for p in panels)
+    assert headings == WHY_HEADINGS
+    who, second, record = (squash(text(p)) for p in panels)
+    assert "own GitHub App" in who and "not which model" in who  # attribution, and what it does not prove
+    assert f"\u201c{REVIEWER_REASON}\u201d" in second  # the contract's reason, quoted exactly
+    assert "different model or harness" in second
+    assert "clean session" in second  # fresh context, not only a fresh identity
+    assert "its own" in second and "every bug" in second  # it has blind spots of its own; no promise of catching all
+    assert "guarantee" not in squash(text(why)).lower()
+    assert "Decisions and deviations" in record  # said once, here (the hero test pins its absence there)
+    assert "refuses" in record and "gh codecrew task finish" in record  # the gates, enforced by the CLI
+    assert "No server, no dashboard" in record  # the fact survives, the topology does not
+
+
+def test_the_middle_leaves_topology_and_principal_types_to_the_docs(home: str, site: Path):
+    """M19-R5: hub/spoke and the four kinds of seat-holder are the docs' to explain; the
+    crew and Why sections link there, in context, and the links land on built pages."""
+    crew, why = section(home, "cc-crew"), section(home, "cc-why")
+    middle = squash(text(crew + why))
+    for topology in ("spoke", "One repo is the hub", "two-line pointer"):
+        assert topology not in middle, topology
+    for principal in ("GitHub team", "username", "colleague", "principal", "user:", "team:"):
+        assert principal not in middle, principal
+    assert f'href="{IDENTITIES_DOC}"' in crew
+    assert (site / IDENTITIES_DOC / "index.html").is_file()
+    assert f'href="{TOPOLOGY_DOC}"' in why
+    page, anchor = TOPOLOGY_DOC.split("#")
+    assert f'id="{anchor}"' in (site / page / "index.html").read_text()
 
 
 def test_alternate_bands_carry_the_glow_in_both_schemes(css: str):
