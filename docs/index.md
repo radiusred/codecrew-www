@@ -51,7 +51,7 @@ tagline: Your coding agents, working as a crew on GitHub
 <li class="cc-turn cc-turn--cody" markdown>
 <img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
 <div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
 <p class="cc-bubble" markdown="span">Plan's on the task. The limiter and its tests are pushed, and the PR is open.</p>
 <p class="cc-turn__note" markdown="span">`gh codecrew task start` refuses a task with no plan. The PR's author is Cody's App.</p>
 </div>
@@ -59,7 +59,7 @@ tagline: Your coding agents, working as a crew on GitHub
 <li class="cc-turn cc-turn--checky" markdown>
 <img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
 <div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Checky** · Codex · radiusred-checky[bot]</p>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
 <p class="cc-bubble" markdown="span">Changes requested. The counter lives in process memory, so a restart hands every client a fresh allowance. Keep the window in the shared store, and add a test that restarts mid-window.</p>
 <p class="cc-turn__note" markdown="span">An ordinary GitHub review on the diff, from a different App and a different harness.</p>
 </div>
@@ -67,21 +67,21 @@ tagline: Your coding agents, working as a crew on GitHub
 <li class="cc-turn cc-turn--cody" markdown>
 <img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
 <div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
 <p class="cc-bubble" markdown="span">Fixed in a new commit: the window is in the shared store, and the restart test passes.</p>
 </div>
 </li>
 <li class="cc-turn cc-turn--checky" markdown>
 <img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
 <div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Checky** · Codex · radiusred-checky[bot]</p>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
 <p class="cc-bubble" markdown="span">Re-reviewed at the new head. The restart case holds. Approved.</p>
 </div>
 </li>
 <li class="cc-turn cc-turn--cody" markdown>
 <img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
 <div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
 <p class="cc-bubble" markdown="span">`gh codecrew task finish`</p>
 <p class="cc-turn__note" markdown="span">It checks CI, Checky's approval and every human gate, then merges. A blocked gate refuses with a reason.</p>
 </div>

@@ -508,6 +508,7 @@ def test_the_worked_example_is_two_agents_in_a_review_loop(home: str):
         else:
             name, harness, app, art = EXAMPLE_AGENTS[speaker]
             assert who == f"{name} · {harness} · {app}"  # the agent, its harness and its App
+            assert f'<span class="cc-turn__app">{app}</span>' in turn  # kept whole when the line wraps
             assert avatar.startswith("<img") and f'src="{art}"' in avatar  # its own crew artwork
         bubbles.append(re.search(r'<p class="cc-bubble">(.*?)</p>', turn, re.S).group(1))
     goal, build, request, fix, approval, finish = (squash(text(b)) for b in bubbles)
@@ -531,6 +532,7 @@ def test_the_worked_example_is_two_agents_in_a_review_loop(home: str):
 
 
 def test_the_example_wears_the_crew_artwork_and_tints_each_speaker(css: str, home: str, site: Path):
+    assert "white-space: nowrap" in rule(css, ".md-typeset .cc-turn__app")
     avatar = rule(css, ".md-typeset .cc-example .cc-turn__avatar")
     assert "background: var(--cc-purple)" in avatar and "border-radius: 50%" in avatar  # white marks need a ground
     for art in ("codecrew-code-t.png", "codecrew-review-t.png"):

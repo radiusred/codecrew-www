@@ -570,6 +570,13 @@ h1,h2,h3 {
   color: var(--md-default-fg-color);
 }
 
+/* The App login wraps as one piece: `overflow-wrap: anywhere` above broke
+   it at its hyphen on a phone ("radiusred-" / "cody[bot]"), which reads
+   as two names (M19-R7). */
+.md-typeset .cc-turn__app {
+  white-space: nowrap;
+}
+
 /* The bubble: its tail is the square top-left corner, pointing back at
    the avatar. Grounds from the palette: a faint fg tint for you, the cyan
    tint for Cody, the review seat's pink (as on the cc:needs-decision
