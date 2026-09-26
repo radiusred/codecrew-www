@@ -29,6 +29,7 @@ nav = [
     { "Latest" = "blog/index.md" },
     # BEGIN_BLOG_POSTS
     { "Protocol 2.0: CodeCrew Moves Out of Your Repository's Root" = "blog/posts/2026-09-07-protocol-2-0-and-the-migration.md" },
+    { "Protocol 2.1: CodeCrew Learns to Scale Down" = "blog/posts/2026-09-26-protocol-2-1-scales-down.md" },
     # END_BLOG_POSTS
     { "All posts..." = "blog/archive.md" },
   ] },
