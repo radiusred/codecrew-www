@@ -44,6 +44,8 @@ INSTALL_LINE_MAX = 42
 # One rule for every code line on the page: the worked example's verbs (longest 23)
 # and the YAML are held to the same 42. The crew section's `identity new` is the
 # exception: with the `--name` protocol 2.1 requires it is 54, so it wraps (#44).
+# Start now's copy of it sits in a terminal, which scrolls rather than wraps, so it
+# splits at a shell continuation and keeps to the ceiling (#52).
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
@@ -108,6 +110,13 @@ EXAMPLE_AGENTS = {
 # Said once on the page, in the example's lead (M19-R3).
 WHO_STARTS_SESSIONS = "the operator or an orchestrator starts every session"
 FRESH_SESSION = "review runs in a fresh session"
+# Start now's second step (M19-R6): the reviewer's App, minted with the name the crew
+# section's example routes it to, split so each line keeps to STEP_CODE_MAX.
+REVIEWER_COMMAND = ("gh codecrew identity new reviewer \\", "  --name myorg-checker")
+# The plan-tier qualifier every required-review claim on the page carries, worded once
+# (SPEC §5, platform requirements), in the proof's receipt and in Start now alike.
+PAID_PLAN = "on a private repo, branch protection needs a paid GitHub plan"
+START_STEPS = (("start-solo", "First, work solo"), ("add-a-reviewer", "Next, add an agent reviewer"))
 INSTALL_COMMANDS = (
     "gh --version",
     "gh extension install radiusred/gh-codecrew",
@@ -333,8 +342,59 @@ def test_payoff_line_sits_beside_the_terminal(home: str, css: str):
     assert "font-size: 1.8rem" in rule(css, ".md-typeset .cc-start .cc-start__payoff")
 
 
+def test_start_goes_from_solo_to_an_agent_reviewer(home: str, site: Path):
+    """M19-R6: install, init and work solo, then the next step: the reviewer seat gets an App
+    of its own. Installing it is per account, and the required-review claim carries both of
+    its qualifiers: the write-permission opt-in and the paid plan private repos need."""
+    start = section(home, "cc-start")
+    assert re.search(r'<h2 id="start-now">Start now<a class="headerlink"', start)  # the hero's primary button lands here
+    steps = tuple(re.findall(r'<h3 id="([\w-]+)">(.*?)<a class="headerlink"', start))
+    assert steps == START_STEPS  # solo first, the reviewer next
+    solo, reviewer = start.split(f'<h3 id="{START_STEPS[1][0]}">')
+    # Solo is real on day one: the install terminal and the one sentence stay in it.
+    assert 'class="cc-install cc-term"' in solo and "cc-install" not in reviewer
+    assert "Then one sentence to your agent" in solo
+    lead = squash(text(re.search(r'<p class="cc-start__step-lead">(.*?)</p>', solo, re.S).group(1)))
+    assert "gh codecrew init routes every seat to you" in lead
+    assert "not a cut-down CodeCrew" in lead
+    assert "approve your own pull request" in lead and "task finish" in lead and "confirmation" in lead  # the one thing solo changes
+    # The reviewer's App: one command, in a terminal of its own, copied as one shell command.
+    assert 'class="cc-reviewer cc-term"' in reviewer
+    lines = code_lines(reviewer)
+    assert lines == list(REVIEWER_COMMAND)
+    assert " ".join(line.removesuffix("\\").strip() for line in lines) == "gh codecrew identity new reviewer --name myorg-checker"
+    too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
+    assert not too_long, too_long
+    assert '<span class="cc-term__line cc-term__line--cont" data-out=' in reviewer  # no prompt on the continuation
+    assert "a name of your own" in squash(text(reviewer))  # the App name is the reader's, not the example's
+    # Then what the verb leaves to you, in order.
+    follow_ups = re.search(r'<ol class="cc-start__next">(.*?)</ol>', reviewer, re.S).group(1)
+    install, route, begin = (squash(text(li)) for li in re.findall(r"<li>(.*?)</li>", follow_ups, re.S))
+    assert install.startswith("Install it on each account it must reach.")
+    assert "per account" in install and "personal account" in install and "public-installable" in install
+    assert "app:myorg-checker" in route and ".codecrew/config.yml" in route and "uncommitted" in route
+    assert "gh codecrew roles show reviewer" in begin
+    assert "CodeCrew does not start it" in begin and "orchestrator" in begin  # the boundary, without restating the example's sentence
+    # Every required-review claim in the section carries both qualifiers, and the CLI's own gate.
+    claims = [squash(text(block)) for block in re.findall(r"<(?:p|li)[^>]*>(.*?)</(?:p|li)>", start, re.S) if "required review" in text(block)]
+    assert claims
+    for claim in claims:
+        assert "--with-approval-permission" in claim and "write access" in claim, claim
+        assert PAID_PLAN in claim, claim
+        assert "task finish refuses until the reviewer App has approved" in claim, claim
+    # The rest is the identities guide's, and its anchors exist in the built page.
+    links = re.findall(r'href="(docs/identities/[^"]*)"', start)
+    assert {"docs/identities/#minting-a-crew-member", "docs/identities/#dispatching-a-role-session"} <= set(links)
+    for href in links:
+        page, _, anchor = href.partition("#")
+        assert f'id="{anchor}"' in (site / page / "index.html").read_text(), href
+    for name in CREW_MEMBER_NAMES:  # the M8 rule holds here: the command uses the example's placeholder
+        assert not re.search(rf"\b{name}\b", text(start).lower()), name
+
+
 def test_terminal_prompt_and_output_are_generated_content(css: str):
     assert 'content: "$"' in rule(css, ".cc-term__line::before")
+    assert 'content: ""' in rule(css, ".cc-term__line--cont::before")  # a continuation line takes no prompt
     assert "attr(data-out)" in rule(css, ".cc-term__line[data-out]::after")
     window = rule(css, ".cc-term")
     assert "width: fit-content" in window and "max-width: 100%" in window and "margin: 0 auto" in window
@@ -490,7 +550,7 @@ def test_proof_receipts_are_visible_text(home: str):
         assert detail in squash(text(body)) and f'href="{href}"' in body
         assert card.index("cc-receipt__glyph") < card.index("<strong>") < card.index("cc-receipt__strap") < card.index("cc-receipt__detail")
     staffed = squash(text(cards[2]))
-    assert "on a private repo, branch protection needs a paid GitHub plan" in staffed  # the claim's plan-tier qualifier
+    assert PAID_PLAN in staffed  # the claim's plan-tier qualifier
     orchestrator = cards[3]
     for href in ("https://github.com/radiusred/numberguess", "https://github.com/radiusred/snake",
                  "https://github.com/radiusred/gh-codecrew/issues/119", "https://github.com/radiusred/gh-codecrew/issues/164"):
@@ -615,7 +675,8 @@ def test_home_configuration_is_valid_under_protocol_2_1(home: str):
     assert identities  # the example still routes its seats
     untyped = [value for value in identities if value != "~" and not re.match(r"(app|user|team):\S+$", value)]
     assert not untyped, untyped
-    commands = [html.unescape(re.sub(r"<[^>]+>", "", m)) for m in re.findall(r"gh codecrew identity new.*?(?=</code>|\n)", home)]
+    joined = re.sub(r"\\(?:<[^>]+>)*\n(?:<[^>]+>)*", " ", home)  # a shell continuation joins its lines, as the shell does
+    commands = [html.unescape(re.sub(r"<[^>]+>", "", m)) for m in re.findall(r"gh codecrew identity new.*?(?=</code>|\n)", joined)]
     assert commands  # the page still shows the verb that mints a seat's holder
     nameless = [command for command in commands if not re.search(r"\s--name\s+\S", command)]
     assert not nameless, nameless
