@@ -1045,3 +1045,18 @@ h1,h2,h3 {
     transition: transform 0.2s cubic-bezier(0.5, 0, 0.5, 0), box-shadow 0.2s, visibility 0s 0.2s;
   }
 }
+
+/* The palette toggle's focus ring. The toggle is two invisible radios, each
+   followed by the label that switches to the other; the theme shows one
+   label by un-hiding it and never checks a radio on load, and rings the
+   label straight after the focused radio. Tab into the unchecked pair lands
+   on the first radio and Shift+Tab on the last, so whenever the label on
+   show is not the focused radio's own neighbour (the sun in a fresh OS-dark
+   visit, for one), focus reached the toggle with no ring. On the home page
+   (cc-home) the label on show takes the theme's ring whichever radio has
+   focus; the header sits outside the page's container, hence body:has
+   (M19-R7). */
+body:has(.cc-home) .md-header__option:has(> .md-option:is(:focus-visible, .focus-visible)) > label:not([hidden]) {
+  outline-style: auto;
+  outline-color: var(--md-accent-fg-color);
+}
