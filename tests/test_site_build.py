@@ -444,6 +444,24 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     assert not too_long, too_long  # the page's one ceiling for every code line
 
 
+def test_home_configuration_is_valid_under_protocol_2_1(home: str):
+    """M19-R1: a reader who copies the homepage's configuration gets one the CLI accepts.
+
+    Protocol 2.1 refuses an untyped routing identity with IDENTITY_UNTYPED (hub
+    SPEC §5, §10): the grammar is `~`, `app:`, `user:` or `team:`. And
+    `gh codecrew identity new` exits 1 without `--name` (hub CLI.md).
+    """
+    lines = code_lines(section(home, "cc-crew"))
+    identities = [line.split("identity:", 1)[1].split("#")[0].strip() for line in lines if line.strip().startswith("identity:")]
+    assert identities  # the example still routes its seats
+    untyped = [value for value in identities if value != "~" and not re.match(r"(app|user|team):\S+$", value)]
+    assert not untyped, untyped
+    commands = [html.unescape(re.sub(r"<[^>]+>", "", m)) for m in re.findall(r"gh codecrew identity new.*?(?=</code>|\n)", home)]
+    assert commands  # the page still shows the verb that mints a seat's holder
+    nameless = [command for command in commands if not re.search(r"\s--name\s+\S", command)]
+    assert not nameless, nameless
+
+
 def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
     why = section(home, "cc-why")
     assert "<img" not in why
