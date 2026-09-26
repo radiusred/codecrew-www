@@ -13,7 +13,7 @@ import pytest
 
 WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
 HUB_CHECKOUT = "repository: radiusred/gh-codecrew"
-STRICT_BUILD = "- run: zensical build --clean --strict"
+STRICT_BUILD = "- run: uv run zensical build --clean --strict"
 
 
 def steps(workflow: str) -> list[str]:
@@ -31,7 +31,7 @@ def the_step(blocks: list[str], *marks: str) -> int:
 
 @pytest.mark.parametrize(
     ("workflow", "consumer"),
-    [("site.yml", "- run: python3 sync_docs.py"), ("ci.yml", "- run: uv run pytest")],
+    [("site.yml", "- run: uv run python sync_docs.py"), ("ci.yml", "- run: uv run pytest")],
 )
 def test_the_hub_is_checked_out_where_the_sync_reads_it(workflow: str, consumer: str) -> None:
     blocks = steps(workflow)
@@ -46,12 +46,28 @@ def test_the_deploy_syncs_then_builds_strict() -> None:
     blocks = steps("site.yml")
     order = [
         the_step(blocks, HUB_CHECKOUT),
-        the_step(blocks, "- run: python3 sync_docs.py"),
-        the_step(blocks, "- run: python3 main.py"),
-        the_step(blocks, "- run: zensical build"),
+        the_step(blocks, "- run: uv run python sync_docs.py"),
+        the_step(blocks, "- run: uv run python main.py"),
+        the_step(blocks, "- run: uv run zensical build"),
     ]
     assert order == sorted(order)
     assert blocks[order[-1]].splitlines()[0] == STRICT_BUILD
+
+
+def test_the_deploy_builds_with_the_locked_theme() -> None:
+    """The deploy installs what the tests ran against: uv.lock's zensical, not whatever
+    PyPI serves that day. An unpinned `pip install zensical` put 0.0.65 on the live site
+    while CI tested 0.0.58, and the homepage's title came out different (#32, #61)."""
+    blocks = steps("site.yml")
+    setup = the_step(blocks, "- uses: astral-sh/setup-uv@")
+    frozen = the_step(blocks, "- run: uv sync --frozen")
+    build = the_step(blocks, "- run: uv run zensical build")
+    assert setup < frozen < build
+    for block in blocks:
+        assert "pip install" not in block, block
+        for line in block.splitlines():
+            if "zensical" in line and line.lstrip().startswith("- run:"):
+                assert line.lstrip().startswith("- run: uv run "), line
 
 
 def test_the_lint_check_calls_the_shared_action_under_the_required_context() -> None:
