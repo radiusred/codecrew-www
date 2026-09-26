@@ -21,15 +21,15 @@ jobs:
         with:
           repository: radiusred/gh-codecrew
           path: _sources/gh-codecrew
-      - uses: actions/setup-python@v6
-        with:
-          python-version: 3.x
-      - run: pip install zensical
-      - run: python3 sync_docs.py
+      # Build with uv.lock's zensical, the one the tests ran against: an unpinned
+      # install let the live site drift from the tested build (#32, #61).
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - run: uv run python sync_docs.py
         env:
           SYNC_SOURCE_BASE: _sources
-      - run: python3 main.py
-      - run: zensical build --clean --strict
+      - run: uv run python main.py
+      - run: uv run zensical build --clean --strict
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
