@@ -27,63 +27,65 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 </div>
 </section>
 
-<section class="cc-section cc-how" markdown>
+<section class="cc-section cc-example" markdown>
 <div class="cc-section__inner" markdown>
 
-## How it works
+<p class="cc-example__label">A worked example</p>
 
-<p class="cc-how__lead" markdown="span">Your agent runs the verbs — under each step, the bubble on the right is the one it runs. You are needed at three moments: when a gate asks you a question, when a PR wants your review, and when a milestone wants your verdict.</p>
+## One agent builds. Another checks the work. { #the-example }
 
-<div class="cc-steps" markdown>
-<div class="cc-step" markdown>
+<p class="cc-example__lead" markdown="span">This one is told through CodeCrew's own crew: Cody, on Claude Code, writes the code, and Checky, on Codex, reviews it, each acting on GitHub as its own App. The change is made up; the crew and the verbs are real. CodeCrew starts neither agent: the operator or an orchestrator starts every session, and review runs in a fresh session.</p>
 
-### :lucide-flag: Milestone
-
-A GitHub issue, with its requirements written into it.
-
-<div class="cc-chat" markdown>
-<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Let's add a new feature.</p>
-<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew milestone new`</p>
+<ol class="cc-thread" markdown>
+<li class="cc-turn cc-turn--you" markdown>
+<p class="cc-turn__avatar" markdown="span">:lucide-user:</p>
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**You** · the goal</p>
+<p class="cc-bubble" markdown="span">The public API needs a rate limit. Requirement: a client over it gets a 429 with a `Retry-After` header.</p>
+<p class="cc-turn__note" markdown="span">A milestone issue carries the goal and the requirement; a task issue hangs off it.</p>
 </div>
-
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-bubble" markdown="span">Plan's on the task. The limiter and its tests are pushed, and the PR is open.</p>
+<p class="cc-turn__note" markdown="span">`gh codecrew task start` refuses a task with no plan. The PR's author is Cody's App.</p>
 </div>
-<div class="cc-step" markdown>
-
-### :lucide-list-checks: Task
-
-An issue with a plan in it, hung off the milestone. Plans come before work: `task start` refuses without one.
-
-<div class="cc-chat" markdown>
-<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Plan it and get started.</p>
-<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew task start`</p>
+</li>
+<li class="cc-turn cc-turn--checky" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · radiusred-checky[bot]</p>
+<p class="cc-bubble" markdown="span">Changes requested. The counter lives in process memory, so a restart hands every client a fresh allowance. Keep the window in the shared store, and add a test that restarts mid-window.</p>
+<p class="cc-turn__note" markdown="span">An ordinary GitHub review on the diff, from a different App and a different harness.</p>
 </div>
-
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-bubble" markdown="span">Fixed in a new commit: the window is in the shared store, and the restart test passes.</p>
 </div>
-<div class="cc-step" markdown>
-
-### :lucide-git-pull-request: PR
-
-One task, one PR, one merge point. Every gate is checked here, and a blocked one refuses with a reason.
-
-<div class="cc-chat" markdown>
-<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: Reviewed and approved.</p>
-<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew task finish`</p>
+</li>
+<li class="cc-turn cc-turn--checky" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · radiusred-checky[bot]</p>
+<p class="cc-bubble" markdown="span">Re-reviewed at the new head. The restart case holds. Approved.</p>
 </div>
-
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · radiusred-cody[bot]</p>
+<p class="cc-bubble" markdown="span">`gh codecrew task finish`</p>
+<p class="cc-turn__note" markdown="span">It checks CI, Checky's approval and every human gate, then merges. A blocked gate refuses with a reason.</p>
 </div>
-<div class="cc-step" markdown>
+</li>
+</ol>
 
-### :lucide-file-text: Record
-
-At close, the recorded decisions become a milestone document, reviewed like code.
-
-<div class="cc-chat" markdown>
-<p class="cc-bubble cc-bubble--you" markdown="span">:lucide-user: That's everything. Close it.</p>
-<p class="cc-bubble cc-bubble--agent" markdown="span">:simple-claude: `gh codecrew milestone close`</p>
-</div>
-
-</div>
-</div>
+<p class="cc-example__close" markdown="span">When every task has landed, QA checks what was built against each requirement, and the recorded decisions become the milestone's document. You stay where the protocol keeps you: the goal, any question only you can answer, and the verdict, if the qa seat is yours.</p>
 
 </div>
 </section>
