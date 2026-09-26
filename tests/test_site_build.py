@@ -41,14 +41,15 @@ if UPSTREAM is None:
 # column holds 43 characters before it scrolls sideways. The longest command
 # is 42. Longer lines scroll on a phone.
 INSTALL_LINE_MAX = 42
-# One rule for every code line on the page: the step lines (longest 33,
-# the crew section's `identity new`) are held to the same 42.
+# One rule for every code line on the page: the step lines (longest 33) and
+# the YAML are held to the same 42. The crew section's `identity new` is the
+# exception: with the `--name` protocol 2.1 requires it is 54, so it wraps (#44).
 STEP_CODE_MAX = 42
 CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 # The crew section's example routing table, the only fenced block on the home page.
-# Its identities are placeholders: the M8 rule keeps crew members off this page,
-# and the hub README carries the real table (operator, #19).
+# Its identities are made-up, typed placeholders: the M8 rule keeps crew members off
+# this page, and the page no longer points at the hub's real table (M19-R1, #44).
 TABLE_BLOCK = r'<div class="language-yaml highlight">.*?</div>'
 # The receipts: glyph, header, strapline, and the popover's detail with its link target.
 RECEIPTS = (
@@ -426,9 +427,9 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     assert len(re.findall(TABLE_BLOCK, crew, re.S)) == 1
     lead, _, rest = crew.partition('<div class="language-yaml highlight">')
     assert "routing table" in text(lead)  # it lands under the sentence that names one
-    # The gloss sends the reader to the hub's real table by the anchor the README
-    # cut left it (gh-codecrew#235: `## The routing table`), not the numbered beat.
-    assert '<a href="https://github.com/radiusred/gh-codecrew#the-routing-table">' in lead
+    assert "illustrative" in text(lead)  # the gloss says it is an example (M19-R1)
+    # ...and no longer sends the reader to the hub's real table to read it against.
+    assert "gh-codecrew#the-routing-table" not in home
     assert "2-four-seats" not in home
     assert "identity new reviewer" in rest  # and before the verb that mints a seat's holder
     lines = code_lines(crew)
@@ -438,7 +439,7 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     keys = {line.split(":")[0].strip() for line in lines[1:]}
     assert {"harness", "model", "identity"} <= keys  # what a row routes
     identities = [line.strip().removeprefix("identity: ").split("  ")[0] for line in lines if line.strip().startswith("identity:")]
-    assert identities == ["coder-bot", "review-bot", "qa-bot", "doc-bot", "~"]  # placeholders, and a seat a person holds
+    assert identities == ["app:myorg-coder", "app:myorg-checker", "app:myorg-tester", "app:myorg-writer", "~"]  # placeholders, and a seat a person holds
     assert "    identity: ~   # a human: the operator" in lines  # the comment says so in the block
     too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
     assert not too_long, too_long  # the page's one ceiling for every code line
