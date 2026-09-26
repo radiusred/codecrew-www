@@ -246,7 +246,7 @@ def test_hero_leads_with_the_crew(home: str):
     assert "different harnesses and models" in lead and "build and review" in lead
     # Apps are optional (user:, team:, operator-held seats): the attribution claim is
     # conditional on the agent acting under its App, not said of every commit (#54's review).
-    assert "Anything an agent does under its App" in lead
+    assert "Anything an agent does under its App — a commit, a review, a recorded decision — carries that App's name." in lead
     assert "Every commit, review and recorded decision carries" not in lead
     # The worked example says, once, who starts the sessions and that review runs fresh;
     # the hero does not repeat it, and names no crew member (R3's example does).

@@ -19,7 +19,7 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 # Your coding agents, working as a crew on GitHub. { .cc-hero__headline }
 
-<p class="cc-hero__sub" markdown="span">**CodeCrew** gives each of your coding agents a GitHub App identity of its own, so different harnesses and models can build and review each other's work. Anything an agent does under its App, a commit, a review, a recorded decision, carries that App's name.</p>
+<p class="cc-hero__sub" markdown="span">**CodeCrew** gives each of your coding agents a GitHub App identity of its own, so different harnesses and models can build and review each other's work. Anything an agent does under its App — a commit, a review, a recorded decision — carries that App's name.</p>
 
 <p class="cc-hero__sub" markdown="span">The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); separation of duties is not, and distinct identities are what make it real: route the reviewer to its own App, and CodeCrew merges only on that App's approval, never the author's.</p>
 
