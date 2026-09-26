@@ -227,6 +227,68 @@ def test_home_keeps_the_header(home: str):
     assert 'class="md-tabs"' in home
 
 
+def front_matter(source: Path) -> dict[str, str]:
+    """The plain `key: value` lines of a Markdown page's front matter, quotes stripped."""
+    front = source.read_text().split("---\n")[1]
+    return {k: v.strip().strip("\"'") for k, v in re.findall(r"^(\w+):[ \t]*(\S.*)$", front, re.M)}
+
+
+def head_meta(page: str) -> dict[str, str]:
+    """What a page's head tells a search engine or a link preview: title and description, three ways each."""
+    found = {"title": html.unescape(re.search(r"<title>(.*?)</title>", page, re.S).group(1)).strip()}
+    for attr, name in (
+        ("name", "description"),
+        ("property", "og:title"),
+        ("property", "og:description"),
+        ("name", "twitter:title"),
+        ("name", "twitter:description"),
+    ):
+        found[name] = html.unescape(re.search(rf'<meta {attr}="{name}" content="([^"]*)"', page).group(1))
+    return found
+
+
+def test_home_metadata_carries_the_crew_pitch(home: str):
+    """M19-R7: the home page's description and title say what the hero says (agents under
+    their own GitHub App identities, different harnesses and models building and reviewing,
+    the record in GitHub), not the receipts-led line it carried before M19."""
+    front = front_matter(ROOT / "docs" / "index.md")
+    meta = head_meta(home)
+    description = front["description"]
+    assert meta["description"] == meta["og:description"] == meta["twitter:description"] == description
+    for pitch in ("GitHub App identity", "different harnesses and models", "build and review", "record"):
+        assert pitch in description, pitch
+    assert "receipts" not in description.lower()
+    # The title's tagline is the hero's headline, set from the page's own front matter.
+    hero = section(home, "cc-hero")
+    h1 = re.search(r"<h1[^>]*>(.*?)</h1>", hero, re.S).group(1)
+    headline = squash(text(re.sub(r'<a class="headerlink".*?</a>', "", h1, flags=re.S)))
+    assert front["tagline"] == headline.removesuffix(".")
+    assert meta["title"] == meta["og:title"] == meta["twitter:title"] == f"CodeCrew — {front['tagline']}"
+    assert "receipts" not in " ".join(meta.values()).lower()
+
+
+def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
+    """M19-R7 sets the pitch for the home page only: the docs and the 404 keep the site's
+    description and tagline, and a blog post keeps its own front matter's."""
+    config = (site.parent / "zensical.toml").read_text()
+    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    home_front = front_matter(ROOT / "docs" / "index.md")
+    for page in (site / "docs" / "identities" / "index.html", site / "404.html"):
+        meta = head_meta(page.read_text())
+        assert meta["description"] == meta["og:description"] == site_description, page
+        assert home_front["tagline"] not in " ".join(meta.values()), page
+    docs_title = head_meta((site / "docs" / "identities" / "index.html").read_text())["title"]
+    assert docs_title.startswith("Identities") and docs_title.endswith(" - CodeCrew")  # its own title, as before
+    main_template = (ROOT / "docs" / "overrides" / "main.html").read_text()
+    tagline = re.search(r'{% set tagline = "(.*)" %}', main_template).group(1)
+    assert head_meta((site / "404.html").read_text())["title"] == f"CodeCrew — {tagline}"
+
+    source = sorted((ROOT / "docs" / "blog" / "posts").glob("*.md"))[-1]
+    meta = head_meta(post.page)
+    assert meta["description"] == meta["og:description"] == front_matter(source)["description"]
+    assert meta["title"] == f"{post.title} - CodeCrew"
+
+
 def test_home_has_the_product_page_flow(home: str):
     order = ("cc-hero", "cc-example", "cc-crew", "cc-why", "cc-proof", "cc-start")
     positions = [home.index(f"cc-section {name}") for name in order]
