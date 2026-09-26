@@ -23,9 +23,26 @@
    - footer: the meta strip only (copyright + social), no prev/next
      navigation. Carries cc-footer so extra.css can give it a ground of
      its own, apart from the Start now band above it.
+   - htmltitle, extrahead: main.html's markup, rendered with the page's
+     own `tagline` front matter in place of the site-wide one, so the
+     title, og:title and twitter:title carry the home page's pitch
+     (M19-R7) while the 404, whose title is also the site name, keeps
+     main.html's. The description needs no override: main.html already
+     prefers the page's `description` to site_description. A top-level
+     `set` would not do: main.html's own `set tagline` runs after it.
   MiniJinja: built-in filters only, no Python.
 -#}
 {% extends "main.html" %}
+
+{% block htmltitle %}
+  {% set tagline = page.meta.tagline %}
+  {{ super() }}
+{% endblock %}
+
+{% block extrahead %}
+  {% set tagline = page.meta.tagline %}
+  {{ super() }}
+{% endblock %}
 
 {% block site_nav %}
   {% if nav %}
