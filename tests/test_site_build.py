@@ -560,6 +560,14 @@ def test_code_blocks_step_down_below_420px_so_42_characters_fit_at_375(css: str,
     assert re.search(TABLE_BLOCK, section(home, "cc-crew"), re.S)
 
 
+def test_the_routing_example_line_anchors_take_no_tab_stop(css: str, home: str):
+    """The site-wide `anchor_linenums` gives each YAML row an empty link, a Tab stop
+    nobody can see; the home page hides them from the keyboard (M19-R7)."""
+    table = re.search(TABLE_BLOCK, section(home, "cc-crew"), re.S).group(0)
+    assert re.search(r'<a id="__codelineno-[\d-]+"[^>]*href="#__codelineno-[\d-]+"></a>', table)  # still emitted
+    assert "visibility: hidden" in rule(css, '.md-typeset .cc-crew .highlight a[id^="__codelineno-"]')
+
+
 def test_proof_captures_are_two_halves_of_one_review(css: str, home: str, site: Path):
     proof = section(home, "cc-proof")
     assert proof.index('class="cc-captures"') < proof.index('class="cc-receipts"')  # under the heading, above the receipts
