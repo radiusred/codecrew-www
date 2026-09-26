@@ -97,61 +97,36 @@ description: Agent-driven software delivery, with the receipts kept in GitHub. A
 
 ## The crew
 
-<div class="cc-crew__badges" markdown>
-<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<div class="cc-crew__badges">
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
-<figcaption>implementer</figcaption>
-<div class="cc-pop__panel" markdown>
-
-You implement one CodeCrew task. Your work is judged by someone else — build for the reviewer, the QA agent, and the person reading the audit trail in three weeks.
-
-</div>
+<figcaption><strong class="cc-crew__role">implementer</strong> <span class="cc-crew__summary">Plans the task on its issue, builds the change and opens the pull request.</span></figcaption>
 </figure>
-<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
-<figcaption>reviewer</figcaption>
-<div class="cc-pop__panel" markdown>
-
-You review one CodeCrew PR. You exist because self-evaluation shares the blind spots of the work itself — your value is independence, so form your own view before reading the implementer's narrative.
-
-</div>
+<figcaption><strong class="cc-crew__role">reviewer</strong> <span class="cc-crew__summary">Reads the diff in a fresh session, then requests changes or approves.</span></figcaption>
 </figure>
-<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-test-t.png" alt="" width="512" height="512">
-<figcaption>qa</figcaption>
-<div class="cc-pop__panel" markdown>
-
-You exercise what was built against what was promised. The reviewer judges the diff; you judge the behaviour. Run the thing.
-
-</div>
+<figcaption><strong class="cc-crew__role">qa</strong> <span class="cc-crew__summary">Runs what was built against each requirement and records a verdict.</span></figcaption>
 </figure>
-<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-docs-t.png" alt="" width="512" height="512">
-<figcaption>doc-synthesizer</figcaption>
-<div class="cc-pop__panel" markdown>
-
-You write the milestone document — the record that lets someone in three months understand *why* the system is the way it is. You compile what was recorded; you do not invent what wasn't.
-
-</div>
+<figcaption><strong class="cc-crew__role">doc-synthesizer</strong> <span class="cc-crew__summary">Turns the milestone's recorded decisions into its document.</span></figcaption>
 </figure>
-<figure class="cc-crew__badge cc-pop" tabindex="0" markdown>
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-coord-t.png" alt="" width="512" height="512">
-<figcaption>coordinator</figcaption>
-<div class="cc-pop__panel" markdown>
-
-You run the delivery loop for a CodeCrew project and hold no seat in it. You open the milestones and the tasks, dispatch the crew seats by the routing table, own the review loop in both directions, raise the gates only a human can answer, and drive the milestone verbs. You never write code, review, verdict or merge: your product is the record on GitHub and one correct dispatch per transition.
-
-</div>
+<figcaption><strong class="cc-crew__role">coordinator</strong> <span class="cc-crew__summary">Opens the work and starts each role's session: you, or an orchestrator.</span></figcaption>
 </figure>
 </div>
 
 <div class="cc-crew__copy" markdown>
 
-Four seats — implementer, reviewer, qa, doc-synthesizer — and a coordinator that dispatches them. Each is a contract: a short markdown file, not an account. Any harness can load one — Claude Code, Codex, Gemini CLI, or an orchestration platform's own agents — and GitHub is the only message bus, so any two of them interoperate by construction.
+Each role is a contract: a short markdown file that any harness can load, whether that is Claude Code, Codex, Gemini CLI or an orchestration platform's own agents. The roles talk to each other only through GitHub, so an implementer in one harness and a reviewer in another need nothing between them but the repository.
 
-A seat is held by you, by a colleague's username, by a GitHub team, or by a GitHub App identity minted for the job. Solo is not a degraded mode; it is the routing table with every seat pointing at you.
+`gh codecrew init` hands every role to you to begin with; [the identities guide](docs/identities.md) covers who else can hold one, and how to hand it over.
 
-Here is an illustrative `roles:` section: the App names are made up, and yours will look different. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. An identity says what kind of principal it is: `app:` for a GitHub App, as here, or `user:` and `team:` for people. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it.
+Who holds each role, and which harness and model its sessions run under, is one row per role in the hub's routing table. Here is an illustrative one: the App names are made up, and yours will look different. `app:` marks a GitHub App, and `~` means you hold the role yourself.
 
 ```yaml
 roles:
@@ -174,11 +149,11 @@ roles:
     identity: ~   # a human: the operator
 ```
 
-When you want the record to show *which* agent did what, one command mints a crew member:
+One command mints an App for a role:
 
 <p class="cc-crew__verb" markdown="span">`gh codecrew identity new reviewer --name myorg-checker`</p>
 
-It builds the App through GitHub's manifest flow with that role's minimal permissions, stores the key outside the repo, and routes the seat for you. The protocol does not change — only the table does.
+It builds the App through GitHub's manifest flow with that role's minimal permissions, stores the key outside the repo, and routes the role to it.
 
 </div>
 
@@ -193,29 +168,29 @@ It builds the App through GitHub's manifest flow with that role's minimal permis
 <div class="cc-panels" markdown>
 <div class="cc-panel" markdown>
 
+<p class="cc-panel__glyph" markdown="span">:lucide-git-pull-request:</p>
+
+### See who built it, and who checked it
+
+Give the implementer and the reviewer each their own GitHub App, and a pull request carries two names: one on the commits, the other on the review. A bot name tells you which App acted, not which model was behind it; the routing table records what each role was set up to run.
+
+</div>
+<div class="cc-panel" markdown>
+
+<p class="cc-panel__glyph" markdown="span">:lucide-scan-eye:</p>
+
+### A second model, with other blind spots
+
+The reviewer contract opens with the reason it exists: “self-evaluation shares the blind spots of the work itself”. So review belongs in a clean session, holding the contract, the task and the diff rather than the author's conversation, and it can run on a different model or harness from the author's. A reviewer on another model does not share the author's blind spots. It has its own, and nobody is promising it catches every bug.
+
+</div>
+<div class="cc-panel" markdown>
+
 <p class="cc-panel__glyph" markdown="span">:lucide-scroll-text:</p>
 
 ### The record is the work
 
-Milestones are GitHub issues; tasks are issues with a plan in them. Decisions and deviations are comments written at the moment they happen, in a fixed shape a machine can find later.
-
-</div>
-<div class="cc-panel" markdown>
-
-<p class="cc-panel__glyph" markdown="span">:lucide-shield-check:</p>
-
-### Gates that refuse, not remind
-
-CI green, an independent approval, a human sign-off wherever one was asked for — enforced by a CLI that refuses rather than reminds. A blocked gate exits non-zero with a machine-readable reason: an agent acts on the code, a human reads the detail.
-
-</div>
-<div class="cc-panel" markdown>
-
-<p class="cc-panel__glyph" markdown="span">:simple-github:</p>
-
-### No server, no dashboard
-
-One repo is the hub: the contracts, the routing table and the milestone issues. Every other repo is a spoke with a two-line pointer file, and for a single project the hub is its own spoke. There is no other place to look — it is `gh`, issues, PRs and CI.
+Decisions and deviations are comments on the task's issue or PR, written when they happen, in a shape a machine can find later. `gh codecrew task finish` merges only when CI is green, the review your routing requires has passed and every raised human gate is resolved; otherwise it refuses, with a reason. No server, no dashboard: it is `gh`, issues, PRs and CI, [across one repo or several](docs/spec.md#3-topology-hub-and-spokes).
 
 </div>
 </div>

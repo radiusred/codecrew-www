@@ -604,9 +604,11 @@ h1,h2,h3 {
   color: var(--md-default-fg-color--light);
 }
 
-/* The crew: five seat badges over the copy, on the page ground between
+/* The crew: five role badges over the copy, on the page ground between
    the worked example and the Why band; a hairline marks it off from the
-   example. */
+   example. Each badge carries its role and a one-line summary in visible
+   text (M19-R5): a fixed column, so the summaries wrap to the same measure
+   and the row centres, five across on a wide screen and two on a phone. */
 .cc-crew {
   border-top: 0.05rem solid var(--md-default-fg-color--lightest);
 }
@@ -615,34 +617,51 @@ h1,h2,h3 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem 1.6rem;
+  align-items: flex-start;
+  gap: 1.2rem 1.2rem;
   margin: 0 0 1.6rem;
 }
 
 .md-typeset .cc-crew__badge {
+  flex: 0 1 7.5rem;
   margin: 0;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.2rem;
   text-align: center;
-  font-size: 0.7rem;
-  color: var(--md-default-fg-color--light);
 }
 
 /* The badges are white marks on transparency (the hub's -t variants), so
    each sits on a rounded tile of the brand purple in both schemes: on the
    light ground the marks would otherwise vanish, and the tile is the
    ground the App avatars carry. */
-.md-typeset .cc-crew__badge p {
-  margin: 0; /* md_in_html wraps the image in a paragraph */
-}
-
 .md-typeset .cc-crew__badge img {
   display: block;
   width: 6rem;
   height: 6rem;
-  margin: 0 auto 0.4rem;
+  margin: 0 auto 0.5rem;
   padding: 0.5rem;
   border-radius: 1.2rem;
   background: var(--cc-purple);
+}
+
+.md-typeset .cc-crew__badge figcaption {
+  margin: 0;
+  max-width: none;
+  font-style: normal;
+}
+
+.md-typeset .cc-crew__role {
+  display: block;
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .cc-crew__summary {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--md-default-fg-color--light);
 }
 
 .cc-crew__copy {
@@ -829,87 +848,6 @@ h1,h2,h3 {
   }
 }
 
-/* Popovers, CSS only: a Markdown panel inside its trigger, hidden at rest
-   and shown while the trigger is hovered or holds focus (the trigger has
-   tabindex="0", so keyboard users and a tap on a phone open it too). On
-   desktop the panel sits below the trigger, centred; below 45em it is a
-   sheet fixed to the bottom of the viewport, so it can never leave the
-   screen. Page ground, hairline border, shadow, the scheme's own text.
-   Anything that opens a popover shows an accent-tint outline and lifts
-   2px on hover and focus-within; nothing else lifts. The outline rests
-   at full width in transparent, so only its colour transitions and it
-   starts from nothing: with no resting outline, outline-color computes to
-   currentColor (the text colour) and the first frames of the transition
-   painted a near-white ring in slate and a near-black one in the light
-   scheme. Keyboard focus shows the same sustained ring; there is no
-   brighter focus-visible state. The lifted trigger is a stacking context
-   (the transform), so its panel's z-index ranks only inside it and later
-   siblings in the grid painted over a row-1 panel; the open trigger
-   therefore takes z-index 5, above every sibling at auto. */
-.cc-pop {
-  position: relative;
-  cursor: default;
-  border-radius: 0.4rem;
-  outline: 0.08rem solid transparent;
-  outline-offset: 0.3rem;
-  transition: transform 125ms, outline-color 125ms;
-}
-
-.cc-pop:hover, .cc-pop:focus-within {
-  z-index: 5;
-  outline-color: color-mix(in srgb, var(--cc-cyan) 45%, transparent);
-  transform: translateY(-2px);
-}
-
-/* The panel rises out of its badge: its top edge overlaps the tile's
-   bottom by 0.5rem, its padding only, so a wide panel never sits over a
-   neighbouring badge's caption (the tile is 7rem wide and a 22rem panel
-   still reaches its neighbours). The receipts had pop-overs too, until
-   M19-R4 put their text on the page. Clearly raised: white with a firmer
-   shadow on the off-white page, where white is the lightest ground there
-   is; --cc-purple-light, two shades up from the page, in slate. Type at
-   0.95rem. */
-.md-typeset .cc-pop .cc-pop__panel {
-  position: absolute;
-  top: calc(100% - 0.5rem);
-  left: 50%;
-  z-index: 4;
-  width: 22rem;
-  max-width: calc(100vw - 2rem);
-  margin: 0;
-  padding: 0.8rem 1rem;
-  border: 0.05rem solid var(--md-default-fg-color--lighter);
-  border-radius: 0.4rem;
-  background: #ffffff;
-  color: var(--md-default-fg-color);
-  box-shadow: 0 0.8rem 2rem #0a001259;
-  font-size: 0.95rem;
-  font-weight: 400;
-  line-height: 1.5;
-  text-align: left;
-  transform: translateX(-50%);
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 125ms, visibility 125ms;
-}
-
-[data-md-color-scheme="slate"] .md-typeset .cc-pop .cc-pop__panel {
-  background: var(--cc-purple-light);
-}
-
-.cc-pop:hover .cc-pop__panel, .cc-pop:focus-within .cc-pop__panel {
-  visibility: visible;
-  opacity: 1;
-}
-
-.md-typeset .cc-pop__panel p {
-  margin: 0 0 0.5rem;
-}
-
-.md-typeset .cc-pop__panel p:last-child {
-  margin-bottom: 0;
-}
-
 .md-typeset .cc-proof .cc-proof__not-yet {
   margin: 1.6rem 0 0;
   font-size: 0.75rem;
@@ -1005,23 +943,6 @@ h1,h2,h3 {
   /* Outranks the nth-child rules above, which are one class more specific. */
   .md-typeset .cc-capture:nth-child(n) {
     margin-left: 0;
-    transform: none;
-  }
-  /* The lift as a relative offset here: a transformed trigger would become
-     the containing block of its fixed sheet below and pin it to the badge. */
-  .cc-pop:hover, .cc-pop:focus-within {
-    top: -2px;
-    transform: none;
-  }
-  /* The popover as a sheet at the bottom of the viewport. */
-  .md-typeset .cc-pop .cc-pop__panel {
-    position: fixed;
-    top: auto;
-    right: 1rem;
-    bottom: 1rem;
-    left: 1rem;
-    width: auto;
-    max-width: none;
     transform: none;
   }
   .md-typeset .cc-section h2 {
