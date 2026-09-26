@@ -470,144 +470,143 @@ h1,h2,h3 {
   }
 }
 
-/* How it works: the lead under the title, then four numbered steps, two by
-   two from 45em up. (Four across a 56rem column gives each step 256px; the
-   44-character verb lines need 356px, so the numbers carry the order
-   instead of a row of arrows.) The lead names .cc-how for the same
-   specificity reason as the hero paragraphs. */
-.md-typeset .cc-how .cc-how__lead {
+/* The worked example (M19-R3): a small label over the title, the lead,
+   then the loop as a thread, one turn per speaker, and one closing line.
+   The label and lead name .cc-example for the same specificity reason as
+   the hero paragraphs. */
+.md-typeset .cc-example .cc-example__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-example .cc-example__lead,
+.md-typeset .cc-example .cc-example__close {
   max-width: 40rem;
   margin: -0.8rem auto 2rem;
   text-align: center;
 }
 
-/* Under each step, a two-line conversation in speech bubbles, CSS only:
-   the human's on the left with the person glyph and one short line, the
-   agent's on the right with the Claude glyph and the verb it runs as code.
-   Grounds from the palette: a faint fg tint for the human, the cyan tint
-   for the agent; the text is the scheme's own, above 10:1 on both in both
-   schemes. Tails are a bordered pseudo-element outside the bubble, so the
-   translucent grounds never overlap. The code never breaks; the bubble
-   fits its content up to 88% of the card, so nothing scrolls on a phone. */
-.cc-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-  padding: 0 0.4rem; /* room for the tails, so they stay inside the card */
+.md-typeset .cc-example .cc-example__close {
+  margin: 2rem auto 0;
 }
 
-.md-typeset .cc-step .cc-bubble {
+/* The thread: each turn is the speaker's avatar beside a name line, a
+   speech bubble and, for some, a note on what the protocol did. A hairline
+   down the avatar column joins the turns into one conversation. */
+.md-typeset ol.cc-thread {
   position: relative;
-  width: fit-content;
-  max-width: 88%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset ol.cc-thread::before {
+  content: "";
+  position: absolute;
+  top: 1.2rem;
+  bottom: 1.2rem;
+  left: 1.2rem;
+  border-left: 0.1rem solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .cc-thread li.cc-turn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.8rem;
+  margin: 0 0 1.2rem;
+  padding: 0;
+}
+
+.md-typeset .cc-thread li.cc-turn:last-child {
+  margin-bottom: 0;
+}
+
+/* The avatar: the crew artwork is white marks, so it sits on the purple
+   the crew badges use; the person glyph gets the same disc. */
+.md-typeset .cc-example .cc-turn__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
   margin: 0;
-  padding: 0.45rem 0.7rem;
-  border-radius: 0.6rem;
+  padding: 0.3rem;
+  border-radius: 50%;
+  background: var(--cc-purple);
+  color: #ffffff;
+}
+
+.md-typeset .cc-turn__avatar .twemoji,
+.md-typeset .cc-turn__avatar .twemoji svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.md-typeset .cc-turn__body {
+  min-width: 0;
+}
+
+.md-typeset .cc-example .cc-turn__who {
+  margin: 0.15rem 0 0.3rem;
   font-size: 0.75rem;
-  line-height: 1.45;
+  color: var(--md-default-fg-color--light);
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .cc-turn__who strong {
   color: var(--md-default-fg-color);
 }
 
-.md-typeset .cc-step .cc-bubble--you {
-  align-self: flex-start;
-  border-bottom-left-radius: 0.15rem;
+/* The bubble: its tail is the square top-left corner, pointing back at
+   the avatar. Grounds from the palette: a faint fg tint for you, the cyan
+   tint for Cody, the review seat's pink (as on the cc:needs-decision
+   label) for Checky; the text is the scheme's own on all three. */
+.md-typeset .cc-example .cc-bubble {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.15rem 0.7rem 0.7rem 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .cc-turn--you .cc-bubble {
   background: var(--md-default-fg-color--lightest);
 }
 
-.md-typeset .cc-step .cc-bubble--agent {
-  align-self: flex-end;
-  border-bottom-right-radius: 0.15rem;
+.md-typeset .cc-turn--cody .cc-bubble {
   background: var(--cc-cyan-tint);
 }
 
-.md-typeset .cc-step .cc-bubble::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  width: 0;
-  height: 0;
-  border-top: 0.45rem solid transparent;
+.md-typeset .cc-turn--checky .cc-bubble {
+  background: color-mix(in srgb, var(--cc-pink) 18%, transparent);
 }
 
-.md-typeset .cc-step .cc-bubble--you::before {
-  left: -0.4rem;
-  border-right: 0.45rem solid var(--md-default-fg-color--lightest);
-}
-
-.md-typeset .cc-step .cc-bubble--agent::before {
-  right: -0.4rem;
-  border-left: 0.45rem solid var(--cc-cyan-tint);
-}
-
-.md-typeset .cc-bubble .twemoji {
-  height: 1em;
-  margin-right: 0.35em;
-  vertical-align: -0.1em;
-  color: var(--md-default-fg-color--light);
-}
-
-.md-typeset .cc-bubble--agent .twemoji {
-  color: var(--md-accent-fg-color);
-}
-
-.md-typeset .cc-bubble .twemoji svg {
-  width: 1em;
-}
-
-.md-typeset .cc-bubble--agent code {
+.md-typeset .cc-example .cc-bubble code {
   padding: 0;
   background: transparent;
   color: inherit;
   white-space: nowrap;
 }
 
-.cc-steps {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.2rem;
-  counter-reset: cc-step;
-}
-
-.cc-step {
-  position: relative;
-  padding-top: 0.8rem;
-  border-top: 0.15rem solid var(--md-accent-fg-color);
-  counter-increment: cc-step;
-}
-
-.md-typeset .cc-step h3::before {
-  content: counter(cc-step);
-  margin-right: 0.4rem;
-  color: var(--md-accent-fg-color);
-}
-
-/* A Lucide glyph before each step's name, in the accent. */
-.md-typeset .cc-step h3 .twemoji {
-  height: 1em;
-  margin-right: 0.3em;
-  vertical-align: -0.1em;
-  color: var(--md-accent-fg-color);
-}
-
-.md-typeset .cc-step h3 .twemoji svg {
-  width: 1em;
-}
-
-@media screen and (min-width: 45em) {
-  .cc-steps {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media screen and (min-width: 60em) {
-  .cc-steps {
-    gap: 1.6rem 2.4rem;
-  }
+.md-typeset .cc-example .cc-turn__note {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--light);
 }
 
 /* The crew: five seat badges over the copy, on the page ground between
-   How it works and the Why band; a hairline marks it off from the steps. */
+   the worked example and the Why band; a hairline marks it off from the
+   example. */
 .cc-crew {
   border-top: 0.05rem solid var(--md-default-fg-color--lightest);
 }
