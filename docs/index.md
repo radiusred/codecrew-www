@@ -147,32 +147,32 @@ Four seats — implementer, reviewer, qa, doc-synthesizer — and a coordinator 
 
 A seat is held by you, by a colleague's username, by a GitHub team, or by a GitHub App identity minted for the job. Solo is not a degraded mode; it is the routing table with every seat pointing at you.
 
-Here is what a `roles:` section looks like. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it. Yours will look different: [CodeCrew's own table](https://github.com/radiusred/gh-codecrew#the-routing-table) is in its README.
+Here is an illustrative `roles:` section: the App names are made up, and yours will look different. Each row is a seat — the identity that holds it, and the harness and model it is dispatched under, which can differ from row to row. An identity says what kind of principal it is: `app:` for a GitHub App, as here, or `user:` and `team:` for people. The coordinator is routed too, which is why there are five rows, and `~` means a human holds it.
 
 ```yaml
 roles:
   implementer:
     harness: claude-code
     model: claude-fable-5
-    identity: coder-bot
+    identity: app:myorg-coder
   reviewer:
     harness: codex
     model: gpt-5.5
-    identity: review-bot
+    identity: app:myorg-checker
   qa:
     harness: codex
     model: gpt-5.5
-    identity: qa-bot
+    identity: app:myorg-tester
   doc-synthesizer:
     harness: claude-code
-    identity: doc-bot
+    identity: app:myorg-writer
   coordinator:
     identity: ~   # a human: the operator
 ```
 
 When you want the record to show *which* agent did what, one command mints a crew member:
 
-<p class="cc-crew__verb" markdown="span">`gh codecrew identity new reviewer`</p>
+<p class="cc-crew__verb" markdown="span">`gh codecrew identity new reviewer --name myorg-checker`</p>
 
 It builds the App through GitHub's manifest flow with that role's minimal permissions, stores the key outside the repo, and routes the seat for you. The protocol does not change — only the table does.
 
