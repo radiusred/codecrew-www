@@ -679,6 +679,14 @@ h1,h2,h3 {
   margin: 0 0 0.8rem;
 }
 
+/* The routing example's line anchors (`anchor_linenums`, set site-wide)
+   are empty links with no line number to sit on: invisible, yet each one
+   a Tab stop, 18 in a row. Hidden, they leave the tab order and stay
+   targets for a #__codelineno link (M19-R7). */
+.md-typeset .cc-crew .highlight a[id^="__codelineno-"] {
+  visibility: hidden;
+}
+
 /* Why: three panels on the glowing band, on the page ground. */
 .cc-panels {
   display: grid;
