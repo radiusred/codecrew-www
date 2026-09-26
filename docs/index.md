@@ -287,6 +287,12 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 
 ## Start now
 
+<div class="cc-start__step" markdown>
+
+### First, work solo { #start-solo }
+
+<p class="cc-start__step-lead" markdown="span">`gh codecrew init` routes every seat to you, so the whole protocol runs on your own `gh` login from the first task, with your agent working under it. Solo is a routing configuration, not a cut-down CodeCrew. One thing changes: GitHub won't let you approve your own pull request, so `task finish` takes your recorded confirmation in place of a review.</p>
+
 <div class="cc-start__pair" markdown>
 <div class="cc-install cc-term">
 <div class="cc-term__bar" aria-hidden="true"><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__title">~/my-project</span></div>
@@ -298,6 +304,32 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 </div>
 
 <p class="cc-start__payoff" markdown="span"><span class="cc-start__lead">Then one sentence to your agent:</span> “Let's build this project!”</p>
+
+</div>
+</div>
+
+<div class="cc-start__step" markdown>
+
+### Next, add an agent reviewer { #add-a-reviewer }
+
+<p class="cc-start__step-lead" markdown="span">When you want the review done by someone other than you, give the reviewer seat a GitHub App of its own, under a name of your own. One command creates it:</p>
+
+<div class="cc-start__pair" markdown>
+<div class="cc-reviewer cc-term">
+<div class="cc-term__bar" aria-hidden="true"><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__title">~/my-project</span></div>
+<pre><code class="cc-term__code"><span class="cc-term__line">gh codecrew identity new reviewer \</span>
+<span class="cc-term__line cc-term__line--cont" data-out="GitHub asks you to confirm the App">  --name myorg-checker</span></code></pre>
+</div>
+
+<ol class="cc-start__next" markdown>
+<li markdown="span">**Install it on each account it must reach.** The command prints the install link. Installations are per account: installed on your organisation, the App sees nothing under your personal account, or anyone else's, until you make it public-installable and install it there too.</li>
+<li markdown="span">**Commit the route.** The command has already routed the reviewer seat to `app:myorg-checker` in `.codecrew/config.yml`, and left the change uncommitted for your next pull request.</li>
+<li markdown="span">**Start the reviewer when a pull request is ready.** Open a new session, with none of the author's conversation, in the harness you want reviewing, and point it at `gh codecrew roles show reviewer`: its contract has it mint its own token and review as the App. CodeCrew does not start it; you do, or an orchestrator does ([how a role session is dispatched](docs/identities.md#dispatching-a-role-session)).</li>
+</ol>
+
+</div>
+
+<p class="cc-start__approval" markdown="span">**Want its approval to count toward GitHub's own required review too?** Add `--with-approval-permission` when you mint it. GitHub counts approvals only from accounts with write access, so the flag gives the reviewer App write access to the repository's contents: a trade of privilege for an agent-gated merge, which is why it is never the default ([the trade, in full](docs/identities.md#minting-a-crew-member)). The required review itself is a branch protection rule or ruleset, and on a private repo, branch protection needs a paid GitHub plan. Without either, CodeCrew's own gate still holds for every merge made through it: `gh codecrew task finish` refuses until the reviewer App has approved.</p>
 
 </div>
 
