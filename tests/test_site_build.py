@@ -1059,3 +1059,59 @@ def test_the_hidden_drawer_rests_on_a_stylesheet_rule_that_still_exists(site: Pa
     assert "display:block" in rule
     query = css[css.rindex("@media", 0, start) :][: css[css.rindex("@media", 0, start) :].index("{")]
     assert query == "@media screen and (max-width:76.234375em)", query
+
+
+# The theme's search panel classes, shut: the panel and its filter pane (M19-R7).
+SEARCH_SHUT_CLASSES = (".l.d", ".a.d")
+
+
+def home_script(home: str) -> str:
+    footer = home[home.index('<footer class="md-footer cc-footer">') :]
+    return re.search(r"<script>(.*?)</script>", footer, re.S).group(1)
+
+
+def shut_search_rules(script: str) -> dict[str, str]:
+    """The rules the home page's script adds inside the search's shadow root, by selector."""
+    sheet = "".join(re.findall(r'"([^"]*)"', re.search(r"var SEARCH_SHUT =(.*?);\n", script, re.S).group(1)))
+    return dict(re.findall(r"([^{}]+)\{([^}]*)\}", sheet))
+
+
+def test_the_shut_search_panel_is_out_of_the_tab_order(home: str, blog: str, docs_index: str):
+    """The theme's search is a shadow-root panel that, shut, is only faded out, so Tab
+    walked through three of its controls at 1280px and four at 375px. On the home page a
+    script puts a rule in that shadow root hiding the shut panel and filter pane once
+    their fade is over (M19-R7); off the home page it takes the rule out again."""
+    script = home_script(home)
+    rules = shut_search_rules(script)
+    assert tuple(rules) == SEARCH_SHUT_CLASSES
+    for selector, body in rules.items():
+        assert "visibility:hidden" in body, selector
+        assert re.search(r"visibility 0s \.\d+s\b", body), selector  # hidden only after the fade
+    for hook in (
+        ".shadowRoot",  # the theme's search host
+        'mine.id = "cc-search-shut"',
+        "root.appendChild(mine)",
+        "mine.remove()",  # undone on a page reached by instant navigation
+        "quietSearch(!!p.drawer)",  # the drawer's id marks the home page
+        "new MutationObserver",  # the theme may mount search after this runs
+    ):
+        assert hook in script, hook
+    for page in (blog, docs_index):
+        assert "cc-search-shut" not in page
+
+
+def test_the_shut_search_rules_follow_the_theme_they_key_off(site: Path, home: str):
+    """The rules name the theme's minified class names and repeat its transitions, with a
+    delayed visibility change added. If a theme upgrade renames the classes or changes the
+    fade, this fails rather than letting the invisible Tab stops quietly come back."""
+    bundles = list((site / "assets/javascripts").glob("bundle.*.min.js"))
+    assert len(bundles) == 1, bundles
+    theme = bundles[0].read_text()
+    for selector, ours in shut_search_rules(home_script(home)).items():
+        match = re.search(re.escape(selector) + r"\{([^}]*)\}", theme)
+        assert match, f"the theme no longer ships {selector}"
+        declared = dict(d.split(":", 1) for d in match.group(1).split(";"))
+        assert "pointer-events" in declared or "width" in declared, selector  # the shut state
+        assert declared["opacity"] == "0", selector
+        transition = dict(d.split(":", 1) for d in ours.split(";"))["transition"]
+        assert transition.startswith(declared["transition"] + ",visibility 0s "), selector
