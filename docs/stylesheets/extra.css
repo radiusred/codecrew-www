@@ -434,6 +434,12 @@ h1,h2,h3 {
   color: var(--cc-cyan);
 }
 
+/* A shell continuation (Start now's `identity new`, split to keep to the
+   page's 42-character code line): no prompt, the same indent as one. */
+.cc-term__line--cont::before {
+  content: "";
+}
+
 .cc-term__line[data-out]::after {
   content: "\A" attr(data-out);
   white-space: pre;
@@ -865,6 +871,42 @@ h1,h2,h3 {
   margin: 1rem auto 0;
 }
 
+/* Two steps, solo then the reviewer's App (M19-R6): each a small heading
+   and a lead, then its terminal with what goes beside it. The follow-up
+   list and the required-review note are prose to read, so they sit left
+   aligned in a reading column rather than centred. */
+.cc-start__step + .cc-start__step {
+  margin-top: 3.2rem;
+}
+
+.md-typeset .cc-start h3 {
+  margin: 2rem 0 0;
+  font-size: 1.1rem;
+}
+
+.md-typeset .cc-start .cc-start__step-lead {
+  margin-bottom: 1.6rem;
+}
+
+.md-typeset .cc-start .cc-start__next {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding-left: 1.2rem;
+  text-align: left;
+}
+
+.md-typeset .cc-start .cc-start__next li {
+  margin-bottom: 0.6rem;
+}
+
+.md-typeset .cc-start .cc-start__approval {
+  margin-top: 2rem;
+  padding: 0.8rem 1rem;
+  border-left: 0.2rem solid var(--cc-pink);
+  text-align: left;
+  font-size: 0.75rem;
+}
+
 /* The terminal and the payoff line: stacked and centred on phones, two
    columns from 60em with the terminal on the left and the line beside it,
    vertically centred. The line is the section's close: the quote in the
@@ -909,6 +951,9 @@ h1,h2,h3 {
     text-align: left;
   }
   .cc-start__pair .cc-term {
+    margin: 0;
+  }
+  .md-typeset .cc-start .cc-start__next {
     margin: 0;
   }
 }
