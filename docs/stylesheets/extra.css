@@ -174,7 +174,7 @@ h1,h2,h3 {
   margin: 0 auto;
 }
 
-/* Alternate sections (Why, Start now) sit darker than the page ground and
+/* Alternate sections (Why, the crew, Start now) sit darker than the page ground and
    carry a radial glow in the spirit of the logo artwork: a soft light
    centre on the purple-black. In slate the band runs from --cc-purple-light
    at the centre to --cc-ink at the edges (body text stays above 10:1, the
@@ -617,15 +617,11 @@ h1,h2,h3 {
   color: var(--md-default-fg-color--light);
 }
 
-/* The crew: five role badges over the copy, on the page ground between
-   the worked example and the Why band; a hairline marks it off from the
-   example. Each badge carries its role and a one-line summary in visible
+/* The crew: five role badges over the copy, on an alternate band between
+   the worked example and the proof (M22: Why moved above the example, so
+   the bands still alternate). Each badge carries its role and a one-line summary in visible
    text (M19-R5): a fixed column, so the summaries wrap to the same measure
    and the row centres, five across on a wide screen and two on a phone. */
-.cc-crew {
-  border-top: 0.05rem solid var(--md-default-fg-color--lightest);
-}
-
 .cc-crew__badges {
   display: flex;
   flex-wrap: wrap;
