@@ -21,6 +21,8 @@ links into them resolve to GitHub like any other path that does not sync.
 - `docs/index.md` — landing page
 - `docs/blog/posts/` — blog posts; `_drafts/` holds future-dated ones
 - `docs/docs/` — the synced upstream docs, generated and git-ignored
+- `overrides/` — the theme templates; kept outside `docs/` so the build does
+  not publish their source
 - `main.py` — draft promotion, blog nav, archive page and Atom feed
 - `sync_docs.py` — the upstream docs sync and its nav block
 - `zensical.toml` — site config; the nav blocks between `BEGIN_BLOG_POSTS`
