@@ -59,9 +59,11 @@ EXAMPLE_CREW = ("cody", "checky")
 # this page, and the page no longer points at the hub's real table (M19-R1, #44).
 TABLE_BLOCK = r'<div class="language-yaml highlight">.*?</div>'
 # The receipts: glyph, header, strapline, and the visible detail with its link target (M19-R4).
+# The first is M22-R1's point (e), merged into the milestones receipt it duplicated (M22-R3).
+HUB = "https://github.com/radiusred/gh-codecrew"
 RECEIPTS = (
-    ("milestone", "Every milestone shipped this way.", "Agent-authored, independently reviewed.",
-     "deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each", "https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones"),
+    ("package-check", "It is working software, not a set of prompts.", "Tests, CI and releases, in public.",
+     "vets, builds and tests it on every pull request", HUB + "/actions"),
     ("megaphone", "The first spoke published its own announcement.", "Driven from the hub, in public.",
      "delivered by the protocol it describes", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
     ("bot", "This project is agent-staffed, and you can check.", "Four seats, four App identities.",
@@ -91,12 +93,39 @@ ROLE_SUMMARIES = {
 }
 # The contracts' openings speak to the agent that loads them; none of it is homepage copy now.
 CONTRACT_VOICE = ("You implement one", "You review one", "You exercise what", "You write the milestone", "You run the delivery loop")
-# Why: three benefits, in order (M19-R5). The second is the different-model reviewer, bounded.
+# Why: M22-R1's ideas (a) to (d), in order, with M19-R5's bounded different-model reviewer
+# kept between the identities and the decisions. (e) is the proof section's first receipt.
 WHY_HEADINGS = (
-    "See who built it, and who checked it",
+    "Gates in code, not instructions",
+    "GitHub is the only state store",
+    "One App per role, with that role's permissions",
     "A second model, with other blind spots",
-    "The record is the work",
+    "Decisions, recorded as they are made",
 )
+# M22-R1's five ideas, each by a phrase only its own copy uses, and the section that carries
+# it. M22-R3: a first-time reader meets each one once.
+IDEAS = {
+    "gates in code": ("cc-why", "not instructions an agent is asked to follow"),
+    "GitHub the only state store": ("cc-why", "no workflow database beside the repository"),
+    "an App per role": ("cc-why", "rather than every agent sharing one privileged token"),
+    "decisions as they happen": ("cc-why", "written at the moment of choice"),
+    "working software": ("cc-proof", "working software, not a set of prompts"),
+}
+# What the gates panel says each verb checks, keyed by the refusal code (hub SPEC §10) that
+# backs it: M22-R2's gate lists match the refusal table, and claim nothing it does not hold.
+FINISH_CHECKS = {
+    "NO_PR": "an open pull request closes the task",
+    "NOT_OWNER": "the seat finishing it is the one that started it",
+    "NO_CHECKS": "CI has reported checks",
+    "CHECKS_FAILING": "every one has passed",
+    "NO_HOLDER_REVIEW": "the review your routing requires has approved",
+    "GATE_UNRECORDED": "every human gate raised on the task has an answer on the record",
+}
+CLOSE_CHECKS = {
+    "OPEN_TASKS": "refuses while a task is still open",
+    "VERDICT_UNSATISFIED": "every requirement's latest QA verdict is satisfied",
+    "DOC_MISSING": "the milestone's document is on the default branch",
+}
 # Character-exact from the reviewer contract's opening (hub .codecrew/roles/reviewer.md).
 REVIEWER_REASON = "self-evaluation shares the blind spots of the work itself"
 # Where the middle of the page sends a reader for principal types and topology (M19-R5).
@@ -365,10 +394,11 @@ def test_hero_keeps_the_commodity_line_aimed_at_separation_of_duties(home: str):
     words = squash(text(sentence))
     assert "The coordinator running your agents is a commodity now" in words
     assert "separation of duties is not" in words
-    assert "distinct identities" in words
-    # Bounded to the tier where it holds: a routed reviewer App (SPEC §4, NO_HOLDER_REVIEW).
-    # An operator-held reviewer seat or pure solo counts other things (#54's review).
-    assert "route the reviewer to its own App, and CodeCrew merges only on that App's approval, never the author's" in words
+    assert "distinct identities are what make it real." in words
+    # M22-R3: the line leads into the identities and the gates and no longer restates them.
+    # The merge rule it carried is the gates panel's, said once there (NO_HOLDER_REVIEW).
+    assert "approval" not in words and "merges" not in words
+    assert "the review your routing requires has approved" in squash(text(section(home, "cc-why")))
 
 
 def test_home_has_exactly_one_install_block(home: str):
@@ -648,6 +678,13 @@ def test_proof_receipts_are_visible_text(home: str):
         body = re.search(r'<div class="cc-receipt__detail">(.*?)</div>', card, re.S).group(1)
         assert detail in squash(text(body)) and f'href="{href}"' in body
         assert card.index("cc-receipt__glyph") < card.index("<strong>") < card.index("cc-receipt__strap") < card.index("cc-receipt__detail")
+    # Point (e) is checkable from its links (M22-R1), and names no version or date (M22-R2).
+    software = cards[0]
+    for href in (HUB, HUB + "/actions", HUB + "/releases", HUB + "/tree/main/docs/milestones"):
+        assert f'href="{href}"' in software, href
+    words = squash(text(software))
+    assert "unit tests" in words and "fake tracker" in words and "every pull request" in words
+    assert "Every milestone shipped this way." not in proof  # merged into this receipt
     staffed = squash(text(cards[2]))
     assert PAID_PLAN in staffed  # the claim's plan-tier qualifier
     orchestrator = cards[3]
@@ -786,32 +823,124 @@ def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
     assert "<img" not in why
     assert not (site / "assets" / "images" / "hub-and-spokes.svg").exists()
     panels = why.split('<div class="cc-panel">')[1:]
-    assert len(panels) == 3
+    assert len(panels) == len(WHY_HEADINGS)
     for panel in panels:
         glyphs = re.findall(r'<p class="cc-panel__glyph">(.*?)</p>', panel, re.S)
         assert len(glyphs) == 1 and glyphs[0].count('<span class="twemoji">') == 1, panel[:80]
         assert panel.index("cc-panel__glyph") < panel.index("<h3")  # the glyph tops the panel
 
 
-def test_why_is_three_benefits_one_of_them_a_bounded_second_model(home: str):
-    """M19-R5: three benefits, including a bounded claim that a reviewer on a different model
-    does not share the author's blind spots. Bounded: fresh context is the other half of the
+def why_panels(home: str) -> dict[str, str]:
+    """The Why section's panels, by heading, as visible text."""
+    panels = section(home, "cc-why").split('<div class="cc-panel">')[1:]
+    heading = lambda p: squash(text(re.search(r"<h3[^>]*>(.*?)<a class=\"headerlink\"", p, re.S).group(1)))
+    return {heading(p): squash(text(p)) for p in panels}
+
+
+def test_why_is_the_five_ideas_and_a_bounded_second_model(home: str):
+    """M22-R1: the panels explain (a) to (d), each with the reason it matters; M19-R5's
+    bounded second-model panel stays. Bounded: fresh context is the other half of the
     independence (hub docs/identities.md), a bot name proves an App and not a model, and no
     review catches everything."""
-    why = section(home, "cc-why")
-    panels = why.split('<div class="cc-panel">')[1:]
-    headings = tuple(squash(text(re.search(r"<h3[^>]*>(.*?)<a class=\"headerlink\"", p, re.S).group(1))) for p in panels)
-    assert headings == WHY_HEADINGS
-    who, second, record = (squash(text(p)) for p in panels)
-    assert "own GitHub App" in who and "not which model" in who  # attribution, and what it does not prove
+    panels = why_panels(home)
+    assert tuple(panels) == WHY_HEADINGS
+    gates, state, apps, second, record = panels.values()
+    assert "code paths in the CLI" in gates and "easier to trust than an agent's own report" in gates
+    assert "No server, no dashboard" in state  # the fact survives, the topology does not
+    assert "drift out of step" in state
+    # A failed session loses no task context, bounded: what was never pushed is not on GitHub.
+    assert "a session that fails loses no task context" in state
+    assert "never pushed or wrote down goes with it" in state
+    assert "a GitHub App of its own" in apps and "what its contract needs" in apps
+    assert "not which model" in apps  # attribution, and what it does not prove
     assert f"\u201c{REVIEWER_REASON}\u201d" in second  # the contract's reason, quoted exactly
     assert "different model or harness" in second
     assert "clean session" in second  # fresh context, not only a fresh identity
     assert "its own" in second and "every bug" in second  # it has blind spots of its own; no promise of catching all
-    assert "guarantee" not in squash(text(why)).lower()
+    assert "guarantee" not in squash(text(section(home, "cc-why"))).lower()
     assert "Decisions and deviations" in record  # said once, here (the hero test pins its absence there)
-    assert "refuses" in record and "gh codecrew task finish" in record  # the gates, enforced by the CLI
-    assert "No server, no dashboard" in record  # the fact survives, the topology does not
+    assert "synthesized" in record and "planning document" in record  # the reason it matters
+
+
+def test_each_of_the_five_ideas_is_on_the_page_once(home: str):
+    """M22-R3: nothing on the home page says the same thing twice. Each idea has one home,
+    and the copy it replaced (the attribution panel, the record panel, the milestones
+    receipt, the hero's merge rule) is gone."""
+    page = squash(text("".join(section(home, name) for name in re.findall(r'<section class="cc-section (cc-[\w-]+)', home))))
+    for idea, (home_section, phrase) in IDEAS.items():
+        assert page.lower().count(phrase.lower()) == 1, idea
+        assert phrase.lower() in squash(text(section(home, home_section))).lower(), idea
+    for gone in ("See who built it, and who checked it", "The record is the work",
+                 "Every milestone shipped this way.", "merges only on that App's approval"):
+        assert gone not in page, gone
+    assert page.count("No server, no dashboard") == 1
+    assert page.count("Decisions and deviations") == 1
+    assert page.count("Anything an agent does under its App") == 1  # attribution: the hero's, alone
+    assert page.count(WHO_STARTS_SESSIONS) == 1
+
+
+def refusal_table() -> dict[str, str]:
+    """The hub SPEC §10 refusal table: each code and the verbs that raise it."""
+    spec = (UPSTREAM / "gh-codecrew" / "SPEC.md").read_text()
+    return dict(re.findall(r"^\| `([A-Z_]+)` \| ([^|]+) \|", spec, re.M))
+
+
+def test_the_gates_claim_only_what_the_refusal_table_backs(home: str):
+    """M22-R2: every check the gates panel names for task finish and milestone close is a
+    refusal that verb raises in the hub's SPEC §10 table. The plan is task start's check
+    (NO_PLAN), not task finish's, and the worked example already says so."""
+    gates = why_panels(home)[WHY_HEADINGS[0]]
+    table = refusal_table()
+    finish, close = gates.split("gh codecrew milestone close")
+    assert "gh codecrew task finish merges only when" in finish
+    for code, claim in FINISH_CHECKS.items():
+        assert "`task finish`" in table[code], code
+        assert claim in finish, code
+    for code, claim in CLOSE_CHECKS.items():
+        assert "`milestone close`" in table[code], code
+        assert claim in close, code
+    assert "`task start`" in table["NO_PLAN"] and "`task finish`" not in table["NO_PLAN"]
+    assert "plan" not in gates.lower()
+    assert "Each refusal names its reason" in gates
+
+
+def test_the_identity_claim_carries_the_approval_opt_in(home: str, site: Path):
+    """M22-R2: review and qa cannot change code by default only. --with-approval-permission
+    gives the reviewer write access (hub docs/identities.md), and the panel says why and
+    points at Start now's full account of the trade instead of repeating it."""
+    why = section(home, "cc-why")
+    apps = why_panels(home)[WHY_HEADINGS[2]]
+    assert "By default, the reviewer and qa Apps are minted able to read the code but not push to it." in apps
+    assert "--with-approval-permission gets write access" in apps
+    assert "count toward GitHub's own required review" in apps
+    assert PAID_PLAN not in apps  # Start now carries the plan-tier qualifier
+    assert 'href="#add-a-reviewer"' in why and 'id="add-a-reviewer"' in section(home, "cc-start")
+
+
+def test_the_new_copy_names_no_version_no_date_and_no_source(home: str):
+    """M22-R1 and R2: the copy is the site's own, in no first person, attributed to nothing,
+    and it carries no version number or release date that would go stale."""
+    proof = section(home, "cc-proof")
+    software = re.split(r'<div class="cc-receipt">', proof)[1]
+    new_copy = squash(text(section(home, "cc-why") + software))
+    assert not re.search(r"\bv?\d+\.\d+", new_copy), new_copy
+    assert not re.search(r"\b20\d\d\b", new_copy)
+    months = r"\b(January|February|March|April|May|June|July|August|September|October|November|December)\b"
+    assert not re.search(months, new_copy)
+    assert not re.search(r"\b(I|I'm|I've|my|me)\b", new_copy)
+    page = text(home).lower()
+    for source in ("chatgpt", "openai", "appraisal"):
+        assert source not in page, source
+
+
+def test_why_panels_fill_their_rows(css: str):
+    """Five panels: one column on a phone, two from 45em with the fifth across both, and from
+    60em three over two on a six-track grid, so the odd count leaves no hole."""
+    assert ".cc-panels {\n    grid-template-columns: repeat(2, 1fr);" in css
+    assert ".cc-panel:last-child:nth-child(odd) {\n    grid-column: 1 / -1;" in css
+    assert ".cc-panels {\n    grid-template-columns: repeat(6, 1fr);" in css
+    assert ".cc-panel:nth-child(n+4),\n  .cc-panel:last-child:nth-child(odd) {\n    grid-column: span 3;" in css
+    assert "grid-template-columns: 1fr" in rule(css, ".cc-panels")  # one column on a phone
 
 
 def test_the_middle_leaves_topology_and_principal_types_to_the_docs(home: str, site: Path):
