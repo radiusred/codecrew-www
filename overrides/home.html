@@ -50,6 +50,8 @@
      main.html's. The description needs no override: main.html already
      prefers the page's `description` to site_description. A top-level
      `set` would not do: main.html's own `set tagline` runs after it.
+     extrahead also sets `application`, which adds the SoftwareApplication
+     node to main.html's JSON-LD graph on this page alone (M23-R3).
   MiniJinja: built-in filters only, no Python.
 -#}
 {% extends "main.html" %}
@@ -61,6 +63,7 @@
 
 {% block extrahead %}
   {% set tagline = page.meta.tagline %}
+  {% set application = true %}
   {{ super() }}
 {% endblock %}
 

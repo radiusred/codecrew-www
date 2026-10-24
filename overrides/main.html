@@ -6,7 +6,9 @@
    - Open Graph / Twitter Card meta tags, the social image at an absolute URL
      (a link preview fetches it from wherever the link was pasted, so a
      relative path resolves against nothing)
-   - JSON-LD structured data (Organization, WebSite, SoftwareSourceCode, BlogPosting)
+   - JSON-LD structured data (Organization, WebSite, SoftwareSourceCode, and on
+     the homepage SoftwareApplication, which home.html asks for by setting
+     `application`; BlogPosting on a dated post)
 
   One title and one description per page, worked out by the macros below and
   used for <title>, the description meta and the og:/twitter: tags alike:
@@ -95,6 +97,26 @@
         "codeRepository": "https://github.com/radiusred/gh-codecrew",
         "license": "https://www.apache.org/licenses/LICENSE-2.0",
         "author": { "@id": "https://www.radiusred.uk/#organization" }
+        {%- if application is defined -%},
+        "targetProduct": { "@id": "{{ config.site_url }}#application" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "{{ config.site_url }}#application",
+        "name": "CodeCrew",
+        "description": {{ page.meta.description | tojson }},
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "GitHub CLI extension",
+        "operatingSystem": "Linux, macOS, Windows",
+        "url": "{{ config.site_url }}",
+        "image": "{{ social_image }}",
+        "sameAs": ["https://github.com/radiusred/gh-codecrew"],
+        "downloadUrl": "https://github.com/radiusred/gh-codecrew/releases/latest",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+        "publisher": { "@id": "https://www.radiusred.uk/#organization" }
+        {%- endif %}
       }
     ]
   }
