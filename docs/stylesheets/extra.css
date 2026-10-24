@@ -382,7 +382,7 @@ h1,h2,h3 {
    a line span; the `$` prompt is ::before and the dim "output" beneath it
    is ::after from the span's data-out attribute, so neither is in the DOM
    text: Zensical's copy button (clipboard.js reads the selection's text)
-   yields the five commands and nothing else. The window sizes to its
+   yields the six commands and nothing else. The window sizes to its
    longest line plus the prompt (fit-content), centred in the band, and is
    the positioned box, so Zensical's copy button (nav.md-code__nav) lands in
    the title bar. The light-type variables are set here as the header does,
@@ -1058,6 +1058,20 @@ h1,h2,h3 {
 }
 
 .md-typeset .cc-start .cc-start__next li {
+  margin-bottom: 0.6rem;
+}
+
+/* What to have before the terminal (M23-R4): the gh floor and a check on
+   pull requests. Prose to read, so left aligned in the same reading column
+   as the follow-up list, with the lead's gap before the terminal. */
+.md-typeset .cc-start .cc-start__needs {
+  max-width: 30rem;
+  margin: 0 auto 1.6rem;
+  padding-left: 1.2rem;
+  text-align: left;
+}
+
+.md-typeset .cc-start .cc-start__needs li {
   margin-bottom: 0.6rem;
 }
 

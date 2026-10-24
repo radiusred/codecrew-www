@@ -163,8 +163,16 @@ INSTALL_COMMANDS = (
     "gh extension install radiusred/gh-codecrew",
     "cd my-project",
     "gh codecrew init",
+    "git push -u origin HEAD",  # init commits and never pushes (M23-R4, the trial's finding 8)
     "claude",
 )
+# What Start now asks you to have before the terminal (M23-R4, the first-hour trial's
+# findings 7 and 8 on radiusred/gh-codecrew#431): the gh floor, worded as the hub README and
+# the first-milestone guide word it, and a check on pull requests, linked to the guide's step.
+GH_FLOOR = "gh 2.50.0 or later"
+GH_INSTALL = "https://github.com/cli/cli#installation"
+CI_CLAIM = "A task can't finish until a check runs on its pull request, and init doesn't add one."
+CI_GUIDE = "docs/first-milestone/#5-finish-the-task"
 
 
 @pytest.fixture(scope="module")
@@ -674,22 +682,50 @@ def test_install_block_is_a_terminal_window_that_copies_clean(home: str):
     term = start[start.index('<div class="cc-install cc-term">') : start.index("</pre>")]
     assert 'class="cc-term__bar"' in term and term.count('class="cc-term__dot"') == 3
     assert 'class="cc-term__title">~/my-project<' in term
-    assert term.count('<span class="cc-term__line"') == 5
+    assert term.count('<span class="cc-term__line"') == 6
     outputs = [html.unescape(o) for o in re.findall(r'data-out="([^"]+)"', term)]
     assert outputs == [
         ">= 2.50.0 required",
         "any repo on GitHub, new or years old",
         "writes and commits the CodeCrew files",
+        "sends init's commit to GitHub",
         "or codex, or whichever agent you run",
     ]
     lines = code_lines(start)  # the DOM text: what the copy button yields
-    assert lines == list(INSTALL_COMMANDS)  # five runnable lines, the version check first
+    assert lines == list(INSTALL_COMMANDS)  # six runnable lines, the version check first
+    assert lines.index("git push -u origin HEAD") == lines.index("gh codecrew init") + 1  # pushed before the agent starts
     assert "Two things to have first" not in start  # the prerequisites paragraph is gone
     assert "$" not in "".join(lines)  # the prompt is CSS, never typed
     too_long = [line for line in lines if len(line) > INSTALL_LINE_MAX]
     assert not too_long, too_long
     assert term.index("</code>") > term.index(INSTALL_COMMANDS[-1])
     assert 'class="cc-term__line"' in term and "\n" in term  # one command per line
+
+
+def test_start_names_the_gh_floor_and_the_check_before_the_terminal(home: str, site: Path):
+    """M23-R4: a stranger learns, before running anything, the gh version CodeCrew needs (in
+    the page's text: the terminal's output line is CSS, which the trial's reader never saw),
+    that a distribution's gh can be older, where GitHub's own installer is, and that a task
+    cannot finish without a check on its pull request, with the guide's workflow linked."""
+    start = section(home, "cc-start")
+    solo = start.split('<h3 id="add-a-reviewer">')[0]
+    needs = re.search(r'<ul class="cc-start__needs">(.*?)</ul>', solo, re.S)
+    assert needs, "the list sits in the solo step"
+    assert solo.index('class="cc-start__needs"') < solo.index('class="cc-install cc-term"')  # read before the terminal
+    floor, check = (squash(text(li)) for li in re.findall(r"<li>(.*?)</li>", needs.group(1), re.S))
+    assert floor.startswith(GH_FLOOR + ".")
+    assert "Distribution packages can be older (Ubuntu 24.04 ships 2.45.0)" in floor
+    assert f'href="{GH_INSTALL}"' in needs.group(1)  # GitHub's own instructions, every platform
+    assert check.startswith("A check on pull requests.")
+    assert CI_CLAIM in check
+    assert f'href="{CI_GUIDE}"' in needs.group(1)
+    page, _, anchor = CI_GUIDE.partition("#")
+    guide = (site / page / "index.html").read_text()
+    assert f'id="{anchor}"' in guide and "NO_CHECKS" in guide  # the step that carries the workflow
+    # Said once (M22-R3): the floor and the check are in the page's text here and nowhere else.
+    words = squash(text(home))
+    assert words.count("2.50.0") == 1 and words.count("check runs on its pull request") == 1
+    assert words.count("ten-line workflow") == 1
 
 
 def test_payoff_line_sits_beside_the_terminal(home: str, css: str):

@@ -327,6 +327,11 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 
 <p class="cc-start__step-lead" markdown="span">`gh codecrew init` routes every seat to you, so the whole protocol runs on your own `gh` login from the first task, with your agent working under it. Solo is a routing configuration, not a cut-down CodeCrew. One thing changes: GitHub won't let you approve your own pull request, so you merge with `task finish --operator-confirm`, which records your confirmation in place of a review.</p>
 
+<ul class="cc-start__needs" markdown>
+<li markdown="span">**`gh` 2.50.0 or later.** Distribution packages can be older (Ubuntu 24.04 ships 2.45.0), so [install it from GitHub's instructions](https://github.com/cli/cli#installation).</li>
+<li markdown="span">**A check on pull requests.** A task can't finish until a check runs on its pull request, and `init` doesn't add one. [The first-milestone guide has a ten-line workflow](docs/first-milestone.md#5-finish-the-task) to copy.</li>
+</ul>
+
 <div class="cc-start__pair" markdown>
 <div class="cc-install cc-term">
 <div class="cc-term__bar" aria-hidden="true"><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__dot"></span><span class="cc-term__title">~/my-project</span></div>
@@ -334,6 +339,7 @@ A Paperclip company — four role agents under a CEO, each on its own App identi
 <span class="cc-term__line">gh extension install radiusred/gh-codecrew</span>
 <span class="cc-term__line" data-out="any repo on GitHub, new or years old">cd my-project</span>
 <span class="cc-term__line" data-out="writes and commits the CodeCrew files">gh codecrew init</span>
+<span class="cc-term__line" data-out="sends init's commit to GitHub">git push -u origin HEAD</span>
 <span class="cc-term__line" data-out="or codex, or whichever agent you run">claude</span></code></pre>
 </div>
 
