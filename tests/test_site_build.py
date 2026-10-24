@@ -486,6 +486,27 @@ def test_the_sitemap_lists_each_canonical_page_once(site: Path):
     assert "Sitemap: https://codecrew.works/sitemap.xml" in (site / "robots.txt").read_text()
 
 
+I_TRIED_IT = "https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it"
+
+
+def test_every_footer_invites_the_reader_to_say_how_it_went(site: Path, css: str):
+    """M23-R5: the footer of every page, the homepage's own and the 404's included, asks a
+    reader how a try went and links straight to the hub's "I tried it" category, in a
+    line of its own at body size rather than among the small print."""
+    for rel, page in built_pages(site).items():
+        footer = page[page.index('<footer class="md-footer') :]
+        invite = re.search(r'<p class="cc-invite">(.*?)</p>', footer, re.S)
+        assert invite, rel
+        assert f'<a href="{I_TRIED_IT}">' in invite.group(1), rel
+        words = squash(text(invite.group(1)))
+        assert words.startswith("Tried CodeCrew?"), rel
+        assert "what stopped you" in words and "I tried it" in words, rel
+        assert footer.index("cc-invite") < footer.index("md-copyright__highlight"), rel
+    invite_rule = rule(css, ".md-typeset .cc-invite")
+    assert "color: var(--md-default-fg-color);" in invite_rule  # full strength, not --lighter
+    assert "font-size: 0.7rem;" in invite_rule
+
+
 def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):
     """www#59: the site-wide description is only a fallback now, and it says what the
     homepage says rather than the receipts-led line the docs used to inherit."""

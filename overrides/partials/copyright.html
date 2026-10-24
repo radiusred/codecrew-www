@@ -1,4 +1,14 @@
+{#-
+  The footer meta strip's left-hand column, on every page: the homepage's own
+  footer (home.html) and the theme's footer (everywhere else, the 404 included)
+  both include this partial. It opens with the invitation to say how a first
+  try went (M23-R5), so the one place that reaches every page carries it.
+-#}
 <div class="md-copyright">
+  <p class="cc-invite">
+    <strong>Tried CodeCrew?</strong> Tell us what you tried, how far you got and what stopped you:
+    <a href="https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it">post in “I tried it” on GitHub Discussions</a>.
+  </p>
   {% if config.copyright %}
     <div class="md-copyright__highlight">
       {{ config.copyright }}
