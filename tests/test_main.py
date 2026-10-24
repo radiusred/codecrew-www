@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -74,3 +75,30 @@ def test_nav_label_is_the_plain_title_with_no_markup(site: Path):
     assert label == "A Plain Title"
     assert "<" not in label and "small" not in label
     assert today.isoformat() not in label
+
+
+GENERATED = ("zensical.toml", "docs/blog/archive.md", "docs/blog/atom.xml")
+
+
+def test_the_committed_blog_metadata_is_what_main_generates(tmp_path: Path, monkeypatch):
+    """www#41: the deploy regenerates the blog nav, the archive and the feed, so a
+    post committed without running main.py reached the live site while main
+    disagreed with it. Regenerating from the committed posts must change nothing.
+
+    Drafts are not reconciled here: the date a draft falls due is not a commit,
+    and the scheduled build that promotes it must not turn main red overnight."""
+    root = Path(__file__).resolve().parent.parent
+    shutil.copytree(root / "docs" / "blog", tmp_path / "docs" / "blog")
+    shutil.copy(root / "zensical.toml", tmp_path / "zensical.toml")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(main, "DOCS_BLOG", Path("docs/blog/posts"))
+    monkeypatch.setattr(main, "CONFIG", Path("zensical.toml"))
+    monkeypatch.setattr(main, "ARCHIVE_PAGE", Path("docs/blog/archive.md"))
+    monkeypatch.setattr(main, "ATOM_FEED", Path("docs/blog/atom.xml"))
+    main.regenerate_nav()
+    main.generate_archive()
+    main.generate_atom_feed()
+    for rel in GENERATED:
+        assert (tmp_path / rel).read_text() == (root / rel).read_text(), (
+            f"{rel} is out of date: run `uv run python main.py` and commit what it writes"
+        )

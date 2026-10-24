@@ -10,4 +10,5 @@ description: A complete index of every post on the CodeCrew blog.
 ### September
 
 - **2026-09-26** — [Protocol 2.1: CodeCrew Learns to Scale Down](posts/2026-09-26-protocol-2-1-scales-down.md)
+- **2026-09-19** — [The Coordinator Is a Commodity Now. The Record Is Not.](posts/2026-09-19-the-coordinator-is-a-commodity-now.md)
 - **2026-09-07** — [Protocol 2.0: CodeCrew Moves Out of Your Repository's Root](posts/2026-09-07-protocol-2-0-and-the-migration.md)
