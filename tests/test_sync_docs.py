@@ -6,6 +6,7 @@ never depends on a radiusred/gh-codecrew checkout being on disk. The real
 upstream is exercised by tests/test_site_build.py, which builds the site.
 """
 
+import json
 import tomllib
 
 import pytest
@@ -106,7 +107,20 @@ def synced(dest=DEST):
 
 
 def page(relpath):
-    return (DEST / relpath).read_text(encoding="utf-8")
+    """A synced page's body: what follows the front matter the sync injects."""
+    text = (DEST / relpath).read_text(encoding="utf-8")
+    return sync_docs.FRONTMATTER_RE.sub("", text, count=1)
+
+
+def front(relpath):
+    """A synced page's injected front matter, each value decoded."""
+    text = (DEST / relpath).read_text(encoding="utf-8")
+    block = sync_docs.FRONTMATTER_RE.match(text)
+    assert block, f"{relpath} has no front matter"
+    return {
+        key: json.loads(value)
+        for key, value in (line.split(": ", 1) for line in block.group(1).splitlines())
+    }
 
 
 def nav_block(root):
@@ -386,3 +400,66 @@ def test_missing_markers_are_an_error_not_a_silent_no_op(upstream):
     (upstream / "zensical.toml").write_text("nav = []\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="BEGIN_DOCS_NAV"):
         write_docs_nav([("Docs", "docs/index.md")])
+
+
+def test_every_synced_page_carries_the_description_written_for_it(upstream):
+    """M23-R3 (www#59): a docs page no longer falls back to the site-wide description.
+    Each one the table knows carries its row, and the rows are distinct and short
+    enough for a search result to show whole."""
+    sync()
+    known = [rel for rel in synced() if rel in sync_docs.DESCRIPTIONS]
+    assert len(known) == len(sync_docs.DESCRIPTIONS)  # every row has its page here
+    for rel in known:
+        assert front(rel)["description"] == sync_docs.DESCRIPTIONS[rel], rel
+    rows = list(sync_docs.DESCRIPTIONS.values())
+    assert len(set(rows)) == len(rows)
+    assert all(len(row) <= sync_docs.DESCRIPTION_MAX for row in rows)
+    assert not any("receipts" in row.lower() for row in rows)
+
+
+def test_the_first_milestone_guide_carries_a_title_for_newcomers(upstream):
+    """M23-R8: the guide's head title says what a newcomer searches for; its nav
+    label and its H1 stay as the hub wrote them."""
+    main()
+    head = front("first-milestone.md")
+    assert head["head_title"].startswith("Getting started with CodeCrew")
+    assert "AI coding agents" in head["head_title"] and "GitHub" in head["head_title"]
+    assert "AI coding agent" in head["description"] and "first milestone" in head["description"]
+    assert page("first-milestone.md").startswith("# Your first milestone")
+    assert '{ "Your first milestone" = "docs/first-milestone.md" }' in nav_block(upstream)
+    assert all("head_title" not in front(rel) for rel in synced() if rel != "first-milestone.md")
+
+
+def test_a_page_the_table_does_not_know_is_described_by_its_first_paragraph(upstream, capsys):
+    repo = upstream / "_sources/gh-codecrew"
+    (repo / "docs/new-guide.md").write_text(
+        "# A new guide\n\n<!-- a note -->\n\n"
+        "This guide shows **one** thing with [a link](identities.md) and `code`. "
+        + "It goes on for a while. " * 10
+        + "\n\n## Next\n",
+        encoding="utf-8",
+    )
+    (repo / "docs/bare.md").write_text("# Bare page\n\n## Only headings\n", encoding="utf-8")
+    sync()
+    described = front("new-guide.md")["description"]
+    assert described.startswith("This guide shows one thing with a link and code. It goes on")
+    assert described.endswith(".") and len(described) <= sync_docs.DESCRIPTION_MAX
+    assert front("bare.md")["description"] == "Bare page, from the CodeCrew documentation."
+    out = capsys.readouterr().out
+    assert "new-guide.md has no row in DESCRIPTIONS" in out
+    assert "bare.md has no row in DESCRIPTIONS" in out
+
+
+def test_a_row_whose_page_did_not_sync_is_reported(upstream, capsys):
+    (upstream / "_sources/gh-codecrew/docs/working-offline.md").unlink()
+    sync()
+    assert "has a row for working-offline.md, which did not sync" in capsys.readouterr().out
+
+
+def test_the_injected_front_matter_leaves_the_nav_titles_alone(upstream):
+    """extract_title reads front matter first; the injected keys carry no title, so
+    every label still comes from the page's H1."""
+    main()
+    block = nav_block(upstream)
+    assert '{ "Identities" = "docs/identities.md" }' in block
+    assert '{ "Introduction" = "docs/index.md" }' in block

@@ -25,6 +25,11 @@ anything else that did not sync — AGENTS.md, ROADMAP.md, CHANGELOG.md, LICENSE
 roles/, assets/ — become absolute GitHub URLs. External URLs and bare in-page
 anchors are left alone.
 
+Every synced page gains front matter: its meta description from DESCRIPTIONS,
+and for a page a newcomer searches for, a head title from HEAD_TITLES (M23-R3,
+M23-R8). The upstream pages carry none, and without it every docs page shared
+the site-wide description.
+
 The Docs nav tab is written between the sentinel markers in zensical.toml, the
 same way main.py maintains the blog's.
 
@@ -38,6 +43,7 @@ Source location: $SYNC_SOURCE_BASE/gh-codecrew, defaulting to ../gh-codecrew.
 CI checks the upstream out under _sources/.
 """
 
+import json
 import os
 import posixpath
 import re
@@ -136,6 +142,73 @@ TRAILING_PAGES = (("contributing.md", "Contributing"), ("security.md", "Security
 # The index's own H1 ("CodeCrew, precisely") titles the page; the tab wants the
 # word a reader scans for.
 INDEX_LABEL = "Introduction"
+
+# Each synced page's meta description (M23-R3, www#59), injected as front matter
+# at sync time: what a search result or a link preview shows for the page, and
+# what /llms.txt lists beside it. Written per page on purpose, in plain words,
+# at most DESCRIPTION_MAX characters, because the upstream pages open on prose
+# that reads well in place and badly as a snippet. A page the table does not
+# know gets its first paragraph, cut at a sentence, and the sync says so; a row
+# whose page no longer syncs is reported too. Keyed by path under DEST.
+DESCRIPTIONS = {
+    "index.md": (
+        "What CodeCrew is, what ships today and where everything else lives: "
+        "the map of the CodeCrew docs, with the order to read them in."
+    ),
+    "first-milestone.md": (
+        "Get started with CodeCrew: install it, set up a repository and take one AI "
+        "coding agent through a first milestone on GitHub, on the free plan."
+    ),
+    "identities.md": (
+        "Run CodeCrew alone on your own GitHub login, or give each coding agent a "
+        "GitHub App identity of its own: who can hold a role, and how to set it up."
+    ),
+    "extensions.md": (
+        "Add your project's own rules to a CodeCrew role contract without forking "
+        "it: what a local extension is, the order it loads in, and what belongs there."
+    ),
+    "platform-interop.md": (
+        "Hosting a whole CodeCrew crew on an orchestration platform that dispatches "
+        "the agents, with a human only at the gates, as learned from real runs."
+    ),
+    "founding-decisions.md": (
+        "The decisions behind CodeCrew's design, made in August 2026 and recorded as "
+        "decision, trade-off and rejected alternative, from GitHub as the only backend on."
+    ),
+    "gsd-vs-frontier-orchestration.md": (
+        "The essay that started CodeCrew: whether a structured process like GSD still "
+        "earns its cost as models improve, and the small kernel of it worth keeping."
+    ),
+    "cli.md": (
+        "Reference for every gh codecrew command: what each one takes, reads, writes "
+        "and prints, what it refuses, and the exit status it returns."
+    ),
+    "working-offline.md": (
+        "Which CodeCrew commands run with no network, which wait for GitHub and what "
+        "each prints when it cannot reach it, and how to finish work begun offline."
+    ),
+    "spec.md": (
+        "The CodeCrew protocol in full: coding agents deliver software with GitHub "
+        "issues, pull requests and CI as the only state, under roles, gates and verbs."
+    ),
+    "contributing.md": (
+        "How to contribute to CodeCrew: ideas and bugs as issues, and every change as "
+        "a task under the open milestone, run by the protocol CodeCrew defines."
+    ),
+    "security.md": (
+        "How CodeCrew handles security: no secrets in the repository, short-lived "
+        "GitHub App tokens, least privilege for each role, and how to report a flaw."
+    ),
+}
+DESCRIPTION_MAX = 160
+# A search-facing head title for a page whose nav label and H1 stay short
+# (M23-R8): what a newcomer types to find it. overrides/main.html uses a page's
+# `head_title` verbatim for <title> and the og:/twitter: titles, nothing else.
+HEAD_TITLES = {
+    "first-milestone.md": (
+        "Getting started with CodeCrew: your first milestone with AI coding agents on GitHub"
+    ),
+}
 
 
 def source_dir():
@@ -272,6 +345,60 @@ def rewrite_links(content, source_repo_path):
     return HTML_IMG_RE.sub(html_replace, content)
 
 
+MD_STRIP = (
+    (re.compile(r"!?\[([^\]]*)\]\([^)]*\)"), r"\1"),  # links and images keep their text
+    (re.compile(r"`([^`]*)`"), r"\1"),
+    (re.compile(r"(\*\*|__|\*|_)(\S(?:.*?\S)?)\1"), r"\2"),
+    (re.compile(r"<[^>]+>"), ""),
+)
+SENTENCE_END_RE = re.compile(r"[.!?](?=\s|$)")
+
+
+def first_paragraph(content):
+    """The first paragraph of prose in a Markdown page, as plain text: headings,
+    comments, quotes, lists and fences skipped, inline markup stripped."""
+    content = HTML_COMMENT_RE.sub("", content)
+    for block in re.split(r"\n\s*\n", content):
+        block = block.strip()
+        if not block or block[0] in "#>|-*`<" or block[:2] in ("1.", "--"):
+            continue
+        text = " ".join(block.split())
+        for pattern, repl in MD_STRIP:
+            text = pattern.sub(repl, text)
+        return text.strip()
+    return ""
+
+
+def fallback_description(content, title):
+    """A description for a page DESCRIPTIONS does not know: its first paragraph
+    cut at the last sentence that fits, else at a word, else one from its title."""
+    text = first_paragraph(content)
+    if not text:
+        return f"{title}, from the CodeCrew documentation."
+    if len(text) <= DESCRIPTION_MAX:
+        return text
+    head = text[:DESCRIPTION_MAX]
+    ends = [m.end() for m in SENTENCE_END_RE.finditer(head)]
+    if ends and ends[-1] >= DESCRIPTION_MAX // 2:
+        return head[: ends[-1]]
+    return head[: DESCRIPTION_MAX - 1].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+
+
+def with_front_matter(dest_rel, content):
+    """`content` with the page's description, and its head title where it has
+    one, as front matter. Values are JSON strings, which YAML reads as quoted."""
+    description = DESCRIPTIONS.get(dest_rel)
+    if description is None:
+        title = extract_title_from(content, humanize(Path(dest_rel).stem))
+        description = fallback_description(content, title)
+        print(f"  note: {dest_rel} has no row in DESCRIPTIONS — described by its first paragraph")
+    lines = ["---", f"description: {json.dumps(description, ensure_ascii=False)}"]
+    if dest_rel in HEAD_TITLES:
+        lines.append(f"head_title: {json.dumps(HEAD_TITLES[dest_rel], ensure_ascii=False)}")
+    lines += ["---", ""]
+    return "\n".join(lines) + content
+
+
 def humanize(stem):
     return stem.replace("_", " ").replace("-", " ").strip().title()
 
@@ -282,7 +409,11 @@ def extract_title(md_path, default):
         content = md_path.read_text(encoding="utf-8")
     except OSError:
         return default
+    return extract_title_from(content, default)
 
+
+def extract_title_from(content, default):
+    """extract_title, for Markdown already in hand."""
     m = FRONTMATTER_RE.match(content)
     if m:
         for line in m.group(1).split("\n"):
@@ -402,6 +533,7 @@ def sync():
         src_path = src / src_name
         if src_path.is_file():
             content = rewrite_links(src_path.read_text(encoding="utf-8"), src_name)
+            content = with_front_matter(dest_name, content)
             (DEST / dest_name).write_text(content, encoding="utf-8")
             copied += 1
 
@@ -419,6 +551,7 @@ def sync():
             target.parent.mkdir(parents=True, exist_ok=True)
             if path.suffix == ".md":
                 content = rewrite_links(path.read_text(encoding="utf-8"), repo_relpath)
+                content = with_front_matter(map_to_dest(repo_relpath), content)
                 target.write_text(content, encoding="utf-8")
             else:
                 shutil.copy2(path, target)
@@ -428,6 +561,10 @@ def sync():
         shutil.rmtree(DEST)
         print(f"  {NAME}: nothing to sync")
         return False
+
+    for rel in sorted(set(DESCRIPTIONS) | set(HEAD_TITLES)):
+        if not (DEST / rel).is_file():
+            print(f"  note: DESCRIPTIONS or HEAD_TITLES has a row for {rel}, which did not sync")
 
     print(f"  {NAME}: synced {copied} files into {DEST}")
     return True
