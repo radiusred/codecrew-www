@@ -11,7 +11,7 @@ CodeCrew is a small open-source tool for people who run AI coding agents on GitH
 
 ## Someone explained us better than we did
 
-The person who runs this project asked ChatGPT to appraise CodeCrew. One section of its answer, "Where I think the design is genuinely strong", explained the tool more clearly than our homepage did. [The note that started the work](https://github.com/radiusred/codecrew-www/issues/68) says so plainly: that section "is a better synopsis of what CodeCrew does well than the homepage currently gives."
+The person who runs this project asked ChatGPT to appraise CodeCrew. One section of its answer, "Where I think the design is genuinely strong", explained the tool more clearly than our homepage did. [The note that started the work](https://github.com/radiusred/codecrew-www/issues/68) says so: that section "is a better synopsis of what CodeCrew does well than the homepage currently gives."
 
 So [a milestone](https://github.com/radiusred/gh-codecrew/issues/420) set the crew to rewrite the homepage from it. The operator [ruled on three things first](https://github.com/radiusred/codecrew-www/issues/69#issuecomment-6378158446). Write it in the site's own words, not as a quote. Make every claim accurate and "drop the version/date". And leave out the appraisal's scores, two of them low. In the operator's words: "The point of adding this from the appraisal is not to inflate or misrepresent the framework, it's to explain it better to a human encountering it for the first time."
 
@@ -23,15 +23,15 @@ At 01:41:51 the pull request was [approved](https://github.com/radiusred/codecre
 
 Nobody on this project had started either step. [The note the operator posted twelve minutes later](https://github.com/radiusred/gh-codecrew/issues/420#issuecomment-6378437386) says who did: agents running in [Paperclip](https://github.com/paperclipai/paperclip) for another project, RR Trading, which works on other repositories in our GitHub organisation.
 
-Both sets of agents use the same GitHub Apps. RR Trading's agents wake up when GitHub tells them something happened: a new pull request for the reviewer, a new review for the builder. An App's webhook fires for every repository the App is installed on, and ours are installed across the whole organisation. So their reviewer reviewed our pull request, and their builder merged it. Their instructions said "on the project repo", but, as [the capture filed that morning](https://github.com/radiusred/gh-codecrew/issues/421) puts it, "nothing compares the event's repository with the project".
+Both sets of agents use the same GitHub Apps, and RR Trading's agents wake when GitHub reports a new pull request or a new review. An App's webhook fires for every repository the App is installed on, and ours are installed across the whole organisation. So their reviewer reviewed our pull request, and their builder merged it. Their instructions said "on the project repo", but, as [the capture filed that morning](https://github.com/radiusred/gh-codecrew/issues/421) puts it, "nothing compares the event's repository with the project".
 
 No rule was broken, and that is the uncomfortable part. A real approval from the reviewer's App, then a merge from the App that started the task: on GitHub, it looked exactly like our own crew's work.
 
 ## Why it was fixable
 
-Every step had a time and a name on GitHub. So the operator's note could list the times to the second, the two Apps and the changes that missed the merge, and #421 could trace the cause to the webhooks.
+Every step had a time and a name on GitHub. So the operator's note could list the times to the second and the changes that missed the merge, and #421 could trace the cause to the webhooks.
 
-The fix is in [the operator's ruling on #421](https://github.com/radiusred/gh-codecrew/issues/421#issuecomment-6383451476): "A GitHub App has one webhook URL, and GitHub delivers to it for every installation and every repository those installations cover." So where Apps are shared, each set of agents listens on webhooks for its own repositories instead, and the shared Apps' own webhooks are switched off. The ruling keeps RR Trading's agents paused until that change is made.
+The fix is in [the operator's ruling on #421](https://github.com/radiusred/gh-codecrew/issues/421#issuecomment-6383451476): "A GitHub App has one webhook URL, and GitHub delivers to it for every installation and every repository those installations cover." So where Apps are shared, each set of agents should listen on webhooks for its own repositories instead. [The operator made that change the same day](https://github.com/radiusred/gh-codecrew/issues/421#issuecomment-6384895655). RR Trading's agents now wake from webhooks on its own six repositories, the shared Apps' own webhooks are switched off, and all twelve new webhooks were checked with a test ping.
 
 One gap stays open: nothing on GitHub yet says which set of agents was driving an App. #421 keeps that question for a later release.
 
@@ -39,9 +39,9 @@ One gap stays open: nothing on GitHub yet says which set of agents was driving a
 
 The operator's changes from the interrupted review went into [a new task](https://github.com/radiusred/codecrew-www/issues/71) and [pull request #72](https://github.com/radiusred/codecrew-www/pull/72). The "why" section moved to the top, and the crew is now drawn as an org chart. The operator [approved the page](https://github.com/radiusred/gh-codecrew/issues/420#issuecomment-6378478542) in these words: "It's good - the story builds in a more natural way now and explains more detailed concepts after the basic and important ones. Let's ship that".
 
-Checky still [asked for two fixes](https://github.com/radiusred/codecrew-www/pull/72#pullrequestreview-5636321437) before approving: two sentences on the page claimed more than CodeCrew actually checks.
+Checky still [asked for two fixes](https://github.com/radiusred/codecrew-www/pull/72#pullrequestreview-5636321437) before approving: two sentences claimed more than CodeCrew checks.
 
-Then Testy, our QA agent, read the live site, not just the build. He found one idea said three times on the same page: how a reviewer's approval counts toward GitHub's required review. [His verdict](https://github.com/radiusred/gh-codecrew/issues/420#issuecomment-6378639442) was "not satisfied".
+Then Testy, our QA agent, read the live site. He found one idea said three times on one page: how a reviewer's approval counts toward GitHub's required review. [His verdict](https://github.com/radiusred/gh-codecrew/issues/420#issuecomment-6378639442) was "not satisfied".
 
 [Pull request #74](https://github.com/radiusred/codecrew-www/pull/74) cut it to one place, and took three review rounds. In the first, Checky [checked all 29 merged pull requests](https://github.com/radiusred/codecrew-www/pull/74#pullrequestreview-5636413619) and found a new sentence false: "each merge here waits on the reviewer App's approval, not a person's". The very first pull request had merged with no review. In the second, the task's own notes still quoted the old sentence, so [a correcting note](https://github.com/radiusred/codecrew-www/issues/73#issuecomment-6378796342) went on the record. Testy's [second verdict](https://github.com/radiusred/gh-codecrew/issues/420#issuecomment-6378865032) was "satisfied".
 
