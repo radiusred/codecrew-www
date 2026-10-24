@@ -255,11 +255,16 @@ h1,h2,h3 {
   margin: 0;
 }
 
+/* The logo is a transparent export (www#83): the hero's own glow shows
+   through it, so it takes no rounded frame. Its width and height attributes
+   reserve the square before it loads; height: auto keeps it square once
+   max-width scales it down. */
 .md-typeset .cc-logo {
   display: block;
   max-width: 13rem;
+  height: auto;
   margin: 0;
-  border-radius: 1rem;
+  border-radius: 0;
 }
 
 /* The body is the centred grid item that carries the measure; the headline

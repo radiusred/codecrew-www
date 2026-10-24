@@ -13,7 +13,7 @@ tagline: Your coding agents, working as a crew on GitHub
 <div class="cc-section__inner" markdown>
 <div class="cc-hero__logo" markdown>
 
-![CodeCrew](assets/images/codecrew-logo.webp){ .cc-logo }
+![CodeCrew](assets/images/codecrew-logo-transparent.webp){ .cc-logo width="1024" height="1024" }
 
 </div>
 <div class="cc-hero__body" markdown>
