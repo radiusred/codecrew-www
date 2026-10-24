@@ -50,7 +50,10 @@ NARROW_CODE = ("(max-width: 26.1875em)", "font-size: 0.56rem")
 # Start now's copy of it sits in a terminal, which scrolls rather than wraps, so it
 # splits at a shell continuation and keeps to the ceiling (#52).
 STEP_CODE_MAX = 42
-CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")
+CREW_ROLES = ("implementer", "reviewer", "qa", "doc-synthesizer", "coordinator")  # the routing table's order
+# The badges are an org chart (M22, #71): the coordinator heads it, first in the markup so the
+# reading and Tab order match what the eye sees, and the other four roles follow, in table order.
+CREW_CHART = ("coordinator",) + CREW_ROLES[:-1]
 CREW_MEMBER_NAMES = ("cody", "checky", "testy", "wordy")  # Radius Red's crew, not the framework's
 # The two the operator's approval of M19-R3 (2026-09-26) lets the worked example name, and only it.
 EXAMPLE_CREW = ("cody", "checky")
@@ -738,7 +741,7 @@ def test_crew_badges_say_what_each_role_does(home: str):
     crew = section(home, "cc-crew")
     figures = re.findall(r'<figure class="cc-crew__badge">(.*?)</figure>', crew, re.S)
     assert len(figures) == 5
-    for figure, role in zip(figures, CREW_ROLES):
+    for figure, role in zip(figures, CREW_CHART):
         caption = re.search(r"<figcaption>(.*?)</figcaption>", figure, re.S).group(1)
         assert re.search(rf'<strong class="cc-crew__role">{role}</strong>', caption)
         summary = squash(text(re.search(r'<span class="cc-crew__summary">(.*?)</span>', caption, re.S).group(1)))
@@ -767,10 +770,33 @@ def test_nothing_on_the_home_page_hides_behind_hover(css: str, home: str):
         assert 'title="' not in markup
 
 
+def test_the_crew_is_an_org_chart_headed_by_the_coordinator(home: str, css: str):
+    """M22 (#71): the coordinator's badge sits centred on top, first in the DOM, and the four
+    roles sit beneath it: two by two on a phone, one row from 45em, joined there by connector
+    lines drawn in CSS, which put nothing in the markup or the accessibility tree."""
+    crew = section(home, "cc-crew")
+    roles = re.findall(r'<strong class="cc-crew__role">([^<]+)</strong>', crew)
+    assert tuple(roles) == CREW_CHART
+    assert "display: grid" in rule(css, ".cc-crew__badges")
+    assert "repeat(2, minmax(0, 7.5rem))" in rule(css, ".cc-crew__badges")  # 2x2 on a phone
+    head = rule(css, ".md-typeset .cc-crew__badge:first-child")
+    assert "grid-column: 1 / -1" in head and "justify-self: center" in head
+    opens = "@media screen and (min-width: 45em) {\n  .cc-crew__badges {"
+    wide = media_block(css[css.index(opens):], "screen and (min-width: 45em)")
+    assert "repeat(4, minmax(0, 7.5rem))" in wide  # one row of four beneath the head
+    for line in ("cc-crew__badge:first-child::after", "cc-crew__badge:not(:first-child)::before",
+                 "cc-crew__badge:not(:first-child)::after"):
+        assert line in wide and css.count(line) == wide.count(line), line  # none on a phone
+    assert css.count("border-left: 0.05rem solid var(--md-default-fg-color--lighter)") == 2  # stem and ticks
+    assert "border-top: 0.05rem solid var(--md-default-fg-color--lighter)" in css  # the bar
+    assert "::before" not in rule(css, ".md-typeset .cc-crew__badge")
+    assert "aria-hidden" not in crew and "cc-crew__line" not in crew  # no markup for the lines
+
+
 def test_crew_section_names_the_seats_and_no_crew_member(home: str, css: str):
     crew = section(home, "cc-crew")
     badges = re.findall(r'<img src="assets/images/crew/[^"]+"[^>]*>\s*<figcaption><strong class="cc-crew__role">([^<]+)</strong>', crew)
-    assert tuple(badges) == CREW_ROLES
+    assert tuple(badges) == CREW_CHART
     assert "identity new reviewer" in crew
     badge = rule(css, ".md-typeset .cc-crew__badge img")
     assert "background: var(--cc-purple)" in badge  # white marks need a ground
@@ -816,7 +842,7 @@ def test_crew_section_shows_the_example_routing_table(home: str):
     lines = code_lines(crew)
     assert lines[0] == "roles:"
     seats = [line.strip(" :") for line in lines if re.fullmatch(r"  [\w-]+:", line)]
-    assert tuple(seats) == CREW_ROLES  # a row per badge above, in the same order
+    assert tuple(seats) == CREW_ROLES  # a row per badge above: the four in the chart's order, then its head
     keys = {line.split(":")[0].strip() for line in lines[1:]}
     assert {"harness", "model", "identity"} <= keys  # what a row routes
     identities = [line.strip().removeprefix("identity: ").split("  ")[0] for line in lines if line.strip().startswith("identity:")]
