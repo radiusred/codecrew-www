@@ -356,7 +356,7 @@ def test_every_page_carries_its_own_description_and_title(site: Path):
     config = (site.parent / "zensical.toml").read_text()
     site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
     pages = built_pages(site)
-    assert len(pages) >= 18, sorted(pages)  # home, 12 docs, the blog's 5, the 404
+    assert len(pages) >= 23, sorted(pages)  # home, 4 why pages, 12 docs, the blog's 5, the 404
     descriptions: dict[str, str] = {}
     titles: dict[str, str] = {}
     for rel, page in pages.items():
@@ -487,6 +487,31 @@ def test_the_sitemap_lists_each_canonical_page_once(site: Path):
 
 
 I_TRIED_IT = "https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it"
+
+
+WHY_PAGES = ("second-model-review", "github-app-per-agent", "gates-in-code", "compared")
+
+
+def test_the_why_pages_carry_their_own_head_and_join_the_sitemap_and_llms_txt(site: Path):
+    """M23-R2 pages (codecrew-www#76) through M23-R3's templates: each one's head carries its
+    own front matter's title and description, its canonical URL and the absolute social
+    image; the sitemap lists it; and /llms.txt gives the Why CodeCrew nav group a section."""
+    llms = (site / "llms.txt").read_text()
+    section = llms[llms.index("## Why CodeCrew\n") :]
+    section = section[: section.index("\n## ", 1)]
+    locs = sitemap(site)
+    for slug in WHY_PAGES:
+        front = front_matter(ROOT / "docs" / "why" / f"{slug}.md")
+        page = (site / "why" / slug / "index.html").read_text()
+        meta = head_meta(page)
+        url = f"{SITE_URL}why/{slug}/"
+        assert meta["description"] == meta["og:description"] == meta["twitter:description"] == front["description"]
+        assert meta["title"] == f"{front['title']} - CodeCrew"
+        assert canonical(page) == [url]
+        assert f'<meta property="og:image" content="{SOCIAL_IMAGE}"' in page
+        assert url in locs
+        assert f"- [{front['title']}]({url}): {front['description']}" in section, slug
+
 
 
 def test_every_footer_invites_the_reader_to_say_how_it_went(site: Path, css: str):
