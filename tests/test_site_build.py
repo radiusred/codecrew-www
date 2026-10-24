@@ -1,6 +1,6 @@
 """Build the site and check the home page template against the rest.
 
-The home page (docs/index.md) selects docs/overrides/home.html and hides the
+The home page (docs/index.md) selects overrides/home.html and hides the
 navigation, toc and footer nav. Every other page — the blog, and the docs
 section sync_docs.py builds from radiusred/gh-codecrew — keeps Zensical's
 default layout. `zensical build` has no site-dir option, so the fixture copies
@@ -172,6 +172,7 @@ def site(tmp_path_factory) -> Path:
     # The synced tree is generated, never committed: drop any local copy and
     # rebuild it here, so this exercises the sync the deploy actually runs.
     shutil.copytree(ROOT / "docs", src / "docs", ignore=shutil.ignore_patterns("docs"))
+    shutil.copytree(ROOT / "overrides", src / "overrides")
     shutil.copy(ROOT / "zensical.toml", src / "zensical.toml")
     shutil.copy(ROOT / "sync_docs.py", src / "sync_docs.py")
     synced = subprocess.run(
@@ -237,6 +238,13 @@ def code_lines(block: str) -> list[str]:
     code = re.search(r"<pre>.*?<code[^>]*>(.*?)</code>", block, re.S).group(1)
     lines = [html.unescape(re.sub(r"<[^>]+>", "", line)) for line in code.split("\n")]
     return [line for line in lines if line.strip()]
+
+
+def test_the_theme_templates_are_not_published(site: Path):
+    """The templates live outside the docs dir: inside it, the build copied their Jinja
+    source to /overrides/*.html, where it was served as pages with no head of their own."""
+    assert not (site / "overrides").exists()
+    assert not [p for p in site.rglob("*.html") if "{%" in p.read_text()]
 
 
 def test_home_uses_the_home_template(home: str):
@@ -319,7 +327,7 @@ def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
         assert home_front["tagline"] not in " ".join(meta.values()), page
     docs_title = head_meta((site / "docs" / "identities" / "index.html").read_text())["title"]
     assert docs_title.startswith("Identities") and docs_title.endswith(" - CodeCrew")  # its own title, as before
-    main_template = (ROOT / "docs" / "overrides" / "main.html").read_text()
+    main_template = (ROOT / "overrides" / "main.html").read_text()
     tagline = re.search(r'{% set tagline = "(.*)" %}', main_template).group(1)
     assert head_meta((site / "404.html").read_text())["title"] == f"CodeCrew — {tagline}"
 

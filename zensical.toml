@@ -45,7 +45,7 @@ nav = [
 extra_css = ["stylesheets/extra.css"]
 
 [project.theme]
-custom_dir = "docs/overrides"
+custom_dir = "overrides"
 favicon = "assets/images/favicon.png"
 logo = "assets/images/logo.png"
 language = "en"
