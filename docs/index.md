@@ -83,6 +83,21 @@ Decisions and deviations are posted as structured comments at the moment of choi
 </div>
 </div>
 
+<div class="cc-newhere" markdown>
+
+<p class="cc-newhere__lead" markdown="span">**New here?** Start with the question you came with:</p>
+
+<ul class="cc-newhere__links" markdown>
+<li markdown="span">[AI code review by a second model](why/second-model-review.md)</li>
+<li markdown="span">[GitHub App for AI coding agents](why/github-app-per-agent.md)</li>
+<li markdown="span">[Enforce review gates for AI coding agents](why/gates-in-code.md)</li>
+<li markdown="span">[CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD](why/compared.md)</li>
+</ul>
+
+<p class="cc-newhere__invite" markdown="span">Tried CodeCrew already? [Tell us how it went](https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it): what you tried, how far you got, and what stopped you.</p>
+
+</div>
+
 </div>
 </section>
 
