@@ -646,6 +646,26 @@ def test_the_logo_steps_down_on_a_phone(css: str):
     assert "max-width: 19rem" in media_block(css, "screen and (min-width: 60em)")  # the desktop logo is unchanged
 
 
+def test_the_hero_logo_is_the_transparent_export_with_no_frame(home: str, css: str, site: Path):
+    """www#83: the old logo is an opaque square with a dark ground baked in, which sat on the
+    hero's glow as a dark squircle. The hero now shows a transparent export under a new name
+    (no cache serves the old image at it), sized so the browser reserves the square, with no
+    rounded frame and no blend mode. The old file stays: the social preview is separate."""
+    hero = section(home, "cc-hero")
+    img = re.search(r'<img [^>]*class="cc-logo"[^>]*>', hero).group(0)
+    assert 'src="assets/images/codecrew-logo-transparent.webp"' in img
+    assert 'alt="CodeCrew"' in img and 'width="1024"' in img and 'height="1024"' in img
+    asset = (site / "assets" / "images" / "codecrew-logo-transparent.webp").read_bytes()
+    assert asset[:4] == b"RIFF" and asset[8:16] == b"WEBPVP8L"  # lossless WebP, which carries alpha
+    bits = int.from_bytes(asset[21:25], "little")
+    assert (bits & 0x3FFF) + 1 == 1024 and ((bits >> 14) & 0x3FFF) + 1 == 1024
+    assert (bits >> 28) & 1  # the alpha-is-used flag
+    logo = rule(css, ".md-typeset .cc-logo")
+    assert "border-radius: 0" in logo and "height: auto" in logo
+    assert "mix-blend-mode" not in css
+    assert (site / "assets" / "images" / "codecrew-logo.webp").exists()
+
+
 def test_hero_leads_with_the_crew(home: str):
     """M19-R2: the hero's visible text names GitHub App identities and says that
     different harnesses and models build and review, before any section below it."""
