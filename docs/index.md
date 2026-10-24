@@ -42,7 +42,7 @@ tagline: Your coding agents, working as a crew on GitHub
 
 ### One App per role, with that role's permissions
 
-Each role (implementer, reviewer, QA and the rest) can have its own GitHub App and permissions, not one shared, privileged token. Reviewer and QA Apps can't push code by default; `--with-approval-permission` gives the reviewer write access so its approval can count toward GitHub's required review ([the trade](#add-a-reviewer)).
+Each role (implementer, reviewer, QA and the rest) can have its own GitHub App and permissions, not one shared, privileged token. Reviewer and QA Apps can't push code by default; `--with-approval-permission` can give the reviewer write access ([the trade](#add-a-reviewer)).
 
 </div>
 <div class="cc-panel" markdown>
@@ -277,7 +277,7 @@ The CLI that runs the gates is [a Go program](https://github.com/radiusred/gh-co
 
 <div class="cc-receipt__detail" markdown>
 
-Four App identities hold the four seats. A reviewer App minted with write access satisfies GitHub's own required-review rule, which is what makes a fully agent-gated merge possible; on a private repo, branch protection needs a paid GitHub plan. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
+Four App identities hold the four seats, and each merge here waits on the reviewer App's approval, not a person's. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
 
 </div>
 </div>
