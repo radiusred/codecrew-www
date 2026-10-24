@@ -1126,14 +1126,15 @@ def docs_index(site: Path) -> str:
     return (site / "docs" / "index.html").read_text()
 
 
-def test_docs_tab_sits_between_home_and_blog(home: str):
+def test_the_tabs_run_home_why_docs_blog(home: str):
+    """M23-R2's introductory pages have a tab of their own, before the reference docs."""
     tabs = [
         " ".join(text(label).split())
         for _, label in re.findall(
             r'<a href="([^"]*)" class="md-tabs__link[^"]*">(.*?)</a>', home, re.S
         )
     ]
-    assert tabs == ["Home", "Docs", "Blog"]
+    assert tabs == ["Home", "Why CodeCrew", "Docs", "Blog"]
 
 
 def test_the_docs_tab_lands_on_the_docs_index(site: Path, home: str):
@@ -1202,6 +1203,7 @@ def test_the_home_drawer_reaches_every_tab(home: str):
     assert "md-nav--primary" in panel
     targets = set(re.findall(r'<a href="([^"]*)" class="md-nav__link', panel))
     assert {"", "./docs/", "./blog/"} <= targets, sorted(targets)
+    assert {f"./why/{slug}/" for slug in INTRO_PAGES} <= targets, sorted(targets)  # the Why CodeCrew tab's pages
 
 
 def test_the_shut_home_drawer_is_out_of_the_tab_order(home: str, blog: str, docs_index: str, css: str):
@@ -1381,3 +1383,227 @@ def test_the_palette_ring_follows_the_theme_it_keys_off(site: Path, css: str):
     theme = bundles[0].read_text()
     assert re.search(r"nextElementSibling;(\w+) instanceof HTMLElement&&\(\1\.hidden=", theme)
     assert 'b(e,"keydown").pipe(O(a=>a.key==="Enter")' in theme  # Enter toggles and refocuses
+
+
+# M23-R2: four introductory pages, written for the site (not synced from the hub), one per
+# problem a stranger searches before they know the name. Each carries its search phrase in its
+# title, H1, meta description and opening paragraph (the Decision on www#76 records the phrases).
+INTRO_PAGES = {
+    "second-model-review": ("AI code review by a second model", "AI code review by a second model"),
+    "github-app-per-agent": ("GitHub App for AI coding agents", "GitHub App for AI coding agents: one per agent"),
+    "gates-in-code": ("enforce review gates for AI coding agents", "Enforce review gates for AI coding agents"),
+    "compared": ("Spec Kit, BMAD, OpenSpec and GSD", "CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD"),
+}
+# M23-R5: the hub's feedback category, which every introductory page and the homepage link.
+TRIED_IT = "https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it"
+INTRO_WORDS_MAX = 650  # "a few hundred words at most", the table and the closing links included
+# The M15 record's `milestone close --dry-run`: the gates page quotes it character-exact.
+DRY_RUN_RECORD = "docs/milestones/15-v2-0-1-what-the-fleet-migration-taught.md"
+# What the gates page says each verb checks, keyed by the SPEC §10 refusal codes that back it.
+INTRO_FINISH_CHECKS = {
+    "its CI checks have run, and every one is green": ("NO_CHECKS", "CHECKS_PENDING", "CHECKS_FAILING"),
+    "the approval your setup requires": ("NO_HOLDER_REVIEW", "NO_NONDOER_APPROVAL"),
+    "every question raised for a human has an answer on record": ("GATED", "GATE_UNRECORDED"),
+    "it is run by whoever started the task": ("NOT_OWNER",),
+}
+INTRO_CLOSE_CHECKS = {
+    "every task under it is closed": ("OPEN_TASKS",),
+    "every requirement's latest QA verdict is satisfied": ("VERDICT_MISSING", "VERDICT_UNSATISFIED"),
+    "the milestone's write-up is on the default branch": ("DOC_MISSING",),
+}
+# Every claim the comparison makes about another tool links that tool's own repository or docs.
+TOOL_SOURCES = {
+    "Spec Kit": ("https://github.com/github/spec-kit", "https://github.github.io/spec-kit/quickstart.html"),
+    "BMAD Method": ("https://github.com/bmad-code-org/BMAD-METHOD", "https://docs.bmad-method.org/start/build-your-first-change/"),
+    "OpenSpec": ("https://github.com/Fission-AI/OpenSpec", "https://openspec.dev/"),
+    "GSD": ("https://github.com/open-gsd/gsd-core",),
+}
+
+
+class IntroPage(NamedTuple):
+    slug: str
+    phrase: str
+    title: str
+    page: str     # the built HTML
+    article: str  # the page's own content, heading anchors dropped
+
+
+@pytest.fixture(scope="module")
+def intro_pages(site: Path) -> list[IntroPage]:
+    pages = []
+    for slug, (phrase, title) in INTRO_PAGES.items():
+        built = (site / "why" / slug / "index.html").read_text()
+        article = built[built.index("<article") : built.index("</article>")]
+        article = re.sub(r'<a class="headerlink".*?</a>', "", article, flags=re.S)
+        pages.append(IntroPage(slug, phrase, title, built, article))
+    return pages
+
+
+def test_each_intro_page_has_its_own_title_and_description(intro_pages: list[IntroPage], site: Path):
+    """M23-R8: a title and a description of its own, not the site's, so search engines and
+    link previews have something to show for the page."""
+    config = (site.parent / "zensical.toml").read_text()
+    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    descriptions = set()
+    for intro in intro_pages:
+        front = front_matter(ROOT / "docs" / "why" / f"{intro.slug}.md")
+        meta = head_meta(intro.page)
+        assert front["title"] == intro.title, intro.slug
+        assert meta["title"] == meta["og:title"] == meta["twitter:title"] == f"{intro.title} - CodeCrew", intro.slug
+        assert meta["description"] == meta["og:description"] == meta["twitter:description"] == front["description"]
+        assert meta["description"] != site_description, intro.slug
+        descriptions.add(meta["description"])
+        assert f'<link rel="canonical" href="https://codecrew.works/why/{intro.slug}/">' in intro.page
+    assert len(descriptions) == len(INTRO_PAGES)
+
+
+def test_each_intro_page_carries_its_search_phrase_four_times(intro_pages: list[IntroPage]):
+    """M23-R2: the phrase a stranger types before they know the name is in the title, the H1,
+    the meta description and the opening paragraph."""
+    for intro in intro_pages:
+        h1 = squash(text(re.search(r"<h1[^>]*>(.*?)</h1>", intro.article, re.S).group(1)))
+        opening = squash(text(re.search(r"</h1>\s*<p>(.*?)</p>", intro.article, re.S).group(1)))
+        meta = head_meta(intro.page)
+        for where, words in (("title", meta["title"]), ("h1", h1), ("description", meta["description"]), ("opening", opening)):
+            assert intro.phrase.lower() in words.lower(), (intro.slug, where)
+        assert h1 == intro.title
+
+
+def test_each_intro_page_is_short_and_ends_with_a_next_step_and_the_invitation(intro_pages: list[IntroPage]):
+    """M23-R2 and R5: short, one idea, then a next step, then a plain invitation to the "I tried
+    it" category, then the other three pages (R8)."""
+    for intro in intro_pages:
+        words = squash(text(intro.article)).split()
+        assert len(words) <= INTRO_WORDS_MAX, (intro.slug, len(words))
+        next_step = intro.article.index('<h2 id="next-step">')
+        invite = intro.article.index(f'href="{TRIED_IT}"')
+        more = intro.article.index('<h2 id="more-for-newcomers">')
+        assert next_step < invite < more, intro.slug
+        step = intro.article[next_step:invite]
+        assert re.search(r'href="\.\./\.\./docs/[\w-]+/(#[\w-]+)?"', step), intro.slug  # the guide or a reference doc
+        box = re.search(r'<div class="admonition question">(.*?)</div>', intro.article, re.S).group(1)
+        assert "Tried it? Tell us how it went" in text(box) and f'href="{TRIED_IT}"' in box, intro.slug
+        assert intro.article.count(f'href="{TRIED_IT}"') == 1, intro.slug
+        others = re.findall(r'href="\.\./([\w-]+)/"', intro.article[more:])
+        assert sorted(others) == sorted(set(INTRO_PAGES) - {intro.slug}), intro.slug
+
+
+def test_each_intro_page_links_land_on_built_pages(intro_pages: list[IntroPage], site: Path):
+    for intro in intro_pages:
+        for href in re.findall(r'href="(\.\./[^"#]*)(?:#([\w-]+))?"', intro.article):
+            path, anchor = href
+            target = (site / "why" / intro.slug / path / "index.html").resolve()
+            assert target.is_file(), (intro.slug, path)
+            if anchor:
+                assert f'id="{anchor}"' in target.read_text(), (intro.slug, path, anchor)
+
+
+def test_the_intro_pages_are_in_the_sitemap(site: Path):
+    """M23-R8: Google finds them through the sitemap as well as the homepage."""
+    sitemap = (site / "sitemap.xml").read_text()
+    for slug in INTRO_PAGES:
+        assert f"<loc>https://codecrew.works/why/{slug}/</loc>" in sitemap, slug
+
+
+def test_the_intro_pages_name_no_crew_member(intro_pages: list[IntroPage]):
+    """The M8 rule: crew member names stay off product pages; bot logins only in link targets
+    or screen-grabs. And topos is no one's example."""
+    for intro in intro_pages:
+        words = text(intro.article).lower()
+        for name in CREW_MEMBER_NAMES + ("topos",):
+            assert not re.search(rf"\b{name}\b", words), (intro.slug, name)
+        assert "[bot]" not in re.sub(r"<code>\[bot\]</code>", "", intro.article)  # the suffix, never a login
+
+
+def test_the_required_review_caveat_is_stated_once_across_the_intro_pages(intro_pages: list[IntroPage]):
+    """The write-permission opt-in and the paid plan private repos need, on the identity page
+    alone; the gates page links it."""
+    homes = [intro.slug for intro in intro_pages if PAID_PLAN in squash(text(intro.article))]
+    assert homes == ["github-app-per-agent"]
+    identity = next(intro for intro in intro_pages if intro.slug == "github-app-per-agent")
+    words = squash(text(identity.article))
+    assert "--with-approval-permission" in words and "write access" in words
+    assert "task finish refuses until the reviewer App has approved" in words
+    gates = next(intro for intro in intro_pages if intro.slug == "gates-in-code")
+    assert 'href="../github-app-per-agent/#one-caveat-about-required-reviews"' in gates.article
+    assert 'id="one-caveat-about-required-reviews"' in identity.article
+
+
+def test_the_second_model_page_keeps_its_claims_bounded(intro_pages: list[IntroPage]):
+    """A fresh session as well as a distinct identity; a bot name proves an App, not a model;
+    the operator or an orchestrator starts the sessions; no review catches everything."""
+    page = next(intro for intro in intro_pages if intro.slug == "second-model-review")
+    words = squash(text(page.article))
+    assert f"“{REVIEWER_REASON}”" in words  # quoted exactly from the reviewer contract
+    assert "It runs in a new session, with none of the builder's conversation" in words
+    assert "a different bot name proves a different App, not a different model" in words
+    assert "CodeCrew does not start agents or choose models: you do, or an orchestrator does" in words
+    assert "No review catches every bug" in words
+    lines = code_lines(page.article)
+    assert [line.strip() for line in lines if "harness:" in line] == ["harness: claude-code", "harness: codex"]
+    assert all(re.fullmatch(r"identity: app:myorg-[a-z]+", line.strip()) for line in lines if "identity:" in line)
+
+
+def test_the_gates_page_claims_only_what_the_refusal_table_backs(intro_pages: list[IntroPage]):
+    """M23-R2 (c): every check named for task finish and milestone close is a refusal that
+    verb raises in the hub's SPEC §10 table, and task start's plan check is task start's."""
+    page = next(intro for intro in intro_pages if intro.slug == "gates-in-code")
+    words = squash(text(page.article))
+    table = refusal_table()
+    finish = words[words.index("gh codecrew task finish merges") : words.index("gh codecrew milestone close closes")]
+    close = words[words.index("gh codecrew milestone close closes") : words.index("Earlier still")]
+    for claims, verb, part in ((INTRO_FINISH_CHECKS, "task finish", finish), (INTRO_CLOSE_CHECKS, "milestone close", close)):
+        for claim, codes in claims.items():
+            assert claim in part, claim
+            for code in codes:
+                assert f"`{verb}`" in table[code], (claim, code)
+    assert "task start refuses a task with no plan" in words and "`task start`" in table["NO_PLAN"]
+    assert "plan" not in finish.lower() and "plan" not in close.lower()
+
+
+def test_the_gates_page_quotes_a_real_refusal_exactly(intro_pages: list[IntroPage]):
+    """One example refusal, in SPEC §6's `refused[CODE]: detail` shape, quoted character-exact
+    from the hub's M15 record, which the page links at the commit it was read from."""
+    page = next(intro for intro in intro_pages if intro.slug == "gates-in-code")
+    record = (UPSTREAM / "gh-codecrew" / DRY_RUN_RECORD).read_text()
+    lines = code_lines(page.article[page.article.index('<h2 id="what-a-refusal-looks-like">') :])
+    quoted = "\n".join(lines)
+    assert quoted in record
+    refusals = [line for line in lines if "refused[" in line]
+    assert len(refusals) == 1
+    code = re.search(r"refused\[([A-Z_]+)\]: \S", refusals[0]).group(1)
+    assert "`milestone close`" in refusal_table()[code]
+    spec = (UPSTREAM / "gh-codecrew" / "SPEC.md").read_text()
+    assert "codecrew: refused[CODE]: detail" in spec and "refused[CODE]: detail" in squash(text(page.article))
+    assert f"/blob/149bd78a32d7180b9a06705c796bb0772b9ccd74/{DRY_RUN_RECORD}#L89-L97" in page.article
+
+
+def test_the_comparison_links_each_tool_at_its_own_source(intro_pages: list[IntroPage]):
+    """M23-R2 (d): describes, never disparages; every claim about another tool links that
+    tool's own repository or docs; GSD appears as the origin story, linking the essay."""
+    page = next(intro for intro in intro_pages if intro.slug == "compared")
+    for tool, sources in TOOL_SOURCES.items():
+        part = re.search(rf'<h2 id="[\w-]+">{tool}</h2>(.*?)<h2', page.article, re.S).group(1)
+        for href in sources:
+            assert f'href="{href}"' in part, (tool, href)
+    gsd = re.search(r'<h2 id="gsd">GSD</h2>(.*?)<h2', page.article, re.S).group(1)
+    assert "GSD is where CodeCrew began" in squash(text(gsd))
+    assert 'href="../../docs/gsd-vs-frontier-orchestration/"' in gsd
+    words = squash(text(page.article)).lower()
+    for slight in ("ceremony", "bloat", "worse", "better than", "unlike", "outdated", "obsolete"):
+        assert slight not in words, slight
+    rows = re.findall(r"<tr>\s*<td>(.*?)</td>", page.article, re.S)
+    assert [text(r).strip() for r in rows] == ["Spec Kit", "BMAD Method", "OpenSpec", "GSD", "CodeCrew"]
+
+
+def test_the_intro_pages_commands_fit_a_phone(intro_pages: list[IntroPage]):
+    """Every code line a reader might copy keeps to the homepage's ceiling, so it does not
+    scroll at 375px; the quoted dry run is a record, character-exact, and is the exception."""
+    for intro in intro_pages:
+        blocks = re.findall(r"<pre>.*?</pre>", intro.article, re.S)
+        for block in blocks:
+            lines = code_lines(block)
+            if any("refused[" in line for line in lines):
+                continue
+            too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
+            assert not too_long, (intro.slug, too_long)

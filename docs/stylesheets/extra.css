@@ -803,6 +803,17 @@ h1,h2,h3 {
   width: 2.4rem;
 }
 
+/* The introductory pages' one screenshot: a readable width, centred, framed. */
+.md-typeset img.cc-intro-shot {
+  display: block;
+  width: 32rem;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+}
+
 /* Proof: the case under the captures, in visible text (M19-R4): which PR,
    which App wrote it and which reviewed it, then the finding, the fix and
    the approval, each linked to its event on GitHub. A readable column,
