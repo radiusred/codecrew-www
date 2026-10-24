@@ -469,6 +469,23 @@ def test_llms_txt_indexes_every_page_and_links_the_spec_and_cli_at_source(site: 
             assert re.match(r"^- \[[^\]]+\]\([^)]+\): \S", line), line  # every link is described
 
 
+def test_the_sitemap_lists_each_canonical_page_once(site: Path):
+    """M23-R3: only canonical URLs with a page behind them; no index.html variant, no
+    redirect, no 404, and every page the build writes is in it."""
+    urls = sitemap(site)
+    assert len(urls) == len(set(urls))
+    canonicals = set()
+    for rel, page in built_pages(site).items():
+        if rel != "404.html":
+            canonicals.add(canonical(page)[0])
+    for url in urls:
+        assert url.startswith(SITE_URL) and url.endswith("/"), url
+        assert "index.html" not in url and "404" not in url, url
+        assert (site / url.removeprefix(SITE_URL) / "index.html").is_file(), url
+    assert set(urls) == canonicals
+    assert "Sitemap: https://codecrew.works/sitemap.xml" in (site / "robots.txt").read_text()
+
+
 def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):
     """www#59: the site-wide description is only a fallback now, and it says what the
     homepage says rather than the receipts-led line the docs used to inherit."""
