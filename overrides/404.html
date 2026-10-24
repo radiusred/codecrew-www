@@ -1,0 +1,34 @@
+{#-
+  The page GitHub Pages serves for any address with nothing behind it.
+  Zensical builds it from this template alone, with no Markdown page behind
+  it, so `page` is empty: the title, description and canonical URL main.html's
+  head uses are set here instead, and site_meta is replaced so the base
+  template's fallback description is not emitted beside this one. The page is
+  served at whatever address was asked for, so its links are root-absolute,
+  its canonical URL names the file itself, and it asks not to be indexed.
+-#}
+{% extends "main.html" %}
+{% set page_title = "Page not found" %}
+{% set page_description = "There is no page at this address on codecrew.works. The homepage, the docs and the blog are a click away." %}
+{% set page_canonical = config.site_url ~ "404.html" %}
+
+{% block site_meta %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ page_description }}">
+  <meta name="author" content="{{ config.site_author }}">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="{{ page_canonical }}">
+  <link rel="icon" href="{{ config.theme.favicon | url }}">
+  <meta name="generator" content="{{ generator }}">
+{% endblock %}
+
+{% block content %}
+  <h1>{{ page_title }}</h1>
+  <p>We couldn't find that page. It may have moved, or the link may have a typo.</p>
+  <ul>
+    <li>Start from the <a href="/">homepage</a></li>
+    <li>Read the <a href="/docs/">docs</a></li>
+    <li>Browse the <a href="/blog/">blog</a></li>
+  </ul>
+{% endblock %}

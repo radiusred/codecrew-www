@@ -16,6 +16,7 @@ upstream_guard.py).
 """
 
 import html
+import json
 import os
 import re
 import shutil
@@ -27,7 +28,7 @@ from typing import NamedTuple
 
 import pytest
 
-from sync_docs import DESCRIPTIONS, HOME_ANCHORS
+from sync_docs import DESCRIPTIONS, HEAD_TITLES, HOME_ANCHORS
 from upstream_guard import absent_upstream, find_upstream
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -316,25 +317,110 @@ def test_home_metadata_carries_the_crew_pitch(home: str):
 
 
 def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
-    """M19-R7 sets the pitch for the home page only: the 404 keeps the site's description
-    and tagline, a docs page its own description, and a blog post its own front matter's."""
-    config = (site.parent / "zensical.toml").read_text()
-    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    """M19-R7 sets the pitch for the home page only: a docs page and the 404 carry their
+    own title and description, and a blog post keeps its own front matter's."""
     home_front = front_matter(ROOT / "docs" / "index.md")
     for page in (site / "docs" / "identities" / "index.html", site / "404.html"):
-        assert home_front["tagline"] not in " ".join(head_meta(page.read_text()).values()), page
-    meta = head_meta((site / "404.html").read_text())
-    assert meta["description"] == meta["og:description"] == site_description
+        meta = head_meta(page.read_text())
+        assert home_front["tagline"] not in " ".join(meta.values()), page
+        assert meta["description"] != home_front["description"], page
     docs_title = head_meta((site / "docs" / "identities" / "index.html").read_text())["title"]
     assert docs_title.startswith("Identities") and docs_title.endswith(" - CodeCrew")  # its own title, as before
-    main_template = (ROOT / "overrides" / "main.html").read_text()
-    tagline = re.search(r'{% set tagline = "(.*)" %}', main_template).group(1)
-    assert head_meta((site / "404.html").read_text())["title"] == f"CodeCrew — {tagline}"
+    assert head_meta((site / "404.html").read_text())["title"] == "Page not found - CodeCrew"
 
     source = sorted((ROOT / "docs" / "blog" / "posts").glob("*.md"))[-1]
     meta = head_meta(post.page)
     assert meta["description"] == meta["og:description"] == front_matter(source)["description"]
     assert meta["title"] == f"{post.title} - CodeCrew"
+
+
+SITE_URL = "https://codecrew.works/"
+SOCIAL_IMAGE = SITE_URL + "assets/images/social-preview.png"
+
+
+def built_pages(site: Path) -> dict[str, str]:
+    """Every HTML page the build writes, by its path under the site, with its markup."""
+    return {p.relative_to(site).as_posix(): p.read_text() for p in sorted(site.rglob("*.html"))}
+
+
+def canonical(page: str) -> list[str]:
+    return re.findall(r'<link rel="canonical" href="([^"]*)"', page)
+
+
+def test_every_page_carries_its_own_description_and_title(site: Path):
+    """M23-R3: no two pages share a description or a title, and only the homepage
+    carries the site-wide description, which is its own (www#59)."""
+    config = (site.parent / "zensical.toml").read_text()
+    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    pages = built_pages(site)
+    assert len(pages) >= 18, sorted(pages)  # home, 12 docs, the blog's 5, the 404
+    descriptions: dict[str, str] = {}
+    titles: dict[str, str] = {}
+    for rel, page in pages.items():
+        meta = head_meta(page)
+        assert meta["description"], rel
+        assert meta["description"] == meta["og:description"] == meta["twitter:description"], rel
+        assert meta["title"] == meta["og:title"] == meta["twitter:title"], rel
+        assert meta["description"] not in descriptions, (rel, descriptions.get(meta["description"]))
+        assert meta["title"] not in titles, (rel, titles.get(meta["title"]))
+        descriptions[meta["description"]] = titles[meta["title"]] = rel
+        if rel != "index.html":
+            assert meta["description"] != site_description, rel
+        assert "receipts kept in GitHub" not in meta["description"], rel
+
+
+def test_every_page_names_its_canonical_url_and_an_absolute_social_image(site: Path):
+    """M23-R3: a link preview fetches the image from wherever the link was pasted, so a
+    relative path (./assets/..., ../../assets/...) resolves against nothing."""
+    assert (site / SOCIAL_IMAGE.removeprefix(SITE_URL)).is_file()
+    for rel, page in built_pages(site).items():
+        urls = canonical(page)
+        assert len(urls) == 1 and urls[0].startswith(SITE_URL), (rel, urls)
+        assert re.search(rf'<meta property="og:url" content="{re.escape(urls[0])}"', page), rel
+        for attr, name in (("property", "og:image"), ("name", "twitter:image")):
+            found = re.findall(rf'<meta {attr}="{name}" content="([^"]*)"', page)
+            assert found == [SOCIAL_IMAGE], (rel, name, found)
+        assert '<meta property="og:image:alt" content="' in page, rel
+        assert '<meta name="twitter:card" content="summary_large_image"' in page, rel
+
+
+def test_the_404_is_the_page_github_pages_serves_and_asks_not_to_be_indexed(site: Path):
+    """GitHub Pages serves 404.html for any address with nothing behind it. It once came
+    from the theme's bare template while docs/404.md built a second page at /404/ that
+    answered 200; now the one page carries the friendly text and its own head."""
+    assert not (site / "404").exists()
+    page = (site / "404.html").read_text()
+    assert canonical(page) == [SITE_URL + "404.html"]
+    assert '<meta name="robots" content="noindex">' in page
+    assert "404 - Not found" not in page
+    body = page[page.index("<h1") :]
+    assert re.search(r"<h1[^>]*>Page not found</h1>", body)
+    for href in ("/", "/docs/", "/blog/"):  # root-absolute: it is served at any depth
+        assert f'<a href="{href}">' in body, href
+
+
+def test_the_first_milestone_guide_is_titled_for_a_newcomer_s_search(site: Path, home: str):
+    """M23-R8: the guide's head says what someone looking for it would type; its H1 and
+    nav label stay the hub's. The homepage links it and the sitemap lists it."""
+    page = (site / "docs" / "first-milestone" / "index.html").read_text()
+    meta = head_meta(page)
+    assert meta["title"] == HEAD_TITLES["first-milestone.md"]
+    assert meta["title"].startswith("Getting started with CodeCrew")
+    assert "AI coding agents" in meta["title"] and "GitHub" in meta["title"]
+    assert meta["description"] == DESCRIPTIONS["first-milestone.md"]
+    h1 = re.search(r"<h1[^>]*>(.*?)</h1>", page, re.S).group(1)
+    assert text(re.sub(r'<a class="headerlink".*?</a>', "", h1, flags=re.S)).strip() == "Your first milestone"
+    assert 'href="./docs/first-milestone/"' in home
+    assert f"<loc>{SITE_URL}docs/first-milestone/</loc>" in (site / "sitemap.xml").read_text()
+
+
+def json_ld(page: str) -> list[dict]:
+    """Every JSON-LD node a page carries, @graph members flattened."""
+    nodes = []
+    for blob in re.findall(r'<script type="application/ld\+json">(.*?)</script>', page, re.S):
+        data = json.loads(blob)
+        nodes += data.get("@graph", [data])
+    return nodes
 
 
 def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):
