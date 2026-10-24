@@ -694,7 +694,10 @@ h1,h2,h3 {
   visibility: hidden;
 }
 
-/* Why: three panels on the glowing band, on the page ground. */
+/* Why: five panels on the glowing band, on the page ground (M22). One
+   column on a phone; two from 45em, the fifth across both; from 60em a
+   six-track grid, three panels and then two wider ones, so the odd count
+   leaves no hole. */
 .cc-panels {
   display: grid;
   grid-template-columns: 1fr;
@@ -710,7 +713,26 @@ h1,h2,h3 {
 
 @media screen and (min-width: 45em) {
   .cc-panels {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cc-panel:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media screen and (min-width: 60em) {
+  .cc-panels {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .cc-panel {
+    grid-column: span 2;
+  }
+
+  .cc-panel:nth-child(n+4),
+  .cc-panel:last-child:nth-child(odd) {
+    grid-column: span 3;
   }
 }
 

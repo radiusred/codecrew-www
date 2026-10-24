@@ -22,7 +22,7 @@ tagline: Your coding agents, working as a crew on GitHub
 
 <p class="cc-hero__sub" markdown="span">**CodeCrew** gives each of your coding agents a GitHub App identity of its own, so different harnesses and models can build and review each other's work. Anything an agent does under its App — a commit, a review, a recorded decision — carries that App's name.</p>
 
-<p class="cc-hero__sub" markdown="span">The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); separation of duties is not, and distinct identities are what make it real: route the reviewer to its own App, and CodeCrew merges only on that App's approval, never the author's.</p>
+<p class="cc-hero__sub" markdown="span">The coordinator running your agents is [a commodity now](blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md); separation of duties is not, and distinct identities are what make it real.</p>
 
 <p class="cc-cta" markdown="span">[Set up a crew](#start-now){ .cc-button .cc-button--primary } [See one at work](#the-example){ .cc-button }</p>
 
@@ -169,11 +169,29 @@ It builds the App through GitHub's manifest flow with that role's minimal permis
 <div class="cc-panels" markdown>
 <div class="cc-panel" markdown>
 
-<p class="cc-panel__glyph" markdown="span">:lucide-git-pull-request:</p>
+<p class="cc-panel__glyph" markdown="span">:lucide-shield-check:</p>
 
-### See who built it, and who checked it
+### Gates in code, not instructions
 
-Give the implementer and the reviewer each their own GitHub App, and a pull request carries two names: one on the commits, the other on the review. A bot name tells you which App acted, not which model was behind it; the routing table records what each role was set up to run.
+`gh codecrew task finish` merges only when an open pull request closes the task, the seat finishing it is the one that started it, CI has reported checks and every one has passed, the review your routing requires has approved, and every human gate raised on the task has an answer on the record. `gh codecrew milestone close` refuses while a task is still open, until every requirement's latest QA verdict is `satisfied`, and until the milestone's document is on the default branch. Each refusal names its reason. These are code paths in the CLI, not instructions an agent is asked to follow, and a check that runs as code is easier to trust than an agent's own report that it has finished.
+
+</div>
+<div class="cc-panel" markdown>
+
+<p class="cc-panel__glyph" markdown="span">:lucide-folder-git-2:</p>
+
+### GitHub is the only state store
+
+There is no workflow database beside the repository to drift out of step with it. A milestone's requirements and verdicts, and each task's plan, decisions, pull request and reviews, are issues, comments and PRs, which GitHub already keeps durable, permissioned and auditable. So a session that fails loses no task context: the next one picks up the plan, the decisions and the review from GitHub. What the failed session never pushed or wrote down goes with it. No server, no dashboard: it is `gh`, issues, PRs and CI, [across one repo or several](docs/spec.md#3-topology-hub-and-spokes).
+
+</div>
+<div class="cc-panel" markdown>
+
+<p class="cc-panel__glyph" markdown="span">:lucide-key-round:</p>
+
+### One App per role, with that role's permissions
+
+Each role can act through a GitHub App of its own, granted what its contract needs, rather than every agent sharing one privileged token that lets any of them do anything under the same name. By default, the reviewer and qa Apps are minted able to read the code but not push to it. A reviewer minted with `--with-approval-permission` gets write access instead, so that its approval can count toward GitHub's own required review: [the trade, under Start now](#add-a-reviewer). A bot name tells you which App acted, not which model was behind it; the routing table records what each role was set up to run.
 
 </div>
 <div class="cc-panel" markdown>
@@ -189,9 +207,9 @@ The reviewer contract opens with the reason it exists: “self-evaluation shares
 
 <p class="cc-panel__glyph" markdown="span">:lucide-scroll-text:</p>
 
-### The record is the work
+### Decisions, recorded as they are made
 
-Decisions and deviations are comments on the task's issue or PR, written when they happen, in a shape a machine can find later. `gh codecrew task finish` merges only when CI is green, the review your routing requires has passed and every raised human gate is resolved; otherwise it refuses, with a reason. No server, no dashboard: it is `gh`, issues, PRs and CI, [across one repo or several](docs/spec.md#3-topology-hub-and-spokes).
+Decisions and deviations are structured comments on the task's issue or PR, written at the moment of choice: what was decided, what was weighed, and what was rejected and why. The milestone's document is synthesized from them when it closes. The reasoning survives without anyone keeping a planning document up to date, and whoever returns to the code months later, agent or human, can read why it is the way it is.
 
 </div>
 </div>
@@ -225,15 +243,15 @@ Decisions and deviations are comments on the task's issue or PR, written when th
 
 <div class="cc-receipts" markdown>
 <div class="cc-receipt" markdown>
-<p class="cc-receipt__glyph" markdown="span">:lucide-milestone:</p>
+<p class="cc-receipt__glyph" markdown="span">:lucide-package-check:</p>
 
-**Every milestone shipped this way.**
+**It is working software, not a set of prompts.**
 
-<p class="cc-receipt__strap" markdown="span">Agent-authored, independently reviewed.</p>
+<p class="cc-receipt__strap" markdown="span">Tests, CI and releases, in public.</p>
 
 <div class="cc-receipt__detail" markdown>
 
-Agent-authored PRs under GitHub App identities, independent review, deterministic CI gates, QA verdicts enforced at close, and a synthesized document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
+The CLI that runs the gates is [a Go program](https://github.com/radiusred/gh-codecrew) with its own unit tests, and a fake tracker that lets those tests script GitHub's answers. [CI](https://github.com/radiusred/gh-codecrew/actions) vets, builds and tests it on every pull request, and [each release](https://github.com/radiusred/gh-codecrew/releases) ships prebuilt binaries. Every milestone has shipped through the protocol it implements, with a document for each: [docs/milestones/](https://github.com/radiusred/gh-codecrew/tree/main/docs/milestones).
 
 </div>
 </div>
