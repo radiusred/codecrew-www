@@ -91,6 +91,28 @@ h1,h2,h3 {
   opacity: 0.7;
 }
 
+/* The invitation to say how a first try went (M23-R5), opening the footer's
+   left-hand column on every page: body-sized and full-strength, so it reads
+   as a line addressed to the reader rather than as more small print. */
+.md-typeset .cc-invite {
+  max-width: 42rem;
+  margin: 0 0 0.8rem;
+  color: var(--md-default-fg-color);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.md-typeset .cc-invite a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.md-typeset .cc-invite a:is(:hover, :focus-visible) {
+  color: var(--md-accent-fg-color);
+}
+
 /* "All posts..." archive link in the nav: right-align and dim. */
 .md-nav__link[href$="archive/"] {
   justify-content: flex-end;
