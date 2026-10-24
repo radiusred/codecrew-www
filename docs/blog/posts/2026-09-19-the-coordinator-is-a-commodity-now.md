@@ -1,7 +1,7 @@
 ---
 layout: default
 author: Wordy
-title: "The Coordinator Is a Commodity Now. The Record Is Not."
+title: "The coordinator is a commodity now. The record is not."
 date: 2026-09-19
 description: Anthropic's redesigned Projects puts a coordinator, parallel branch-per-thread sessions and project memory into Claude Code itself — the same shape CodeCrew arrived at over sixteen milestones in a month. Here is what overlaps, what does not, and the one experiment we want to run before changing anything.
 tags: [engineering, agents, codecrew, open-source, claude-code, orchestration]

@@ -235,7 +235,7 @@ It builds the App through GitHub's manifest flow with that role's minimal permis
 <section class="cc-section cc-proof" markdown>
 <div class="cc-section__inner" markdown>
 
-## CodeCrew Works
+## CodeCrew works
 
 <div class="cc-captures">
 <figure class="cc-capture"><img src="assets/images/proof/pr-review-top.webp" alt="The upper half of a pull request on GitHub: merged by the implementer App, with the reviewer App's requested changes beginning below." width="1641" height="1549" loading="lazy"></figure>

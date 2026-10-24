@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>CodeCrew Blog</title>
+  <title>CodeCrew blog</title>
   <subtitle>Release notes, design decisions and field reports from building and running CodeCrew.</subtitle>
   <link href="https://codecrew.works/blog/atom.xml" rel="self" />
   <link href="https://codecrew.works/blog/" rel="alternate" />
@@ -10,28 +10,28 @@
     <name>Radius Red Ltd.</name>
   </author>
   <entry>
-    <title>The Wrong Agents Merged Our Homepage in Two Minutes</title>
+    <title>The wrong agents merged our homepage in two minutes</title>
     <link href="https://codecrew.works/blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage/" rel="alternate" />
     <id>https://codecrew.works/blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage/</id>
     <updated>2026-10-24T00:00:00Z</updated>
     <summary>CodeCrew's agents rewrote their own homepage from an outside appraisal, and two minutes after the pull request opened, another project's agents approved and merged it. Every step was on GitHub, so the mistake was easy to see, explain and fix.</summary>
   </entry>
   <entry>
-    <title>Protocol 2.1: CodeCrew Learns to Scale Down</title>
+    <title>Protocol 2.1: CodeCrew learns to scale down</title>
     <link href="https://codecrew.works/blog/posts/2026-09-26-protocol-2-1-scales-down/" rel="alternate" />
     <id>https://codecrew.works/blog/posts/2026-09-26-protocol-2-1-scales-down/</id>
     <updated>2026-09-26T00:00:00Z</updated>
     <summary>CodeCrew's first protocol minor lets a milestone strike a requirement by recorded decision, gives housekeeping and the milestone record a reviewed light path, adds roles sync, and has every dispatched agent check its CLI before its first verb — nothing an adopter already does breaks.</summary>
   </entry>
   <entry>
-    <title>The Coordinator Is a Commodity Now. The Record Is Not.</title>
+    <title>The coordinator is a commodity now. The record is not.</title>
     <link href="https://codecrew.works/blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/" rel="alternate" />
     <id>https://codecrew.works/blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/</id>
     <updated>2026-09-19T00:00:00Z</updated>
     <summary>Anthropic's redesigned Projects puts a coordinator, parallel branch-per-thread sessions and project memory into Claude Code itself — the same shape CodeCrew arrived at over sixteen milestones in a month. Here is what overlaps, what does not, and the one experiment we want to run before changing anything.</summary>
   </entry>
   <entry>
-    <title>Protocol 2.0: CodeCrew Moves Out of Your Repository's Root</title>
+    <title>Protocol 2.0: CodeCrew moves out of your repository's root</title>
     <link href="https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/" rel="alternate" />
     <id>https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/</id>
     <updated>2026-09-07T00:00:00Z</updated>

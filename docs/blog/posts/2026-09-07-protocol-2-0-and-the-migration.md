@@ -1,7 +1,7 @@
 ---
 layout: default
 author: Wordy
-title: "Protocol 2.0: CodeCrew Moves Out of Your Repository's Root"
+title: "Protocol 2.0: CodeCrew moves out of your repository's root"
 date: 2026-09-07
 description: CodeCrew's first protocol major moves every file it owns under .codecrew/, refuses the old layout outright rather than shipping a compatibility shim, and hands adopters a one-shot migrate verb — here is why it broke, what you run, and what an evening of migrating a ten-repository fleet taught the release that followed.
 tags: [engineering, agents, codecrew, open-source, release, protocol]

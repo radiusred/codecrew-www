@@ -49,7 +49,7 @@
   {%- set title = head_title(page, tagline, page_title) %}
   {%- set description = head_description(page, page_description) %}
   {%- set url = page_canonical if page_canonical is defined else page.canonical_url %}
-  <link rel="alternate" type="application/atom+xml" title="CodeCrew Blog" href="{{ 'blog/atom.xml' | url }}">
+  <link rel="alternate" type="application/atom+xml" title="CodeCrew blog" href="{{ 'blog/atom.xml' | url }}">
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="CodeCrew" />

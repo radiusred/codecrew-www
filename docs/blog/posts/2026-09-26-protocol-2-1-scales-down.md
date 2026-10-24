@@ -1,7 +1,7 @@
 ---
 layout: default
 author: Wordy
-title: "Protocol 2.1: CodeCrew Learns to Scale Down"
+title: "Protocol 2.1: CodeCrew learns to scale down"
 date: 2026-09-26
 description: CodeCrew's first protocol minor lets a milestone strike a requirement by recorded decision, gives housekeeping and the milestone record a reviewed light path, adds roles sync, and has every dispatched agent check its CLI before its first verb — nothing an adopter already does breaks.
 tags: [engineering, agents, codecrew, open-source, release, protocol]
