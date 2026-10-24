@@ -43,7 +43,9 @@ nav = [
   ] },
 ]
 
-extra_css = ["stylesheets/extra.css"]
+# The ?h= query is the stylesheet's content hash, written by main.py:stamp_stylesheets
+# so a changed stylesheet gets a new URL past Cloudflare's cache (www#83).
+extra_css = ["stylesheets/extra.css?h=3514997ef0"]
 
 [project.theme]
 custom_dir = "overrides"

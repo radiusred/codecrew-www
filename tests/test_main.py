@@ -99,6 +99,30 @@ def test_nav_label_is_the_plain_title_with_no_markup(site: Path):
     assert today.isoformat() not in label
 
 
+def test_the_stylesheet_url_changes_when_its_content_does(site: Path, monkeypatch):
+    """www#83: Cloudflare caches the stylesheet for hours at a fixed URL, so the
+    reference carries a content hash. Same file, same URL; any change, a new one."""
+    monkeypatch.setattr(main, "DOCS_DIR", Path("docs"))
+    (site / "docs/stylesheets").mkdir()
+    css = site / "docs/stylesheets/extra.css"
+    css.write_text("h1 { color: red; }\n")
+    config = site / "zensical.toml"
+    config.write_text(config.read_text() + '\nextra_css = ["stylesheets/extra.css"]\n')
+
+    def reference():
+        return re.search(r'^extra_css = \["(.*)"\]$', config.read_text(), re.M).group(1)
+
+    main.stamp_stylesheets()
+    first = reference()
+    assert first == f"stylesheets/extra.css?h={main.content_hash(css)}"
+    main.stamp_stylesheets()
+    assert reference() == first  # restamping an unchanged file changes nothing
+    css.write_text("h1 { color: blue; }\n")
+    main.stamp_stylesheets()
+    assert reference() != first and reference().startswith("stylesheets/extra.css?h=")
+    assert reference().count("?") == 1  # the old stamp is replaced, not appended to
+
+
 GENERATED = ("zensical.toml", "docs/blog/archive.md", "docs/blog/atom.xml")
 
 
@@ -111,15 +135,18 @@ def test_the_committed_blog_metadata_is_what_main_generates(tmp_path: Path, monk
     and the scheduled build that promotes it must not turn main red overnight."""
     root = Path(__file__).resolve().parent.parent
     shutil.copytree(root / "docs" / "blog", tmp_path / "docs" / "blog")
+    shutil.copytree(root / "docs" / "stylesheets", tmp_path / "docs" / "stylesheets")
     shutil.copy(root / "zensical.toml", tmp_path / "zensical.toml")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(main, "DOCS_BLOG", Path("docs/blog/posts"))
     monkeypatch.setattr(main, "CONFIG", Path("zensical.toml"))
     monkeypatch.setattr(main, "ARCHIVE_PAGE", Path("docs/blog/archive.md"))
     monkeypatch.setattr(main, "ATOM_FEED", Path("docs/blog/atom.xml"))
+    monkeypatch.setattr(main, "DOCS_DIR", Path("docs"))
     main.regenerate_nav()
     main.generate_archive()
     main.generate_atom_feed()
+    main.stamp_stylesheets()  # www#83: the committed stylesheet hash is the current one
     for rel in GENERATED:
         assert (tmp_path / rel).read_text() == (root / rel).read_text(), (
             f"{rel} is out of date: run `uv run python main.py` and commit what it writes"

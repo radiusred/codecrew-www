@@ -15,6 +15,7 @@ drift, and this strict build must not quietly stop running (see
 upstream_guard.py).
 """
 
+import hashlib
 import html
 import json
 import os
@@ -257,6 +258,23 @@ def test_the_theme_templates_are_not_published(site: Path):
     source to /overrides/*.html, where it was served as pages with no head of their own."""
     assert not (site / "overrides").exists()
     assert not [p for p in site.rglob("*.html") if "{%" in p.read_text()]
+
+
+def test_every_page_references_the_stylesheet_by_its_content_hash(site: Path):
+    """www#83: a returning visitor got new markup with the old stylesheet until Cloudflare's
+    copy expired. Each page links the stylesheet under a URL carrying the hash of the file
+    the build serves, so a changed stylesheet is a new URL; the file itself stays where the
+    URL's path points (GitHub Pages ignores the query)."""
+    served = site / "stylesheets" / "extra.css"
+    stamp = hashlib.sha256(served.read_bytes()).hexdigest()[:10]
+    pages = list(site.rglob("*.html"))
+    assert pages
+    for page in pages:
+        refs = re.findall(r'<link rel="stylesheet" href="([^"]*extra\.css[^"]*)"', page.read_text())
+        assert len(refs) == 1, page
+        path, _, query = refs[0].partition("?")
+        assert query == f"h={stamp}", page
+        assert path.endswith("stylesheets/extra.css"), page
 
 
 def test_home_uses_the_home_template(home: str):
