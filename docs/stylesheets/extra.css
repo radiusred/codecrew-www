@@ -620,22 +620,78 @@ h1,h2,h3 {
 /* The crew: five role badges over the copy, on the page ground between the
    Why band and the worked example's (M22 moved both, and the bands still
    alternate). Each badge carries its role and a one-line summary in visible
-   text (M19-R5): a fixed column, so the summaries wrap to the same measure
-   and the row centres, five across on a wide screen and two on a phone. */
+   text (M19-R5). The badges form an org chart (M22, #71): the coordinator,
+   first in the markup so reading and Tab order match, centred on top, and
+   the four roles it dispatches beneath it, two by two on a phone and in one
+   row from 45em, where thin connector lines join them. The lines are
+   pseudo-elements, so they add nothing a screen reader announces. */
 .cc-crew__badges {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 7.5rem));
   justify-content: center;
-  align-items: flex-start;
-  gap: 1.2rem 1.2rem;
+  align-items: start;
+  gap: 1.2rem;
   margin: 0 0 1.6rem;
 }
 
 .md-typeset .cc-crew__badge {
-  flex: 0 1 7.5rem;
+  position: relative;
   margin: 0;
   padding: 0.4rem 0.2rem;
   text-align: center;
+}
+
+.md-typeset .cc-crew__badge:first-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+  max-width: 11rem;
+}
+
+@media screen and (min-width: 45em) {
+  .cc-crew__badges {
+    grid-template-columns: repeat(4, minmax(0, 7.5rem));
+    gap: 2.4rem 1.2rem;
+  }
+
+  /* The stem down from the coordinator, the bar across the four (each
+     badge draws its own stretch, half a gap either side, trimmed at the
+     ends), and a tick up to each badge. */
+  .md-typeset .cc-crew__badge:first-child::after,
+  .md-typeset .cc-crew__badge:not(:first-child)::before,
+  .md-typeset .cc-crew__badge:not(:first-child)::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .md-typeset .cc-crew__badge:first-child::after {
+    top: 100%;
+    left: 50%;
+    height: 1.2rem;
+    border-left: 0.05rem solid var(--md-default-fg-color--lighter);
+  }
+
+  .md-typeset .cc-crew__badge:not(:first-child)::before {
+    top: -1.2rem;
+    left: -0.6rem;
+    right: -0.6rem;
+    border-top: 0.05rem solid var(--md-default-fg-color--lighter);
+  }
+
+  .md-typeset .cc-crew__badge:nth-child(2)::before {
+    left: 50%;
+  }
+
+  .md-typeset .cc-crew__badge:last-child::before {
+    right: 50%;
+  }
+
+  .md-typeset .cc-crew__badge:not(:first-child)::after {
+    top: -1.2rem;
+    left: 50%;
+    height: 1.6rem;
+    border-left: 0.05rem solid var(--md-default-fg-color--lighter);
+  }
 }
 
 /* The badges are white marks on transparency (the hub's -t variants), so

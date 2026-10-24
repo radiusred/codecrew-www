@@ -93,6 +93,10 @@ Decisions and deviations are posted as structured comments at the moment of choi
 
 <div class="cc-crew__badges">
 <figure class="cc-crew__badge">
+<img src="assets/images/crew/codecrew-coord-t.png" alt="" width="512" height="512">
+<figcaption><strong class="cc-crew__role">coordinator</strong> <span class="cc-crew__summary">Opens the work and starts each role's session: you, or an orchestrator.</span></figcaption>
+</figure>
+<figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
 <figcaption><strong class="cc-crew__role">implementer</strong> <span class="cc-crew__summary">Plans the task on its issue, builds the change and opens the pull request.</span></figcaption>
 </figure>
@@ -107,10 +111,6 @@ Decisions and deviations are posted as structured comments at the moment of choi
 <figure class="cc-crew__badge">
 <img src="assets/images/crew/codecrew-docs-t.png" alt="" width="512" height="512">
 <figcaption><strong class="cc-crew__role">doc-synthesizer</strong> <span class="cc-crew__summary">Turns the milestone's recorded decisions into its document.</span></figcaption>
-</figure>
-<figure class="cc-crew__badge">
-<img src="assets/images/crew/codecrew-coord-t.png" alt="" width="512" height="512">
-<figcaption><strong class="cc-crew__role">coordinator</strong> <span class="cc-crew__summary">Opens the work and starts each role's session: you, or an orchestrator.</span></figcaption>
 </figure>
 </div>
 
