@@ -29,6 +29,8 @@ jobs:
         env:
           SYNC_SOURCE_BASE: _sources
       - run: uv run python main.py
+      # After the sync and the blog nav: it indexes the pages both of them write.
+      - run: uv run python llms_txt.py
       - run: uv run zensical build --clean --strict
       - uses: actions/upload-pages-artifact@v4
         with:

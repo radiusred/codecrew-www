@@ -176,6 +176,7 @@ def site(tmp_path_factory) -> Path:
     shutil.copytree(ROOT / "overrides", src / "overrides")
     shutil.copy(ROOT / "zensical.toml", src / "zensical.toml")
     shutil.copy(ROOT / "sync_docs.py", src / "sync_docs.py")
+    shutil.copy(ROOT / "llms_txt.py", src / "llms_txt.py")
     synced = subprocess.run(
         [sys.executable, "sync_docs.py"],
         cwd=src,
@@ -184,6 +185,8 @@ def site(tmp_path_factory) -> Path:
         text=True,
     )
     assert synced.returncode == 0, synced.stdout + synced.stderr
+    indexed = subprocess.run([sys.executable, "llms_txt.py"], cwd=src, capture_output=True, text=True)
+    assert indexed.returncode == 0, indexed.stdout + indexed.stderr
     result = subprocess.run(
         [sys.executable, "-m", "zensical", "build", "--clean", "--strict"],
         cwd=src,
@@ -444,6 +447,26 @@ def test_the_homepage_describes_codecrew_as_a_software_application(site: Path, h
         assert "SoftwareSourceCode" in types, rel
         if rel != "index.html":
             assert "SoftwareApplication" not in types, rel
+
+
+def sitemap(site: Path) -> list[str]:
+    return re.findall(r"<loc>([^<]*)</loc>", (site / "sitemap.xml").read_text())
+
+
+def test_llms_txt_indexes_every_page_and_links_the_spec_and_cli_at_source(site: Path):
+    """M23-R3: /llms.txt, in llmstxt.org's shape, lists every page the sitemap does, each
+    with its description, and SPEC.md and CLI.md as they stand in the hub."""
+    llms = (site / "llms.txt").read_text()
+    assert llms.startswith("# CodeCrew\n\n> ")
+    links = dict(re.findall(r"^- \[[^\]]+\]\(([^)]+)\): (.+)$", llms, re.M))
+    for url in sitemap(site):
+        assert url in links, url
+        assert links[url], url
+    assert "https://github.com/radiusred/gh-codecrew/blob/main/SPEC.md" in links
+    assert "https://github.com/radiusred/gh-codecrew/blob/main/CLI.md" in links
+    for line in llms.splitlines():
+        if line.startswith("- ["):
+            assert re.match(r"^- \[[^\]]+\]\([^)]+\): \S", line), line  # every link is described
 
 
 def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):

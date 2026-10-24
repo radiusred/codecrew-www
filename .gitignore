@@ -8,5 +8,8 @@ __pycache__
 # Synced upstream docs (populated by sync_docs.py from radiusred/gh-codecrew)
 /docs/docs/
 
+# The site's llms.txt (written by llms_txt.py from the nav and the pages)
+/docs/llms.txt
+
 # CI-only working dir for the checked-out upstream repo
 /_sources/

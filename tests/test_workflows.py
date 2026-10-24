@@ -48,6 +48,7 @@ def test_the_deploy_syncs_then_builds_strict() -> None:
         the_step(blocks, HUB_CHECKOUT),
         the_step(blocks, "- run: uv run python sync_docs.py"),
         the_step(blocks, "- run: uv run python main.py"),
+        the_step(blocks, "- run: uv run python llms_txt.py"),
         the_step(blocks, "- run: uv run zensical build"),
     ]
     assert order == sorted(order)

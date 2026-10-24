@@ -25,6 +25,8 @@ links into them resolve to GitHub like any other path that does not sync.
   not publish their source
 - `main.py` — draft promotion, blog nav, archive page and Atom feed
 - `sync_docs.py` — the upstream docs sync and its nav block
+- `llms_txt.py` — `/llms.txt`, generated from the nav and each page's
+  description; git-ignored like the synced docs
 - `zensical.toml` — site config; the nav blocks between `BEGIN_BLOG_POSTS`
   / `END_BLOG_POSTS` and `BEGIN_DOCS_NAV` / `END_DOCS_NAV` are generated
 
@@ -64,6 +66,7 @@ be the strict build quietly not running.
 uv sync
 uv run python sync_docs.py   # builds docs/docs/ from ../gh-codecrew
 uv run python main.py
+uv run python llms_txt.py    # writes docs/llms.txt from the nav
 uv run zensical serve        # http://localhost:8000
 uv run pytest
 ```
