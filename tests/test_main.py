@@ -43,6 +43,28 @@ def test_future_posts_are_demoted_and_due_drafts_promoted(site: Path):
     assert (site / "docs/blog/posts/due.md").exists()
 
 
+def test_a_notes_file_in_drafts_is_never_published(site: Path):
+    """www#79: _drafts/ also holds working notes that are not posts, such as the
+    list-submission drafts. With no front matter they carry no date, so they stay
+    put, even when a line in the body looks like a date field."""
+    notes = site / "_drafts/notes.md"
+    notes.write_text(f"# Notes\n\ndate: {date.today().isoformat()}\n")
+    main.reconcile_drafts()
+    main.regenerate_nav()
+    assert notes.exists()
+    assert not (site / "docs/blog/posts/notes.md").exists()
+    assert "notes.md" not in (site / "zensical.toml").read_text()
+
+
+def test_the_committed_drafts_notes_carry_no_front_matter():
+    """The real notes files in _drafts/ must never open with front matter, or a
+    date in it would publish them as a blog post on the next build."""
+    root = Path(__file__).resolve().parent.parent
+    for notes in sorted((root / "_drafts").glob("m*-*.md")):
+        assert not notes.read_text().startswith("---"), notes.name
+        assert main._post_date(notes) is None, notes.name
+
+
 def test_nav_archive_and_feed_reflect_published_posts(site: Path):
     today = date.today()
     post(site / "docs/blog/posts/2026-01-01-one.md", "One", today - timedelta(days=10))
