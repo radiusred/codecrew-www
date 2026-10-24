@@ -423,6 +423,29 @@ def json_ld(page: str) -> list[dict]:
     return nodes
 
 
+def test_the_homepage_describes_codecrew_as_a_software_application(site: Path, home: str):
+    """M23-R3: the homepage's JSON-LD graph gains a SoftwareApplication, which the
+    SoftwareSourceCode node it already carried points at; no other page carries one."""
+    nodes = {node["@type"]: node for node in json_ld(home)}
+    app = nodes["SoftwareApplication"]
+    assert app["name"] == "CodeCrew"
+    assert app["applicationCategory"] == "DeveloperApplication"
+    # The release assets: darwin, linux and windows builds (gh extension install picks one).
+    assert all(system in app["operatingSystem"] for system in ("Linux", "macOS", "Windows"))
+    assert app["url"] == SITE_URL
+    assert "https://github.com/radiusred/gh-codecrew" in app["sameAs"]
+    assert app["license"] == nodes["SoftwareSourceCode"]["license"]
+    assert app["offers"]["price"] == "0"
+    assert app["description"] == front_matter(ROOT / "docs" / "index.md")["description"]
+    assert nodes["SoftwareSourceCode"]["targetProduct"] == {"@id": app["@id"]}
+    assert nodes["SoftwareSourceCode"]["codeRepository"] == "https://github.com/radiusred/gh-codecrew"
+    for rel, page in built_pages(site).items():
+        types = [node["@type"] for node in json_ld(page)]  # every page's JSON-LD parses
+        assert "SoftwareSourceCode" in types, rel
+        if rel != "index.html":
+            assert "SoftwareApplication" not in types, rel
+
+
 def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):
     """www#59: the site-wide description is only a fallback now, and it says what the
     homepage says rather than the receipts-led line the docs used to inherit."""
