@@ -70,7 +70,7 @@ RECEIPTS = (
     ("megaphone", "The first spoke published its own announcement.", "Driven from the hub, in public.",
      "delivered by the protocol it describes", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
     ("bot", "This project is agent-staffed, and you can check.", "Four seats, four App identities.",
-     "A reviewer App minted with write access satisfies GitHub's own required-review rule", "https://github.com/radiusred/codecrew-www/pull/3"),
+     "each merge here waits on the reviewer App's approval, not a person's", "https://github.com/radiusred/codecrew-www/pull/3"),
     ("network", "It scales from solo, to a team, to an orchestration platform.", "Same protocol, any routing table.",
      "with a dedicated coordinator agent from the first event", "https://github.com/radiusred/gh-codecrew/issues/164"),
 )
@@ -153,8 +153,8 @@ FRESH_SESSION = "review runs in a fresh session"
 # Start now's second step (M19-R6): the reviewer's App, minted with the name the crew
 # section's example routes it to, split so each line keeps to STEP_CODE_MAX.
 REVIEWER_COMMAND = ("gh codecrew identity new reviewer \\", "  --name myorg-checker")
-# The plan-tier qualifier every required-review claim on the page carries, worded once
-# (SPEC §5, platform requirements), in the proof's receipt and in Start now alike.
+# The plan-tier qualifier the required-review claim carries (SPEC §5, platform requirements).
+# The claim and the qualifier live in Start now alone (M22-R3, QA's finding on #71).
 PAID_PLAN = "on a private repo, branch protection needs a paid GitHub plan"
 START_STEPS = (("start-solo", "First, work solo"), ("add-a-reviewer", "Next, add an agent reviewer"))
 INSTALL_COMMANDS = (
@@ -720,7 +720,9 @@ def test_proof_receipts_are_visible_text(home: str):
     assert "unit tests" in words and "fake tracker" in words and "every pull request" in words
     assert "Every milestone shipped this way." not in proof  # merged into this receipt
     staffed = squash(text(cards[2]))
-    assert PAID_PLAN in staffed  # the claim's plan-tier qualifier
+    # The project's own fact, not the general rule: the required-review trade and its
+    # plan-tier qualifier are Start now's alone (M22-R3, QA's finding on #71).
+    assert PAID_PLAN not in staffed and "write access" not in staffed
     orchestrator = cards[3]
     for href in ("https://github.com/radiusred/numberguess", "https://github.com/radiusred/snake",
                  "https://github.com/radiusred/gh-codecrew/issues/119", "https://github.com/radiusred/gh-codecrew/issues/164"):
@@ -963,15 +965,33 @@ def test_the_gates_claim_only_what_the_refusal_table_backs(home: str, site: Path
     assert f'id="{anchor}"' in (site / page / "index.html").read_text()
 
 
+def test_the_required_review_caveat_lives_only_in_start_now(home: str):
+    """M22-R3, QA's finding on #71: the required-review trade is said once, under Start now.
+    Elsewhere the page may say a reviewer can be given write access, but not why: no required
+    review in any casing or hyphenation, no approval that counts, no paid-plan qualifier. This
+    rejects the repeated claim however it is worded, not only the phrases it used before."""
+    repeat = re.compile(r"required[\s-]+review|approvals?\s+(?:can\s+)?counts?|count(?:s|ed)?\s+toward"
+                        r"|paid(?:\s+GitHub)?\s+plan|branch\s+protection", re.I)
+    names = re.findall(r'<section class="cc-section (cc-[\w-]+)', home)
+    for name in names:
+        words = squash(text(section(home, name)))
+        found = repeat.findall(words)
+        if name == "cc-start":
+            assert found  # its one home keeps the whole trade
+        else:
+            assert not found, (name, found)
+
+
 def test_the_identity_claim_carries_the_approval_opt_in(home: str, site: Path):
     """M22-R2: review and qa cannot change code by default only. --with-approval-permission
-    gives the reviewer write access (hub docs/identities.md), and the panel says why and
-    points at Start now's full account of the trade instead of repeating it."""
+    can give the reviewer write access (hub docs/identities.md). M22-R3: the panel says so and
+    links Start now's account of the trade, without saying why (QA's finding on #71)."""
     why = section(home, "cc-why")
     apps = why_panels(home)["One App per role, with that role's permissions"]
     assert "Reviewer and QA Apps can't push code by default" in apps
-    assert "--with-approval-permission gives the reviewer write access" in apps
-    assert "can count toward GitHub's required review" in apps
+    assert "--with-approval-permission can give the reviewer write access" in apps
+    assert "the trade" in apps
+    assert "required review" not in apps.lower() and "count" not in apps
     assert PAID_PLAN not in apps  # Start now carries the plan-tier qualifier
     assert 'href="#add-a-reviewer"' in why and 'id="add-a-reviewer"' in section(home, "cc-start")
 
