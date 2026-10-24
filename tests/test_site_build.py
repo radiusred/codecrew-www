@@ -109,7 +109,7 @@ WHY_HEADINGS = (
 IDEAS = {
     "gates in code": ("cc-why", "easier to trust than an agent's word"),
     "GitHub the only state store": ("cc-why", "no workflow database drifts"),
-    "an App per role": ("cc-why", "instead of every agent sharing one privileged token"),
+    "an App per role": ("cc-why", "not one shared, privileged token"),
     "decisions as they happen": ("cc-why", "at the moment of choice"),
     "working software": ("cc-proof", "working software, not a set of prompts"),
 }
@@ -119,8 +119,8 @@ IDEAS = {
 FINISH_CHECKS = {
     "CHECKS_FAILING": "green CI",
     "NO_HOLDER_REVIEW": "the reviewer's approval",
-    "GATED": "every human gate answered",
-    "GATE_UNRECORDED": "every human gate answered",
+    "GATED": "every question raised for a human answered",
+    "GATE_UNRECORDED": "every question raised for a human answered",
 }
 CLOSE_CHECKS = {
     "VERDICT_MISSING": "refuses until QA has verified every requirement",
@@ -323,9 +323,10 @@ def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
 
 
 def test_home_has_the_product_page_flow(home: str):
-    # Why comes straight after the hero, before the worked example (the operator's review
-    # of PR #70): a first-time reader meets the ideas before the story that shows them.
-    order = ("cc-hero", "cc-why", "cc-example", "cc-crew", "cc-proof", "cc-start")
+    # The operator's review of PR #70: Why comes straight after the hero, so a first-time
+    # reader meets the ideas first; then the crew, so the roles are known before the worked
+    # example tells its story through them; then the proof of it, and how to start.
+    order = ("cc-hero", "cc-why", "cc-crew", "cc-example", "cc-proof", "cc-start")
     positions = [home.index(f"cc-section {name}") for name in order]
     assert positions == sorted(positions)
     assert tuple(re.findall(r'<section class="cc-section (cc-[\w-]+)', home)) == order
@@ -339,6 +340,20 @@ def test_the_bands_below_the_hero_alternate(home: str):
     classes = re.findall(r'<section class="cc-section (cc-[\w-]+)([^"]*)"', home)
     below = [(name, "cc-section--alt" in rest) for name, rest in classes[1:]]
     assert [alt for _, alt in below] == [i % 2 == 0 for i in range(len(below))], below
+
+
+def test_the_moved_sections_stand_on_their_own(home: str):
+    """Why comes before the crew and the example, so it explains its own terms: the roles
+    are glossed, the reviewer's reason is not credited to a "contract" the page has not yet
+    introduced, and human gates are put in plain words. The example's finish note points
+    back at the gates instead of listing them again (M22-R3)."""
+    why = squash(text(section(home, "cc-why")))
+    assert "(implementer, reviewer, QA and the rest)" in why
+    assert "contract" not in why.lower() and "human gate" not in why.lower()
+    assert "as the reviewer's instructions put it" in why
+    example = squash(text(section(home, "cc-example")))
+    assert "The gates run here: if one fails, it refuses with its reason." in example
+    assert "It checks CI" not in example
 
 
 def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
@@ -857,11 +872,11 @@ def test_why_is_the_five_ideas_and_a_bounded_second_model(home: str):
     panels = why_panels(home)
     assert tuple(panels) == WHY_HEADINGS
     apps, second, gates, state, record = panels.values()
-    assert "runs as code" in gates and "easier to trust than an agent's word" in gates
+    assert "Checks in code" in gates and "easier to trust than an agent's word" in gates
     assert "no workflow database drifts" in state
     # A failed session loses no task context, bounded: what was never pushed is not on GitHub.
     assert "A session that fails loses no task context, only work it never pushed" in state
-    assert "its own GitHub App" in apps and "only the permissions it needs" in apps
+    assert "its own GitHub App and permissions" in apps
     for heading, words in panels.items():
         assert len(words.split()) <= 60, heading  # one idea and its reason, in a few short sentences
     assert f"\u201c{REVIEWER_REASON}\u201d" in second  # the contract's reason, quoted exactly
