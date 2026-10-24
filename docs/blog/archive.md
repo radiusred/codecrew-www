@@ -7,6 +7,10 @@ description: A complete index of every post on the CodeCrew blog.
 
 ## 2026
 
+### October
+
+- **2026-10-24** — [The Wrong Agents Merged Our Homepage in Two Minutes](posts/2026-10-24-the-wrong-agents-merged-our-homepage.md)
+
 ### September
 
 - **2026-09-26** — [Protocol 2.1: CodeCrew Learns to Scale Down](posts/2026-09-26-protocol-2-1-scales-down.md)

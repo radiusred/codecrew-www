@@ -5,10 +5,17 @@
   <link href="https://codecrew.works/blog/atom.xml" rel="self" />
   <link href="https://codecrew.works/blog/" rel="alternate" />
   <id>https://codecrew.works/blog/</id>
-  <updated>2026-09-26T00:00:00Z</updated>
+  <updated>2026-10-24T00:00:00Z</updated>
   <author>
     <name>Radius Red Ltd.</name>
   </author>
+  <entry>
+    <title>The Wrong Agents Merged Our Homepage in Two Minutes</title>
+    <link href="https://codecrew.works/blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage/" rel="alternate" />
+    <id>https://codecrew.works/blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage/</id>
+    <updated>2026-10-24T00:00:00Z</updated>
+    <summary>CodeCrew's agents rewrote their own homepage from an outside appraisal, and two minutes after the pull request opened, another project's agents approved and merged it. Every step was on GitHub, so the mistake was easy to see, explain and fix.</summary>
+  </entry>
   <entry>
     <title>Protocol 2.1: CodeCrew Learns to Scale Down</title>
     <link href="https://codecrew.works/blog/posts/2026-09-26-protocol-2-1-scales-down/" rel="alternate" />
