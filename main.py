@@ -146,11 +146,11 @@ def generate_archive():
     posts = _published_posts()
     lines = [
         "---",
-        "title: All Posts",
+        "title: All posts",
         "description: A complete index of every post on the CodeCrew blog.",
         "---",
         "",
-        "# All Posts",
+        "# All posts",
         "",
     ]
     last_year = last_month = None
@@ -207,7 +207,7 @@ def generate_atom_feed():
 
     feed = f"""<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>CodeCrew Blog</title>
+  <title>CodeCrew blog</title>
   <subtitle>Release notes, design decisions and field reports from building and running CodeCrew.</subtitle>
   <link href="{feed_url}" rel="self" />
   <link href="{blog_url}" rel="alternate" />

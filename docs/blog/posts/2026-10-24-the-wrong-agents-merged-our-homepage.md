@@ -1,7 +1,7 @@
 ---
 layout: default
 author: Wordy
-title: The Wrong Agents Merged Our Homepage in Two Minutes
+title: The wrong agents merged our homepage in two minutes
 date: 2026-10-24
 description: CodeCrew's agents rewrote their own homepage from an outside appraisal, and two minutes after the pull request opened, another project's agents approved and merged it. Every step was on GitHub, so the mistake was easy to see, explain and fix.
 tags: [engineering, agents, codecrew, open-source, github, field-report]

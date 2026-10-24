@@ -939,7 +939,7 @@ def test_proof_names_the_pr_its_apps_the_finding_and_the_fix(home: str):
     """M19-R4: the proof can be checked without hovering. Visible text under the screenshots
     names the PR, its author App and reviewer App, the finding and the fix, and links the review."""
     proof = section(home, "cc-proof")
-    assert re.search(r'<h2 id="codecrew-works">CodeCrew Works<a class="headerlink"', proof)  # nothing linked the old id
+    assert re.search(r'<h2 id="codecrew-works">CodeCrew works<a class="headerlink"', proof)  # nothing linked the old id
     assert "cc-captures__caption" not in proof  # the generic caption is gone
     case = proof_case(proof)
     assert proof.index('class="cc-captures"') < proof.index('class="cc-proof__case"') < proof.index('class="cc-receipts"')
@@ -1383,6 +1383,70 @@ def test_the_post_still_shows_its_date_once_in_the_meta_block(post: Post):
     meta = text(re.search(r'<div class="rr-page-meta">(.*?)</div>', post.page, re.S).group(1))
     assert "published on:" in meta
     assert post.date.strftime("%B") in meta and str(post.date.year) in meta
+
+
+# Every blog URL as built on 2026-10-24, before www#83 put the post titles into sentence
+# case. Posts 1 to 6 of the ops social series link these, so they never move: a post's
+# slug is its file name, not its title.
+BLOG_URLS = (
+    "blog/",
+    "blog/archive/",
+    "blog/posts/2026-09-07-protocol-2-0-and-the-migration/",
+    "blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/",
+    "blog/posts/2026-09-26-protocol-2-1-scales-down/",
+    "blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage/",
+)
+# Words that keep their capitals mid-title: names, and the first word after a full stop.
+PROPER_NOUNS = {"CodeCrew", "GitHub", "App", "Spec", "Kit", "OpenSpec", "BMAD", "GSD", "CLI", "Protocol"}
+
+
+def sentence_case(title: str) -> bool:
+    """True when no word after the first is capitalised, bar a name or a new sentence."""
+    words = re.findall(r"[\w'.]+[.:]?", title)
+    for before, word in zip(words, words[1:]):
+        if word[0].isupper() and word.rstrip(".:") not in PROPER_NOUNS and not before.endswith("."):
+            return False
+    return True
+
+
+def test_the_published_blog_urls_never_move(site: Path):
+    """www#83: changing a post's title left every published URL where the ops series links it."""
+    for url in BLOG_URLS:
+        assert (site / url / "index.html").exists(), url
+    built = {str(p.parent.relative_to(site)) + "/" for p in (site / "blog").rglob("index.html")}
+    assert built == set(BLOG_URLS)
+
+
+def test_blog_titles_use_sentence_case_everywhere_they_appear(site: Path):
+    """www#83: the post titles, the archive heading and the feed's own name are in sentence
+    case, as the nav, the archive and the Atom feed carry them."""
+    titles = [
+        re.search(r"^title:\s*(.+?)\s*$", p.read_text(), re.M).group(1).strip("\"'")
+        for p in sorted((ROOT / "docs" / "blog" / "posts").glob("*.md"))
+    ]
+    assert titles and all(sentence_case(t) for t in titles), titles
+    feed = (site / "blog" / "atom.xml").read_text()
+    feed_titles = [html.unescape(t) for t in re.findall(r"<title>(.*?)</title>", feed)]
+    assert feed_titles[0] == "CodeCrew blog"
+    assert sorted(feed_titles[1:]) == sorted(titles)
+    archive = (site / "blog" / "archive" / "index.html").read_text()
+    h1 = re.search(r"<h1[^>]*>(.*?)</h1>", archive, re.S).group(1)
+    assert text(re.sub(r'<a class="headerlink".*?</a>', "", h1, flags=re.S)).strip() == "All posts"
+    for title in titles:
+        assert html.escape(title, quote=False) in archive or title in archive, title
+    nav = (ROOT / "zensical.toml").read_text()
+    for title in titles:
+        assert f'{{ "{title}" = "blog/posts/' in nav, title
+
+
+def test_home_headings_use_sentence_case(home: str):
+    """www#83: every heading on the homepage, the proof section's "CodeCrew works" among them."""
+    headings = [
+        squash(text(re.sub(r'<a class="headerlink".*?</a>', "", h, flags=re.S))).strip()
+        for h in re.findall(r"<h[1-4][^>]*>(.*?)</h[1-4]>", home, re.S)
+    ]
+    assert "CodeCrew works" in headings
+    assert all(sentence_case(h) for h in headings), [h for h in headings if not sentence_case(h)]
 
 
 @pytest.fixture(scope="module")

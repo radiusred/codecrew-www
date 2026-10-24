@@ -77,7 +77,7 @@ def test_nav_archive_and_feed_reflect_published_posts(site: Path):
     archive = (site / "docs/blog/archive.md").read_text()
     assert archive.index("[Two]") < archive.index("[One]")
     feed = (site / "docs/blog/atom.xml").read_text()
-    assert "<title>CodeCrew Blog</title>" in feed
+    assert "<title>CodeCrew blog</title>" in feed
     assert "https://codecrew.works/blog/posts/2026-02-01-two/" in feed
 
 

@@ -34,10 +34,10 @@ nav = [
   { "Blog" = [
     { "Latest" = "blog/index.md" },
     # BEGIN_BLOG_POSTS
-    { "Protocol 2.0: CodeCrew Moves Out of Your Repository's Root" = "blog/posts/2026-09-07-protocol-2-0-and-the-migration.md" },
-    { "The Coordinator Is a Commodity Now. The Record Is Not." = "blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md" },
-    { "Protocol 2.1: CodeCrew Learns to Scale Down" = "blog/posts/2026-09-26-protocol-2-1-scales-down.md" },
-    { "The Wrong Agents Merged Our Homepage in Two Minutes" = "blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage.md" },
+    { "Protocol 2.0: CodeCrew moves out of your repository's root" = "blog/posts/2026-09-07-protocol-2-0-and-the-migration.md" },
+    { "The coordinator is a commodity now. The record is not." = "blog/posts/2026-09-19-the-coordinator-is-a-commodity-now.md" },
+    { "Protocol 2.1: CodeCrew learns to scale down" = "blog/posts/2026-09-26-protocol-2-1-scales-down.md" },
+    { "The wrong agents merged our homepage in two minutes" = "blog/posts/2026-10-24-the-wrong-agents-merged-our-homepage.md" },
     # END_BLOG_POSTS
     { "All posts..." = "blog/archive.md" },
   ] },
