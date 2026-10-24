@@ -23,7 +23,10 @@ links into them resolve to GitHub like any other path that does not sync.
 - `docs/docs/` — the synced upstream docs, generated and git-ignored
 - `overrides/` — the theme templates; kept outside `docs/` so the build does
   not publish their source
-- `main.py` — draft promotion, blog nav, archive page and Atom feed
+- `main.py` — draft promotion, blog nav, archive page and Atom feed, and the
+  content hash on the stylesheet URL in `zensical.toml` (`extra_css`), so a
+  changed stylesheet gets a new URL past the CDN cache. Run it and commit what
+  it writes whenever a post or `docs/stylesheets/extra.css` changes
 - `sync_docs.py` — the upstream docs sync and its nav block
 - `llms_txt.py` — `/llms.txt`, generated from the nav and each page's
   description; git-ignored like the synced docs

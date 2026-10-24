@@ -1,3 +1,4 @@
+import hashlib
 import re
 import shutil
 import tomllib
@@ -9,6 +10,7 @@ DRAFTS_BLOG = Path("_drafts")
 CONFIG = Path("zensical.toml")
 ARCHIVE_PAGE = Path("docs/blog/archive.md")
 ATOM_FEED = Path("docs/blog/atom.xml")
+DOCS_DIR = Path("docs")
 
 
 def _load_site_url():
@@ -236,11 +238,50 @@ def generate_atom_feed():
     print(f"Generated Atom feed with {len(posts)} posts")
 
 
+STAMP_PARAM = "h"
+EXTRA_CSS_RE = re.compile(r"^extra_css = \[.*\]$", re.M)
+
+
+def content_hash(path):
+    """The first 10 hex digits of the file's SHA-256: enough to tell versions apart."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:10]
+
+
+def stamp_stylesheets():
+    """Give each extra_css entry in zensical.toml a query that changes with its content.
+
+    Cloudflare caches the stylesheet for hours at a fixed URL, so a returning
+    visitor saw new markup with old CSS until it expired (www#83). Zensical
+    prints each extra_css path through its url filter, which keeps a query
+    string, and Cloudflare's cache key includes it; GitHub Pages ignores it
+    and serves the file. So the built pages reference
+    stylesheets/extra.css?h=<hash>, a new URL whenever the file changes.
+    """
+    with open(CONFIG, "rb") as f:
+        cfg = tomllib.load(f)
+    paths = cfg.get("project", {}).get("extra_css", [])
+    if not paths:
+        return
+    stamped = []
+    for entry in paths:
+        bare = entry.split("?", 1)[0]
+        stamped.append(f"{bare}?{STAMP_PARAM}={content_hash(DOCS_DIR / bare)}")
+    line = "extra_css = [" + ", ".join(f'"{s}"' for s in stamped) + "]"
+    text = CONFIG.read_text()
+    if not EXTRA_CSS_RE.search(text):
+        raise RuntimeError(f"Could not find a one-line extra_css list in {CONFIG}")
+    new_text = EXTRA_CSS_RE.sub(lambda _: line, text, count=1)
+    if new_text != text:
+        CONFIG.write_text(new_text)
+        print(f"Stamped stylesheets: {', '.join(stamped)}")
+
+
 def main():
     reconcile_drafts()
     regenerate_nav()
     generate_archive()
     generate_atom_feed()
+    stamp_stylesheets()
 
 
 if __name__ == "__main__":
