@@ -884,7 +884,7 @@ def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
     why = section(home, "cc-why")
     assert "<img" not in why
     assert not (site / "assets" / "images" / "hub-and-spokes.svg").exists()
-    panels = why.split('<div class="cc-panel">')[1:]
+    panels = why[: why.index('<div class="cc-newhere">')].split('<div class="cc-panel">')[1:]
     assert len(panels) == len(WHY_HEADINGS)
     for panel in panels:
         glyphs = re.findall(r'<p class="cc-panel__glyph">(.*?)</p>', panel, re.S)
@@ -894,7 +894,8 @@ def test_why_panels_carry_one_glyph_each_and_no_picture(home: str, site: Path):
 
 def why_panels(home: str) -> dict[str, str]:
     """The Why section's panels, by heading, as visible text."""
-    panels = section(home, "cc-why").split('<div class="cc-panel">')[1:]
+    why = section(home, "cc-why")
+    panels = why[: why.index('<div class="cc-newhere">')].split('<div class="cc-panel">')[1:]  # the row under them is not a panel
     heading = lambda p: squash(text(re.search(r"<h3[^>]*>(.*?)<a class=\"headerlink\"", p, re.S).group(1)))
     return {heading(p): squash(text(p)) for p in panels}
 
@@ -1503,6 +1504,22 @@ def test_the_intro_pages_are_in_the_sitemap(site: Path):
     sitemap = (site / "sitemap.xml").read_text()
     for slug in INTRO_PAGES:
         assert f"<loc>https://codecrew.works/why/{slug}/</loc>" in sitemap, slug
+
+
+def test_the_homepage_links_each_intro_page_and_the_invitation(home: str):
+    """M23-R8 and R5: a compact "New here?" row under the Why panels links each page, and one
+    line invites a reader who tried it. It adds no section: the M22 order is pinned above."""
+    why = section(home, "cc-why")
+    row = why[why.index('<div class="cc-newhere">') :]
+    assert why.index('<div class="cc-panels">') < why.index('<div class="cc-newhere">')
+    links = re.findall(r'<li><a href="why/([\w-]+)/">(.*?)</a></li>', row)
+    assert [slug for slug, _ in links] == list(INTRO_PAGES)
+    for slug, label in links:
+        assert INTRO_PAGES[slug][0].lower() in label.lower(), slug  # the page's own search phrase, as anchor text
+    invite = re.search(r'<p class="cc-newhere__invite">(.*?)</p>', row, re.S).group(1)
+    assert f'href="{TRIED_IT}"' in invite and "Tell us how it went" in invite
+    assert section(home, "cc-why").count(f'href="{TRIED_IT}"') == 1  # once, in the row
+    assert "<h2" not in row and "<h3" not in row  # a row, not another section or panel
 
 
 def test_the_intro_pages_name_no_crew_member(intro_pages: list[IntroPage]):

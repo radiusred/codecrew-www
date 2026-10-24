@@ -803,6 +803,46 @@ h1,h2,h3 {
   width: 2.4rem;
 }
 
+/* New here? (M23-R8): under the panels, one row of links to the four
+   introductory pages under /why/, wrapping on a phone, then one line
+   inviting a reader who has tried CodeCrew to say how it went (M23-R5). */
+.md-typeset .cc-newhere {
+  max-width: 48rem;
+  margin: 2rem auto 0;
+  text-align: center;
+}
+
+.md-typeset .cc-newhere__lead {
+  margin: 0 0 0.8rem;
+}
+
+.md-typeset ul.cc-newhere__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset ul.cc-newhere__links > li {
+  margin: 0;
+}
+
+.md-typeset .cc-newhere__links a {
+  display: inline-block;
+  padding: 0.4em 0.9em;
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 1rem;
+  background: var(--md-default-bg-color);
+  font-size: 0.75rem;
+}
+
+.md-typeset .cc-newhere__invite {
+  margin: 0;
+}
+
 /* The introductory pages' one screenshot: a readable width, centred, framed. */
 .md-typeset img.cc-intro-shot {
   display: block;
