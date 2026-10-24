@@ -42,7 +42,7 @@ tagline: Your coding agents, working as a crew on GitHub
 
 ### One App per role, with that role's permissions
 
-Each role can act as its own GitHub App, with only the permissions it needs, instead of every agent sharing one privileged token. Reviewer and QA Apps can't push code by default; `--with-approval-permission` gives the reviewer write access, so its approval can count toward GitHub's required review ([the trade](#add-a-reviewer)).
+Each role (implementer, reviewer, QA and the rest) can have its own GitHub App and permissions, not one shared, privileged token. Reviewer and QA Apps can't push code by default; `--with-approval-permission` gives the reviewer write access so its approval can count toward GitHub's required review ([the trade](#add-a-reviewer)).
 
 </div>
 <div class="cc-panel" markdown>
@@ -51,7 +51,7 @@ Each role can act as its own GitHub App, with only the permissions it needs, ins
 
 ### A second model, with other blind spots
 
-The reviewer contract opens with why it exists: “self-evaluation shares the blind spots of the work itself”. So review runs in a clean session, ideally on a different model or harness. That reviewer has blind spots of its own; nobody promises it catches every bug.
+CodeCrew's reviewer role exists because, as the reviewer's instructions put it, “self-evaluation shares the blind spots of the work itself”. So review runs in a clean session, ideally on a different model or harness, which has its own blind spots; nobody promises it catches every bug.
 
 </div>
 <div class="cc-panel" markdown>
@@ -60,7 +60,7 @@ The reviewer contract opens with why it exists: “self-evaluation shares the bl
 
 ### Gates in code, not instructions
 
-CodeCrew's `task finish` merges only with green CI, the reviewer's approval and every human gate answered; `milestone close` refuses until QA has verified every requirement ([every refusal](docs/spec.md#10-the-cli)). A check that runs as code is easier to trust than an agent's word that it is done.
+CodeCrew's `task finish` merges only with green CI, the reviewer's approval and every question raised for a human answered; `milestone close` refuses until QA has verified every requirement ([every refusal](docs/spec.md#10-the-cli)). Checks in code are easier to trust than an agent's word that it is done.
 
 </div>
 <div class="cc-panel" markdown>
@@ -86,70 +86,7 @@ Decisions and deviations are posted as structured comments at the moment of choi
 </div>
 </section>
 
-<section class="cc-section cc-example" markdown>
-<div class="cc-section__inner" markdown>
-
-<p class="cc-example__label">A worked example</p>
-
-## One agent builds. Another checks the work. { #the-example }
-
-<p class="cc-example__lead" markdown="span">This one is told through CodeCrew's own crew: Cody, on Claude Code, writes the code, and Checky, on Codex, reviews it, each acting on GitHub as its own App. The change is made up; the crew and the verbs are real. CodeCrew starts neither agent: the operator or an orchestrator starts every session, and review runs in a fresh session.</p>
-
-<ol class="cc-thread" markdown>
-<li class="cc-turn cc-turn--you" markdown>
-<p class="cc-turn__avatar" markdown="span">:lucide-user:</p>
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**You** · the goal</p>
-<p class="cc-bubble" markdown="span">The public API needs a rate limit. Requirement: a client over it gets a 429 with a `Retry-After` header.</p>
-<p class="cc-turn__note" markdown="span">A milestone issue carries the goal and the requirement; a task issue hangs off it.</p>
-</div>
-</li>
-<li class="cc-turn cc-turn--cody" markdown>
-<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
-<p class="cc-bubble" markdown="span">Plan's on the task. The limiter and its tests are pushed, and the PR is open.</p>
-<p class="cc-turn__note" markdown="span">`gh codecrew task start` refuses a task with no plan. The PR's author is Cody's App.</p>
-</div>
-</li>
-<li class="cc-turn cc-turn--checky" markdown>
-<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
-<p class="cc-bubble" markdown="span">Changes requested. The counter lives in process memory, so a restart hands every client a fresh allowance. Keep the window in the shared store, and add a test that restarts mid-window.</p>
-<p class="cc-turn__note" markdown="span">An ordinary GitHub review on the diff, from a different App and a different harness.</p>
-</div>
-</li>
-<li class="cc-turn cc-turn--cody" markdown>
-<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
-<p class="cc-bubble" markdown="span">Fixed in a new commit: the window is in the shared store, and the restart test passes.</p>
-</div>
-</li>
-<li class="cc-turn cc-turn--checky" markdown>
-<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
-<p class="cc-bubble" markdown="span">Re-reviewed at the new head. The restart case holds. Approved.</p>
-</div>
-</li>
-<li class="cc-turn cc-turn--cody" markdown>
-<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
-<div class="cc-turn__body" markdown>
-<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
-<p class="cc-bubble" markdown="span">`gh codecrew task finish`</p>
-<p class="cc-turn__note" markdown="span">It checks CI, Checky's approval and every human gate, then merges. A blocked gate refuses with a reason.</p>
-</div>
-</li>
-</ol>
-
-<p class="cc-example__close" markdown="span">When every task has landed, QA checks what was built against each requirement, and the recorded decisions become the milestone's document. You stay where the protocol keeps you: the goal, any question only you can answer, and the verdict, if the qa seat is yours.</p>
-
-</div>
-</section>
-
-<section class="cc-section cc-crew cc-section--alt" markdown>
+<section class="cc-section cc-crew" markdown>
 <div class="cc-section__inner" markdown>
 
 ## The crew
@@ -213,6 +150,69 @@ One command mints an App for a role:
 It builds the App through GitHub's manifest flow with that role's minimal permissions, stores the key outside the repo, and routes the role to it.
 
 </div>
+
+</div>
+</section>
+
+<section class="cc-section cc-example cc-section--alt" markdown>
+<div class="cc-section__inner" markdown>
+
+<p class="cc-example__label">A worked example</p>
+
+## One agent builds. Another checks the work. { #the-example }
+
+<p class="cc-example__lead" markdown="span">This one is told through CodeCrew's own crew: Cody, on Claude Code, writes the code, and Checky, on Codex, reviews it, each acting on GitHub as its own App. The change is made up; the crew and the verbs are real. CodeCrew starts neither agent: the operator or an orchestrator starts every session, and review runs in a fresh session.</p>
+
+<ol class="cc-thread" markdown>
+<li class="cc-turn cc-turn--you" markdown>
+<p class="cc-turn__avatar" markdown="span">:lucide-user:</p>
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**You** · the goal</p>
+<p class="cc-bubble" markdown="span">The public API needs a rate limit. Requirement: a client over it gets a 429 with a `Retry-After` header.</p>
+<p class="cc-turn__note" markdown="span">A milestone issue carries the goal and the requirement; a task issue hangs off it.</p>
+</div>
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
+<p class="cc-bubble" markdown="span">Plan's on the task. The limiter and its tests are pushed, and the PR is open.</p>
+<p class="cc-turn__note" markdown="span">`gh codecrew task start` refuses a task with no plan. The PR's author is Cody's App.</p>
+</div>
+</li>
+<li class="cc-turn cc-turn--checky" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
+<p class="cc-bubble" markdown="span">Changes requested. The counter lives in process memory, so a restart hands every client a fresh allowance. Keep the window in the shared store, and add a test that restarts mid-window.</p>
+<p class="cc-turn__note" markdown="span">An ordinary GitHub review on the diff, from a different App and a different harness.</p>
+</div>
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
+<p class="cc-bubble" markdown="span">Fixed in a new commit: the window is in the shared store, and the restart test passes.</p>
+</div>
+</li>
+<li class="cc-turn cc-turn--checky" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-review-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Checky** · Codex · <span class="cc-turn__app">radiusred-checky[bot]</span></p>
+<p class="cc-bubble" markdown="span">Re-reviewed at the new head. The restart case holds. Approved.</p>
+</div>
+</li>
+<li class="cc-turn cc-turn--cody" markdown>
+<img class="cc-turn__avatar" src="assets/images/crew/codecrew-code-t.png" alt="" width="512" height="512">
+<div class="cc-turn__body" markdown>
+<p class="cc-turn__who" markdown="span">**Cody** · Claude Code · <span class="cc-turn__app">radiusred-cody[bot]</span></p>
+<p class="cc-bubble" markdown="span">`gh codecrew task finish`</p>
+<p class="cc-turn__note" markdown="span">The gates run here: if one fails, it refuses with its reason.</p>
+</div>
+</li>
+</ol>
+
+<p class="cc-example__close" markdown="span">When every task has landed, QA checks what was built against each requirement, and the recorded decisions become the milestone's document. You stay where the protocol keeps you: the goal, any question only you can answer, and the verdict, if the qa seat is yours.</p>
 
 </div>
 </section>
