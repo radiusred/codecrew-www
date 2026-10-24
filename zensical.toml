@@ -9,6 +9,12 @@ Copyright &copy; 2026 Radius Red Ltd.
 
 nav = [
   { "Home" = "index.md" },
+  { "Why CodeCrew" = [
+    { "AI code review by a second model" = "why/second-model-review.md" },
+    { "GitHub App for AI coding agents: one per agent" = "why/github-app-per-agent.md" },
+    { "Enforce review gates for AI coding agents" = "why/gates-in-code.md" },
+    { "CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD" = "why/compared.md" },
+  ] },
   # BEGIN_DOCS_NAV
   { "Docs" = [
     { "Introduction" = "docs/index.md" },
