@@ -277,7 +277,7 @@ The CLI that runs the gates is [a Go program](https://github.com/radiusred/gh-co
 
 <div class="cc-receipt__detail" markdown>
 
-Four App identities hold the four seats, and each merge here waits on the reviewer App's approval, not a person's. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
+Four App identities hold the four seats, and `gh codecrew task finish` merges a task here only once the reviewer App has approved. [This page was delivered the same way, through a spoke](https://github.com/radiusred/codecrew-www/pull/3).
 
 </div>
 </div>
