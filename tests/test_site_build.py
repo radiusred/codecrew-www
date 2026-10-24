@@ -93,39 +93,40 @@ ROLE_SUMMARIES = {
 }
 # The contracts' openings speak to the agent that loads them; none of it is homepage copy now.
 CONTRACT_VOICE = ("You implement one", "You review one", "You exercise what", "You write the milestone", "You run the delivery loop")
-# Why: M22-R1's ideas (a) to (d), in order, with M19-R5's bounded different-model reviewer
-# kept between the identities and the decisions. (e) is the proof section's first receipt.
+# Why: M22-R1's ideas (a) to (d) with M19-R5's bounded different-model reviewer, in the
+# order a first-time reader meets them straight after the hero (the operator's review of
+# PR #70): identities, the review they make possible, the gates, the state, the record.
+# (e) is the proof section's first receipt.
 WHY_HEADINGS = (
-    "Gates in code, not instructions",
-    "GitHub is the only state store",
     "One App per role, with that role's permissions",
     "A second model, with other blind spots",
+    "Gates in code, not instructions",
+    "GitHub is the only state store",
     "Decisions, recorded as they are made",
 )
 # M22-R1's five ideas, each by a phrase only its own copy uses, and the section that carries
 # it. M22-R3: a first-time reader meets each one once.
 IDEAS = {
-    "gates in code": ("cc-why", "not instructions an agent is asked to follow"),
-    "GitHub the only state store": ("cc-why", "no workflow database beside the repository"),
-    "an App per role": ("cc-why", "rather than every agent sharing one privileged token"),
-    "decisions as they happen": ("cc-why", "written at the moment of choice"),
+    "gates in code": ("cc-why", "easier to trust than an agent's word"),
+    "GitHub the only state store": ("cc-why", "no workflow database drifts"),
+    "an App per role": ("cc-why", "instead of every agent sharing one privileged token"),
+    "decisions as they happen": ("cc-why", "at the moment of choice"),
     "working software": ("cc-proof", "working software, not a set of prompts"),
 }
 # What the gates panel says each verb checks, keyed by the refusal code (hub SPEC §10) that
 # backs it: M22-R2's gate lists match the refusal table, and claim nothing it does not hold.
+# The panel names a few, in a few words, and links the table for the rest.
 FINISH_CHECKS = {
-    "NO_PR": "an open pull request closes the task",
-    "NOT_OWNER": "the seat finishing it is the one that started it",
-    "NO_CHECKS": "CI has reported checks",
-    "CHECKS_FAILING": "every one has passed",
-    "NO_HOLDER_REVIEW": "the review your routing requires has approved",
-    "GATE_UNRECORDED": "every human gate raised on the task has an answer on the record",
+    "CHECKS_FAILING": "green CI",
+    "NO_HOLDER_REVIEW": "the reviewer's approval",
+    "GATED": "every human gate answered",
+    "GATE_UNRECORDED": "every human gate answered",
 }
 CLOSE_CHECKS = {
-    "OPEN_TASKS": "refuses while a task is still open",
-    "VERDICT_UNSATISFIED": "every requirement's latest QA verdict is satisfied",
-    "DOC_MISSING": "the milestone's document is on the default branch",
+    "VERDICT_MISSING": "refuses until QA has verified every requirement",
+    "VERDICT_UNSATISFIED": "refuses until QA has verified every requirement",
 }
+REFUSAL_TABLE_DOC = "docs/spec/#10-the-cli"
 # Character-exact from the reviewer contract's opening (hub .codecrew/roles/reviewer.md).
 REVIEWER_REASON = "self-evaluation shares the blind spots of the work itself"
 # Where the middle of the page sends a reader for principal types and topology (M19-R5).
@@ -322,11 +323,22 @@ def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
 
 
 def test_home_has_the_product_page_flow(home: str):
-    order = ("cc-hero", "cc-example", "cc-crew", "cc-why", "cc-proof", "cc-start")
+    # Why comes straight after the hero, before the worked example (the operator's review
+    # of PR #70): a first-time reader meets the ideas before the story that shows them.
+    order = ("cc-hero", "cc-why", "cc-example", "cc-crew", "cc-proof", "cc-start")
     positions = [home.index(f"cc-section {name}") for name in order]
-    assert positions == sorted(positions)  # the example sits where How it works did, the crew after it
+    assert positions == sorted(positions)
+    assert tuple(re.findall(r'<section class="cc-section (cc-[\w-]+)', home)) == order
     assert 'id="start-now"' in home
     assert 'id="the-example"' in section(home, "cc-example")  # the anchor the hero's second call to action needs (M19-R2)
+
+
+def test_the_bands_below_the_hero_alternate(home: str):
+    """Under the dark hero the sections alternate between the glowing band and the page
+    ground, starting with the band, whatever order they come in."""
+    classes = re.findall(r'<section class="cc-section (cc-[\w-]+)([^"]*)"', home)
+    below = [(name, "cc-section--alt" in rest) for name, rest in classes[1:]]
+    assert [alt for _, alt in below] == [i % 2 == 0 for i in range(len(below))], below
 
 
 def test_hero_carries_the_logo_and_both_calls_to_action(home: str):
@@ -398,7 +410,7 @@ def test_hero_keeps_the_commodity_line_aimed_at_separation_of_duties(home: str):
     # M22-R3: the line leads into the identities and the gates and no longer restates them.
     # The merge rule it carried is the gates panel's, said once there (NO_HOLDER_REVIEW).
     assert "approval" not in words and "merges" not in words
-    assert "the review your routing requires has approved" in squash(text(section(home, "cc-why")))
+    assert "the reviewer's approval" in squash(text(section(home, "cc-why")))
 
 
 def test_home_has_exactly_one_install_block(home: str):
@@ -844,15 +856,14 @@ def test_why_is_the_five_ideas_and_a_bounded_second_model(home: str):
     review catches everything."""
     panels = why_panels(home)
     assert tuple(panels) == WHY_HEADINGS
-    gates, state, apps, second, record = panels.values()
-    assert "code paths in the CLI" in gates and "easier to trust than an agent's own report" in gates
-    assert "No server, no dashboard" in state  # the fact survives, the topology does not
-    assert "drift out of step" in state
+    apps, second, gates, state, record = panels.values()
+    assert "runs as code" in gates and "easier to trust than an agent's word" in gates
+    assert "no workflow database drifts" in state
     # A failed session loses no task context, bounded: what was never pushed is not on GitHub.
-    assert "a session that fails loses no task context" in state
-    assert "never pushed or wrote down goes with it" in state
-    assert "a GitHub App of its own" in apps and "what its contract needs" in apps
-    assert "not which model" in apps  # attribution, and what it does not prove
+    assert "A session that fails loses no task context, only work it never pushed" in state
+    assert "its own GitHub App" in apps and "only the permissions it needs" in apps
+    for heading, words in panels.items():
+        assert len(words.split()) <= 60, heading  # one idea and its reason, in a few short sentences
     assert f"\u201c{REVIEWER_REASON}\u201d" in second  # the contract's reason, quoted exactly
     assert "different model or harness" in second
     assert "clean session" in second  # fresh context, not only a fresh identity
@@ -873,7 +884,7 @@ def test_each_of_the_five_ideas_is_on_the_page_once(home: str):
     for gone in ("See who built it, and who checked it", "The record is the work",
                  "Every milestone shipped this way.", "merges only on that App's approval"):
         assert gone not in page, gone
-    assert page.count("No server, no dashboard") == 1
+    assert "No server, no dashboard" not in page  # cut for length in the operator's review of PR #70
     assert page.count("Decisions and deviations") == 1
     assert page.count("Anything an agent does under its App") == 1  # attribution: the hero's, alone
     assert page.count(WHO_STARTS_SESSIONS) == 1
@@ -885,14 +896,14 @@ def refusal_table() -> dict[str, str]:
     return dict(re.findall(r"^\| `([A-Z_]+)` \| ([^|]+) \|", spec, re.M))
 
 
-def test_the_gates_claim_only_what_the_refusal_table_backs(home: str):
+def test_the_gates_claim_only_what_the_refusal_table_backs(home: str, site: Path):
     """M22-R2: every check the gates panel names for task finish and milestone close is a
     refusal that verb raises in the hub's SPEC §10 table. The plan is task start's check
     (NO_PLAN), not task finish's, and the worked example already says so."""
-    gates = why_panels(home)[WHY_HEADINGS[0]]
+    gates = why_panels(home)["Gates in code, not instructions"]
     table = refusal_table()
-    finish, close = gates.split("gh codecrew milestone close")
-    assert "gh codecrew task finish merges only when" in finish
+    finish, close = gates.split("milestone close")
+    assert "task finish merges only with" in finish
     for code, claim in FINISH_CHECKS.items():
         assert "`task finish`" in table[code], code
         assert claim in finish, code
@@ -901,7 +912,9 @@ def test_the_gates_claim_only_what_the_refusal_table_backs(home: str):
         assert claim in close, code
     assert "`task start`" in table["NO_PLAN"] and "`task finish`" not in table["NO_PLAN"]
     assert "plan" not in gates.lower()
-    assert "Each refusal names its reason" in gates
+    assert f'href="{REFUSAL_TABLE_DOC}"' in section(home, "cc-why")  # the full list is the table's
+    page, anchor = REFUSAL_TABLE_DOC.split("#")
+    assert f'id="{anchor}"' in (site / page / "index.html").read_text()
 
 
 def test_the_identity_claim_carries_the_approval_opt_in(home: str, site: Path):
@@ -909,10 +922,10 @@ def test_the_identity_claim_carries_the_approval_opt_in(home: str, site: Path):
     gives the reviewer write access (hub docs/identities.md), and the panel says why and
     points at Start now's full account of the trade instead of repeating it."""
     why = section(home, "cc-why")
-    apps = why_panels(home)[WHY_HEADINGS[2]]
-    assert "By default, the reviewer and qa Apps are minted able to read the code but not push to it." in apps
-    assert "--with-approval-permission gets write access" in apps
-    assert "count toward GitHub's own required review" in apps
+    apps = why_panels(home)["One App per role, with that role's permissions"]
+    assert "Reviewer and QA Apps can't push code by default" in apps
+    assert "--with-approval-permission gives the reviewer write access" in apps
+    assert "can count toward GitHub's required review" in apps
     assert PAID_PLAN not in apps  # Start now carries the plan-tier qualifier
     assert 'href="#add-a-reviewer"' in why and 'id="add-a-reviewer"' in section(home, "cc-start")
 
