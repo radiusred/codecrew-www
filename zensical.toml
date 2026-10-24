@@ -1,6 +1,6 @@
 [project]
 site_name = "CodeCrew"
-site_description = "Agent-driven software delivery, with the receipts kept in GitHub. A protocol, five role contracts, and a gh extension CLI."
+site_description = "Give each coding agent its own GitHub App identity, so different harnesses and models can build and review each other's work, with the record kept in GitHub."
 site_author = "Radius Red Ltd."
 site_url = "https://codecrew.works/"
 copyright = """

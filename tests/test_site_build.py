@@ -27,7 +27,7 @@ from typing import NamedTuple
 
 import pytest
 
-from sync_docs import HOME_ANCHORS
+from sync_docs import DESCRIPTIONS, HOME_ANCHORS
 from upstream_guard import absent_upstream, find_upstream
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -316,15 +316,15 @@ def test_home_metadata_carries_the_crew_pitch(home: str):
 
 
 def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
-    """M19-R7 sets the pitch for the home page only: the docs and the 404 keep the site's
-    description and tagline, and a blog post keeps its own front matter's."""
+    """M19-R7 sets the pitch for the home page only: the 404 keeps the site's description
+    and tagline, a docs page its own description, and a blog post its own front matter's."""
     config = (site.parent / "zensical.toml").read_text()
     site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
     home_front = front_matter(ROOT / "docs" / "index.md")
     for page in (site / "docs" / "identities" / "index.html", site / "404.html"):
-        meta = head_meta(page.read_text())
-        assert meta["description"] == meta["og:description"] == site_description, page
-        assert home_front["tagline"] not in " ".join(meta.values()), page
+        assert home_front["tagline"] not in " ".join(head_meta(page.read_text()).values()), page
+    meta = head_meta((site / "404.html").read_text())
+    assert meta["description"] == meta["og:description"] == site_description
     docs_title = head_meta((site / "docs" / "identities" / "index.html").read_text())["title"]
     assert docs_title.startswith("Identities") and docs_title.endswith(" - CodeCrew")  # its own title, as before
     main_template = (ROOT / "overrides" / "main.html").read_text()
@@ -335,6 +335,30 @@ def test_the_home_metadata_stays_on_the_home_page(site: Path, post: "Post"):
     meta = head_meta(post.page)
     assert meta["description"] == meta["og:description"] == front_matter(source)["description"]
     assert meta["title"] == f"{post.title} - CodeCrew"
+
+
+def test_the_site_description_is_the_homepage_s_not_the_receipts_line(site: Path):
+    """www#59: the site-wide description is only a fallback now, and it says what the
+    homepage says rather than the receipts-led line the docs used to inherit."""
+    config = (site.parent / "zensical.toml").read_text()
+    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    assert site_description == front_matter(ROOT / "docs" / "index.md")["description"]
+
+
+def test_each_docs_page_carries_the_description_written_for_it(site: Path):
+    """M23-R3 (www#59): every synced docs page's head describes that page, in the three
+    places a search engine or a link preview reads, from the sync's table."""
+    config = (site.parent / "zensical.toml").read_text()
+    site_description = re.search(r'^site_description = "(.*)"$', config, re.M).group(1)
+    block = config[config.index("BEGIN_DOCS_NAV") : config.index("END_DOCS_NAV")]
+    targets = re.findall(r'"docs/([^"]+\.md)"', block)
+    assert len(targets) == len(DESCRIPTIONS), targets  # the table covers the section
+    for rel in targets:
+        built = site / "docs" / rel.removesuffix(".md").removesuffix("index") / "index.html"
+        meta = head_meta(built.read_text())
+        assert meta["description"] == meta["og:description"] == meta["twitter:description"], rel
+        assert meta["description"] == DESCRIPTIONS[rel], rel
+        assert meta["description"] != site_description, rel
 
 
 def test_home_has_the_product_page_flow(home: str):
