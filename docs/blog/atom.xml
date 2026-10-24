@@ -17,6 +17,13 @@
     <summary>CodeCrew's first protocol minor lets a milestone strike a requirement by recorded decision, gives housekeeping and the milestone record a reviewed light path, adds roles sync, and has every dispatched agent check its CLI before its first verb — nothing an adopter already does breaks.</summary>
   </entry>
   <entry>
+    <title>The Coordinator Is a Commodity Now. The Record Is Not.</title>
+    <link href="https://codecrew.works/blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/" rel="alternate" />
+    <id>https://codecrew.works/blog/posts/2026-09-19-the-coordinator-is-a-commodity-now/</id>
+    <updated>2026-09-19T00:00:00Z</updated>
+    <summary>Anthropic's redesigned Projects puts a coordinator, parallel branch-per-thread sessions and project memory into Claude Code itself — the same shape CodeCrew arrived at over sixteen milestones in a month. Here is what overlaps, what does not, and the one experiment we want to run before changing anything.</summary>
+  </entry>
+  <entry>
     <title>Protocol 2.0: CodeCrew Moves Out of Your Repository's Root</title>
     <link href="https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/" rel="alternate" />
     <id>https://codecrew.works/blog/posts/2026-09-07-protocol-2-0-and-the-migration/</id>
