@@ -70,7 +70,7 @@ RECEIPTS = (
     ("megaphone", "The first spoke published its own announcement.", "Driven from the hub, in public.",
      "delivered by the protocol it describes", "https://www.radiusred.uk/blog/posts/2026-08-20-this-post-was-delivered-by-the-framework-it-introduces/"),
     ("bot", "This project is agent-staffed, and you can check.", "Four seats, four App identities.",
-     "each merge here waits on the reviewer App's approval, not a person's", "https://github.com/radiusred/codecrew-www/pull/3"),
+     "gh codecrew task finish merges a task here only once the reviewer App has approved", "https://github.com/radiusred/codecrew-www/pull/3"),
     ("network", "It scales from solo, to a team, to an orchestration platform.", "Same protocol, any routing table.",
      "with a dedicated coordinator agent from the first event", "https://github.com/radiusred/gh-codecrew/issues/164"),
 )
@@ -723,6 +723,9 @@ def test_proof_receipts_are_visible_text(home: str):
     # The project's own fact, not the general rule: the required-review trade and its
     # plan-tier qualifier are Start now's alone (M22-R3, QA's finding on #71).
     assert PAID_PLAN not in staffed and "write access" not in staffed
+    # About the gate (routing plus NO_HOLDER_REVIEW), never the history: the bootstrap PR
+    # merged with no review, so no claim about every merge (PR #74 review).
+    assert "each merge" not in staffed and "every merge" not in staffed
     orchestrator = cards[3]
     for href in ("https://github.com/radiusred/numberguess", "https://github.com/radiusred/snake",
                  "https://github.com/radiusred/gh-codecrew/issues/119", "https://github.com/radiusred/gh-codecrew/issues/164"):
