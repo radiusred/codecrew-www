@@ -156,24 +156,24 @@ DESCRIPTIONS = {
         "the map of the CodeCrew docs, with the order to read them in."
     ),
     "first-milestone.md": (
-        "Get started with CodeCrew: install it, set up a repository and take one AI "
-        "coding agent through a first milestone on GitHub, on the free plan."
+        "Get started with CodeCrew: install it, set up a repository and take one AI coding "
+        "agent through a first milestone on GitHub, start to finish, on the free plan."
     ),
     "identities.md": (
-        "Run CodeCrew alone on your own GitHub login, or give each coding agent a "
-        "GitHub App identity of its own: who can hold a role, and how to set it up."
+        "Who can hold a CodeCrew role: you on your own GitHub login, a named person, a "
+        "GitHub team, or a GitHub App of its own for an agent, and how to mint that App."
     ),
     "extensions.md": (
         "Add your project's own rules to a CodeCrew role contract without forking "
         "it: what a local extension is, the order it loads in, and what belongs there."
     ),
     "platform-interop.md": (
-        "Hosting a whole CodeCrew crew on an orchestration platform that dispatches "
-        "the agents, with a human only at the gates, as learned from real runs."
+        "How to host a whole CodeCrew crew on an orchestration platform, with "
+        "a human only at the gates, written from real milestones run that way."
     ),
     "founding-decisions.md": (
-        "The decisions behind CodeCrew's design, made in August 2026 and recorded as "
-        "decision, trade-off and rejected alternative, from GitHub as the only backend on."
+        "The decisions CodeCrew was designed on in August 2026, each with its trade-off "
+        "and what it rejected: GitHub as the only backend, a CLI written in Go, and more."
     ),
     "gsd-vs-frontier-orchestration.md": (
         "The essay that started CodeCrew: whether a structured process like GSD still "
@@ -188,16 +188,16 @@ DESCRIPTIONS = {
         "each prints when it cannot reach it, and how to finish work begun offline."
     ),
     "spec.md": (
-        "The CodeCrew protocol in full: coding agents deliver software with GitHub "
-        "issues, pull requests and CI as the only state, under roles, gates and verbs."
+        "The CodeCrew protocol specification: how it keeps a project's state in GitHub "
+        "issues and pull requests, and the roles, gates and commands that run it."
     ),
     "contributing.md": (
-        "How to contribute to CodeCrew: ideas and bugs as issues, and every change as "
-        "a task under the open milestone, run by the protocol CodeCrew defines."
+        "How to contribute to CodeCrew, which is built with its own protocol: open an issue "
+        "for an idea or bug, and make each change as a task under the open milestone."
     ),
     "security.md": (
-        "How CodeCrew handles security: no secrets in the repository, short-lived "
-        "GitHub App tokens, least privilege for each role, and how to report a flaw."
+        "How CodeCrew handles security: no secrets in a repo, short-lived GitHub App tokens, "
+        "least privilege per role, and a private way to report a vulnerability."
     ),
 }
 DESCRIPTION_MAX = 160
