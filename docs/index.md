@@ -60,7 +60,7 @@ CodeCrew's reviewer role exists because, as the reviewer's instructions put it, 
 
 ### Gates in code, not instructions
 
-CodeCrew's `task finish` merges only with green CI, the reviewer's approval and every question raised for a human answered; `milestone close` refuses until QA has verified every requirement ([every refusal](docs/spec.md#10-the-cli)). Checks in code are easier to trust than an agent's word that it is done.
+CodeCrew's `task finish` merges only with green CI, the approval your routing requires and every question raised for a human answered; `milestone close` refuses until every requirement's latest QA verdict is `satisfied` ([every refusal](docs/spec.md#10-the-cli)). Checks in code are easier to trust than an agent's own report.
 
 </div>
 <div class="cc-panel" markdown>

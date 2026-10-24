@@ -110,7 +110,7 @@ WHY_HEADINGS = (
 # M22-R1's five ideas, each by a phrase only its own copy uses, and the section that carries
 # it. M22-R3: a first-time reader meets each one once.
 IDEAS = {
-    "gates in code": ("cc-why", "easier to trust than an agent's word"),
+    "gates in code": ("cc-why", "easier to trust than an agent's own report"),
     "GitHub the only state store": ("cc-why", "no workflow database drifts"),
     "an App per role": ("cc-why", "not one shared, privileged token"),
     "decisions as they happen": ("cc-why", "at the moment of choice"),
@@ -121,13 +121,17 @@ IDEAS = {
 # The panel names a few, in a few words, and links the table for the rest.
 FINISH_CHECKS = {
     "CHECKS_FAILING": "green CI",
-    "NO_HOLDER_REVIEW": "the reviewer's approval",
+    # The approval depends on routing (the routed holder's, or a non-author's when the seat is
+    # operator-held), so the panel names the routing's, never "the reviewer's" (PR #72 review).
+    "NO_HOLDER_REVIEW": "the approval your routing requires",
+    "NO_NONDOER_APPROVAL": "the approval your routing requires",
     "GATED": "every question raised for a human answered",
     "GATE_UNRECORDED": "every question raised for a human answered",
 }
 CLOSE_CHECKS = {
-    "VERDICT_MISSING": "refuses until QA has verified every requirement",
-    "VERDICT_UNSATISFIED": "refuses until QA has verified every requirement",
+    # A verdict can be unsatisfied: what close needs is each latest verdict `satisfied`.
+    "VERDICT_MISSING": "refuses until every requirement's latest QA verdict is satisfied",
+    "VERDICT_UNSATISFIED": "refuses until every requirement's latest QA verdict is satisfied",
 }
 REFUSAL_TABLE_DOC = "docs/spec/#10-the-cli"
 # Character-exact from the reviewer contract's opening (hub .codecrew/roles/reviewer.md).
@@ -428,7 +432,7 @@ def test_hero_keeps_the_commodity_line_aimed_at_separation_of_duties(home: str):
     # M22-R3: the line leads into the identities and the gates and no longer restates them.
     # The merge rule it carried is the gates panel's, said once there (NO_HOLDER_REVIEW).
     assert "approval" not in words and "merges" not in words
-    assert "the reviewer's approval" in squash(text(section(home, "cc-why")))
+    assert "the approval your routing requires" in squash(text(section(home, "cc-why")))
 
 
 def test_home_has_exactly_one_install_block(home: str):
@@ -898,7 +902,7 @@ def test_why_is_the_five_ideas_and_a_bounded_second_model(home: str):
     panels = why_panels(home)
     assert tuple(panels) == WHY_HEADINGS
     apps, second, gates, state, record = panels.values()
-    assert "Checks in code" in gates and "easier to trust than an agent's word" in gates
+    assert "Checks in code" in gates and "easier to trust than an agent's own report" in gates
     assert "no workflow database drifts" in state
     # A failed session loses no task context, bounded: what was never pushed is not on GitHub.
     assert "A session that fails loses no task context, only work it never pushed" in state
@@ -953,6 +957,7 @@ def test_the_gates_claim_only_what_the_refusal_table_backs(home: str, site: Path
         assert claim in close, code
     assert "`task start`" in table["NO_PLAN"] and "`task finish`" not in table["NO_PLAN"]
     assert "plan" not in gates.lower()
+    assert "the reviewer's approval" not in gates and "has verified" not in gates  # PR #72 review
     assert f'href="{REFUSAL_TABLE_DOC}"' in section(home, "cc-why")  # the full list is the table's
     page, anchor = REFUSAL_TABLE_DOC.split("#")
     assert f'id="{anchor}"' in (site / page / "index.html").read_text()
