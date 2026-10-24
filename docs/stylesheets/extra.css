@@ -825,40 +825,108 @@ h1,h2,h3 {
   width: 2.4rem;
 }
 
-/* New here? (M23-R8): under the panels, one row of links to the four
-   introductory pages under /why/, wrapping on a phone, then one line
-   inviting a reader who has tried CodeCrew to say how it went (M23-R5). */
+/* New here? (M23-R8): under the panels, a group of four small cards, one
+   per introductory page under /why/, then one line inviting a reader who has
+   tried CodeCrew to say how it went (M23-R5). The lead labels the group (the
+   list's aria-labelledby). Each card wears the glyph of the Why panel it
+   expands on, in the accent as the panels do, hidden from assistive tech so
+   the link's name is its search phrase alone. Four across from 60em, two
+   from 45em, one per row on a phone. The whole card is the link, and an
+   exception to the site's link style: no underline in any state, the
+   scheme's text colour, and a hover and keyboard focus that firm the border
+   up to the accent with a faint wash, plus a ring for the keyboard. */
 .md-typeset .cc-newhere {
-  max-width: 48rem;
-  margin: 2rem auto 0;
+  margin: 3rem auto 0;
   text-align: center;
 }
 
-.md-typeset .cc-newhere__lead {
-  margin: 0 0 0.8rem;
+.md-typeset .cc-section .cc-newhere__lead {
+  margin: 0 0 1.2rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .cc-newhere__lead strong {
+  display: block;
+  margin: 0 0 0.2rem;
+  font-family: "Oswald", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--md-default-fg-color);
 }
 
 .md-typeset ul.cc-newhere__links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.6rem;
-  margin: 0 0 1.4rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  margin: 0 0 2rem;
   padding: 0;
   list-style: none;
+  text-align: left;
+}
+
+@media screen and (min-width: 45em) {
+  .md-typeset ul.cc-newhere__links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset ul.cc-newhere__links {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .md-typeset ul.cc-newhere__links > li {
+  display: flex;
   margin: 0;
 }
 
 .md-typeset .cc-newhere__links a {
-  display: inline-block;
-  padding: 0.4em 0.9em;
-  border: 0.05rem solid var(--md-default-fg-color--lighter);
-  border-radius: 1rem;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
   background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
   font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background-color 125ms, border-color 125ms;
+}
+
+/* :not(.cc-button) matches the specificity of the home page's slate link hover. */
+.cc-home .md-typeset .cc-newhere__links a:not(.cc-button):is(:hover, :focus, :focus-visible) {
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+}
+
+.cc-home .md-typeset .cc-newhere__links a:is(:hover, :focus-visible) {
+  border-color: var(--md-accent-fg-color);
+  background: color-mix(in srgb, var(--md-accent-fg-color) 8%, var(--md-default-bg-color));
+}
+
+.md-typeset .cc-newhere__links a:focus-visible {
+  outline: 0.1rem solid var(--md-accent-fg-color);
+  outline-offset: 0.1rem;
+}
+
+.md-typeset .cc-newhere__glyph {
+  flex: none;
+  display: flex;
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset .cc-newhere__glyph .twemoji {
+  height: 1.6rem;
+}
+
+.md-typeset .cc-newhere__glyph .twemoji svg {
+  width: 1.6rem;
 }
 
 .md-typeset .cc-newhere__invite {

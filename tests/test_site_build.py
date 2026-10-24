@@ -1857,14 +1857,67 @@ def test_the_homepage_links_each_intro_page_and_the_invitation(home: str):
     why = section(home, "cc-why")
     row = why[why.index('<div class="cc-newhere">') :]
     assert why.index('<div class="cc-panels">') < why.index('<div class="cc-newhere">')
-    links = re.findall(r'<li><a href="why/([\w-]+)/">(.*?)</a></li>', row)
+    links = re.findall(r'<li><a href="why/([\w-]+)/">(.*?)</a></li>', row, re.S)
     assert [slug for slug, _ in links] == list(INTRO_PAGES)
     for slug, label in links:
-        assert INTRO_PAGES[slug][0].lower() in label.lower(), slug  # the page's own search phrase, as anchor text
+        assert INTRO_PAGES[slug][0].lower() in text(label).lower(), slug  # the page's own search phrase, as anchor text
     invite = re.search(r'<p class="cc-newhere__invite">(.*?)</p>', row, re.S).group(1)
     assert f'href="{TRIED_IT}"' in invite and "Tell us how it went" in invite
     assert section(home, "cc-why").count(f'href="{TRIED_IT}"') == 1  # once, in the row
     assert "<h2" not in row and "<h3" not in row  # a row, not another section or panel
+
+
+# www#83: each "New here?" card wears the glyph of the Why panel it expands on; the
+# comparison has no panel of its own, so it takes the scale.
+NEWHERE_CARDS = {
+    "second-model-review": ("scan-eye", "AI code review by a second model"),
+    "github-app-per-agent": ("key-round", "GitHub App for AI coding agents"),
+    "gates-in-code": ("shield-check", "Enforce review gates for AI coding agents"),
+    "compared": ("scale", "CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD"),
+}
+
+
+def test_the_new_here_links_are_cards_with_the_glyph_of_their_panel(home: str):
+    """www#83: the four links read as a designed group, not a pasted-in row. Each is a card
+    whose glyph matches its Why panel, hidden from assistive tech so the link's name is
+    exactly its search phrase (M23-R8), and the list is labelled by the lead above it."""
+    why = section(home, "cc-why")
+    panels = why[: why.index('<div class="cc-newhere">')]
+    row = why[why.index('<div class="cc-newhere">') :]
+    assert re.search(r'<p class="cc-newhere__lead" id="new-here"><strong>New here\?</strong>', row)
+    assert '<ul aria-labelledby="new-here" class="cc-newhere__links">' in row
+    cards = re.findall(r'<li><a href="why/([\w-]+)/">(.*?)</a></li>', row, re.S)
+    assert [slug for slug, _ in cards] == list(NEWHERE_CARDS)
+    for slug, card in cards:
+        glyph, label = NEWHERE_CARDS[slug]
+        hidden = re.search(r'<span class="cc-newhere__glyph" aria-hidden="true">(.*?</svg></span>)</span>', card, re.S)
+        assert hidden and f"lucide-{glyph}" in hidden.group(1), slug
+        assert card.index("cc-newhere__glyph") < card.index("cc-newhere__label")  # the glyph leads
+        named = re.search(r'<span class="cc-newhere__label">(.*?)</span>', card, re.S).group(1)
+        assert named == label, slug  # the accessible name: the label, character for character
+        if glyph != "scale":
+            assert f"lucide-{glyph}" in panels, slug  # the same glyph as the panel it expands on
+    # The invitation follows the cards directly (M23-R5).
+    assert re.search(r"</ul>\s*<p class=\"cc-newhere__invite\">", row)
+
+
+def test_the_new_here_cards_lose_the_underline_and_answer_hover_and_focus(css: str):
+    """www#83: the cards are an exception to the site's link style. No underline in any
+    state; hover and keyboard focus change the border, and focus adds a ring. Four across
+    on a desktop, two on a tablet, one per row on a phone."""
+    card = rule(css, ".md-typeset .cc-newhere__links a")
+    assert "text-decoration: none" in card and "display: flex" in card
+    states = rule(css, ".cc-home .md-typeset .cc-newhere__links a:not(.cc-button):is(:hover, :focus, :focus-visible)")
+    assert "text-decoration: none" in states
+    assert "color: var(--md-default-fg-color)" in states  # not the home page's pink hover
+    hover = rule(css, ".cc-home .md-typeset .cc-newhere__links a:is(:hover, :focus-visible)")
+    assert "border-color: var(--md-accent-fg-color)" in hover
+    assert "outline: 0.1rem solid" in rule(css, ".md-typeset .cc-newhere__links a:focus-visible")
+    grid = rule(css, ".md-typeset ul.cc-newhere__links")
+    assert "grid-template-columns: 1fr;" in grid and "list-style: none" in grid
+    for query, columns in (("(min-width: 45em)", "repeat(2, 1fr)"), ("(min-width: 60em)", "repeat(4, 1fr)")):
+        blocks = re.findall(r"@media screen and " + re.escape(query) + r" \{\s*\.md-typeset ul\.cc-newhere__links \{([^}]*)\}", css)
+        assert len(blocks) == 1 and f"grid-template-columns: {columns}" in blocks[0], query
 
 
 def test_the_intro_pages_name_no_crew_member(intro_pages: list[IntroPage]):

@@ -85,13 +85,13 @@ Decisions and deviations are posted as structured comments at the moment of choi
 
 <div class="cc-newhere" markdown>
 
-<p class="cc-newhere__lead" markdown="span">**New here?** Start with the question you came with:</p>
+<p class="cc-newhere__lead" id="new-here" markdown="span">**New here?** Start with the question you came with:</p>
 
-<ul class="cc-newhere__links" markdown>
-<li markdown="span">[AI code review by a second model](why/second-model-review.md)</li>
-<li markdown="span">[GitHub App for AI coding agents](why/github-app-per-agent.md)</li>
-<li markdown="span">[Enforce review gates for AI coding agents](why/gates-in-code.md)</li>
-<li markdown="span">[CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD](why/compared.md)</li>
+<ul class="cc-newhere__links" aria-labelledby="new-here" markdown>
+<li markdown="span">[<span class="cc-newhere__glyph" aria-hidden="true">:lucide-scan-eye:</span><span class="cc-newhere__label">AI code review by a second model</span>](why/second-model-review.md)</li>
+<li markdown="span">[<span class="cc-newhere__glyph" aria-hidden="true">:lucide-key-round:</span><span class="cc-newhere__label">GitHub App for AI coding agents</span>](why/github-app-per-agent.md)</li>
+<li markdown="span">[<span class="cc-newhere__glyph" aria-hidden="true">:lucide-shield-check:</span><span class="cc-newhere__label">Enforce review gates for AI coding agents</span>](why/gates-in-code.md)</li>
+<li markdown="span">[<span class="cc-newhere__glyph" aria-hidden="true">:lucide-scale:</span><span class="cc-newhere__label">CodeCrew compared with Spec Kit, BMAD, OpenSpec and GSD</span>](why/compared.md)</li>
 </ul>
 
 <p class="cc-newhere__invite" markdown="span">Tried CodeCrew already? [Tell us how it went](https://github.com/radiusred/gh-codecrew/discussions/categories/i-tried-it): what you tried, how far you got, and what stopped you.</p>
