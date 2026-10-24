@@ -1624,3 +1624,29 @@ def test_the_intro_pages_commands_fit_a_phone(intro_pages: list[IntroPage]):
                 continue
             too_long = [line for line in lines if len(line) > STEP_CODE_MAX]
             assert not too_long, (intro.slug, too_long)
+
+
+def test_the_comparison_claims_only_the_overlap_each_source_supports(intro_pages: list[IntroPage]):
+    """PR #77 review: "all five want a plan before code" was not true of BMAD, whose README lets
+    clear changes go straight to build, and "work with more than one coding agent" read as a
+    multi-agent workflow none of the four establishes. The overlap now says what each source
+    supports, with that source linked beside the claim."""
+    page = next(intro for intro in intro_pages if intro.slug == "compared")
+    overlap = page.article[page.article.index('<h2 id="where-they-overlap">') : page.article.index('<h2 id="next-step">')]
+    words = squash(text(overlap))
+    assert "All five" not in words and "all five" not in words
+    assert "clear changes can go straight to build" in words  # BMAD's own exception, said
+    assert "Supporting several tools is not the same as having a second agent check the first" in words
+    for href in (
+        "https://github.com/github/spec-kit#spec-driven-development",
+        "https://github.com/Fission-AI/OpenSpec#see-it-in-action",
+        "https://github.com/open-gsd/gsd-core#how-it-works",
+        "https://github.com/bmad-code-org/BMAD-METHOD#why-bmad",
+        "https://github.github.io/spec-kit/integrations/index.html",
+        "https://github.com/bmad-code-org/BMAD-METHOD#start-building",
+        "https://openspec.dev/docs/supported-tools",
+        "https://github.com/open-gsd/gsd-core#quickstart",
+    ):
+        assert f'href="{href}"' in overlap, href
+    gsd = re.search(r'<h2 id="gsd">GSD</h2>(.*?)<h2', page.article, re.S).group(1)
+    assert 'href="https://github.com/gsd-build/get-shit-done"' in gsd  # the archive claim, at its source
