@@ -3,24 +3,67 @@
 {#-
   Extends the base <head> with:
    - Atom feed auto-discovery link
-   - Open Graph / Twitter Card meta tags
+   - Open Graph / Twitter Card meta tags, the social image at an absolute URL
+     (a link preview fetches it from wherever the link was pasted, so a
+     relative path resolves against nothing)
    - JSON-LD structured data (Organization, WebSite, SoftwareSourceCode, BlogPosting)
+
+  One title and one description per page, worked out by the macros below and
+  used for <title>, the description meta and the og:/twitter: tags alike:
+   - title: a page's `head_title` front matter, verbatim, when it has one (the
+     search-facing title of a page whose nav label and H1 stay short, M23-R8);
+     else "<page title> - CodeCrew"; else, for a page titled with the site
+     name, "CodeCrew — <tagline>".
+   - description: the page's `description` front matter, else site_description.
+     Every built page carries its own (M23-R3); the fallback is the homepage's.
+  Autoescape is off in this theme, so each value is escaped where it lands in
+  an attribute or the title: a title with quotes in it (the GSD essay's) once
+  ended its og:title attribute early.
+  A template with no page behind it (404.html) sets `page_title`,
+  `page_description` and `page_canonical` at its top level instead.
+  MiniJinja: built-in filters only, no Python.
 -#}
-{% set tagline = "Agent-driven software delivery, with the receipts kept in GitHub" %}
+{% set tagline = "Your coding agents, working as a crew on GitHub" %}
+{% set social_image = config.site_url ~ "assets/images/social-preview.png" %}
+{% set social_image_alt = "The CodeCrew logo: three figures between a pair of code brackets" %}
+
+{% macro head_title(page, tagline, override) -%}
+  {%- if override is defined -%}{{ override }} - {{ config.site_name }}
+  {%- elif page and page.meta and page.meta.head_title -%}{{ page.meta.head_title }}
+  {%- elif page and page.title and page.title != config.site_name -%}{{ page.title | striptags }} - {{ config.site_name }}
+  {%- else -%}{{ config.site_name }} — {{ tagline }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro head_description(page, override) -%}
+  {%- if override is defined -%}{{ override }}
+  {%- elif page and page.meta and page.meta.description -%}{{ page.meta.description }}
+  {%- else -%}{{ config.site_description }}
+  {%- endif -%}
+{%- endmacro %}
+
 {% block extrahead %}
   {{ super() }}
+  {%- set title = head_title(page, tagline, page_title) %}
+  {%- set description = head_description(page, page_description) %}
+  {%- set url = page_canonical if page_canonical is defined else page.canonical_url %}
   <link rel="alternate" type="application/atom+xml" title="CodeCrew Blog" href="{{ 'blog/atom.xml' | url }}">
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="CodeCrew" />
-  <meta property="og:title" content="{% if page and page.title and page.title != config.site_name %}{{ page.title }} - {{ config.site_name }}{% else %}{{ config.site_name }} — {{ tagline }}{% endif %}" />
-  <meta property="og:description" content="{% if page and page.meta and page.meta.description %}{{ page.meta.description }}{% else %}{{ config.site_description }}{% endif %}" />
-  <meta property="og:url" content="{{ page.canonical_url }}" />
-  <meta property="og:image" content="{{ 'assets/images/social-preview.png' | url }}" />
+  <meta property="og:title" content="{{ title | e }}" />
+  <meta property="og:description" content="{{ description | e }}" />
+  <meta property="og:url" content="{{ url }}" />
+  <meta property="og:image" content="{{ social_image }}" />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="640" />
+  <meta property="og:image:alt" content="{{ social_image_alt }}" />
   <meta property="og:locale" content="en_GB" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="{% if page and page.title and page.title != config.site_name %}{{ page.title }} - {{ config.site_name }}{% else %}{{ config.site_name }} — {{ tagline }}{% endif %}" />
-  <meta name="twitter:description" content="{% if page and page.meta and page.meta.description %}{{ page.meta.description }}{% else %}{{ config.site_description }}{% endif %}" />
+  <meta name="twitter:title" content="{{ title | e }}" />
+  <meta name="twitter:description" content="{{ description | e }}" />
+  <meta name="twitter:image" content="{{ social_image }}" />
+  <meta name="twitter:image:alt" content="{{ social_image_alt }}" />
 
   <script type="application/ld+json">
   {
@@ -62,9 +105,10 @@
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "{{ page.meta.title }}",
-    "description": "{% if page.meta.description %}{{ page.meta.description }}{% endif %}",
+    "headline": {{ page.meta.title | tojson }},
+    "description": {{ (page.meta.description or "") | tojson }},
     "datePublished": "{{ page.meta.date }}",
+    "image": "{{ social_image }}",
     "author": {
       "@type": "Person",
       "name": "{% if page.meta.author %}{{ page.meta.author }}{% else %}Radius Red Ltd.{% endif %}"
@@ -80,9 +124,5 @@
 {% endblock %}
 
 {% block htmltitle %}
-  {% if page and page.title and page.title != config.site_name %}
-    <title>{{ page.title }} - {{ config.site_name }}</title>
-  {% else %}
-    <title>{{ config.site_name }} — {{ tagline }}</title>
-  {% endif %}
+  <title>{{ head_title(page, tagline, page_title) | e }}</title>
 {% endblock %}
