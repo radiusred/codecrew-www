@@ -45,7 +45,7 @@ nav = [
 
 # The ?h= query is the stylesheet's content hash, written by main.py:stamp_stylesheets
 # so a changed stylesheet gets a new URL past Cloudflare's cache (www#83).
-extra_css = ["stylesheets/extra.css?h=79abab5acb"]
+extra_css = ["stylesheets/extra.css?h=d7d6afb195"]
 
 [project.theme]
 custom_dir = "overrides"
@@ -135,7 +135,9 @@ generic = true
 emoji_generator = "zensical.extensions.emoji.to_svg"
 emoji_index = "zensical.extensions.emoji.twemoji"
 [project.markdown_extensions.pymdownx.highlight]
-anchor_linenums = true
+# Off: no block shows line numbers, so each line's anchor was an empty link,
+# a Tab stop nobody could see (93 of them on the CLI reference; M24-R1, www#57).
+anchor_linenums = false
 line_spans = "__span"
 pygments_lang_class = true
 [project.markdown_extensions.pymdownx.inlinehilite]
