@@ -1840,12 +1840,9 @@ def test_the_shut_search_rules_follow_the_theme_they_key_off(site: Path, home: s
         assert transition.startswith(declared["transition"] + ",visibility 0s "), selector
 
 
-# The palette toggle's ring on the home page (M19-R7): whichever radio has keyboard
-# focus, the label on show carries the theme's own focus ring.
-PALETTE_RING = (
-    "body:has(.cc-home) .md-header__option:has(> .md-option:is(:focus-visible, .focus-visible))"
-    " > label:not([hidden])"
-)
+# The palette toggle's ring on every page (M19-R7 on the home page, M24-R3 everywhere):
+# whichever radio has keyboard focus, the label on show carries the theme's own focus ring.
+PALETTE_RING = ".md-header__option:has(> .md-option:is(:focus-visible, .focus-visible)) > label:not([hidden])"
 THEME_OPTION_RING = ".md-option.focus-visible+label{"
 
 
@@ -1854,26 +1851,23 @@ def palette_form(page: str) -> str:
     return page[start : page.index("</form>", start)]
 
 
-def test_the_palette_toggle_shows_keyboard_focus_on_the_home_page(css: str, home: str, blog: str, docs_index: str):
+def test_the_palette_toggle_shows_keyboard_focus_on_every_page(css: str, site: Path):
     """The theme rings the label straight after the focused radio. It never checks a radio
     on load, only un-hides one label, so Tab lands on the first radio and Shift+Tab on the
     last, whose next label is often the hidden one: in a fresh OS-dark visit Tab reached
-    the palette with no ring at all (QA on #61). On the home page the label on show takes
-    the ring whichever radio has focus (M19-R7)."""
+    the palette with no ring at all (QA on #61, #64). On every page the label on show takes
+    the ring whichever radio has focus (M24-R3)."""
     ring = rule(css, PALETTE_RING)
     assert "outline-style: auto" in ring
     assert "outline-color: var(--md-accent-fg-color)" in ring
+    assert "body:has(.cc-home)" not in css  # no page scope left on it
     # The markup the rule rests on, the same on every page: two radios in the header's
     # palette form, each followed by the label that switches to the other, one hidden.
-    for name, page in (("home", home), ("blog", blog), ("docs", docs_index)):
+    for name, page in built_pages(site).items():
         pairs = re.findall(r'<input class="md-option"[^>]*id="(__palette_\d)">\s*<label ([^>]*)>', palette_form(page))
         assert [radio for radio, _ in pairs] == ["__palette_0", "__palette_1"], name
         assert [re.search(r'for="([^"]*)"', label).group(1) for _, label in pairs] == ["__palette_1", "__palette_0"]
         assert all(label.endswith(" hidden") for _, label in pairs), name  # the theme's script un-hides one
-    # Scoped by the home page's container: the docs and the blog have none.
-    assert "cc-home" in home
-    for page in (blog, docs_index):
-        assert "cc-home" not in page
 
 
 def test_the_palette_ring_follows_the_theme_it_keys_off(site: Path, css: str):
