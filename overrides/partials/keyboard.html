@@ -1,0 +1,148 @@
+{#-
+  The keyboard's way through the theme's shut panels, on every page:
+  main.html's scripts block includes it after the theme's bundle, so it runs
+  once per page load and follows the theme's document$ through instant
+  navigation (M24-R2; first written for the homepage alone in M19-R7).
+
+  - Two buttons. The theme opens two panels on a phone with a
+    <label for="..."> that takes no Tab stop: the header's burger (the
+    drawer, #__drawer, below 76.234375em) and the floating "On this page"
+    button (the table of contents, #__toc, below 60em). extra.css hides each
+    panel while it is shut, so its links leave the tab order; this makes each
+    label the keyboard's way in. It becomes a button (tabindex, role,
+    aria-controls naming the panel, aria-expanded kept in step with the
+    toggle, and for the contents button, which has none, a name taken from
+    the panel's own nav). Enter or Space toggles the panel and moves focus to
+    its first link when it opens; Escape shuts an open panel and puts focus
+    back on its button. The panels are replaced on instant navigation and
+    carry no id of their own, so each page change gives them one again.
+    Where the theme hides a button (the burger above its breakpoint, the
+    contents button above 60em), it takes no Tab stop, so wider screens are
+    unchanged; without JavaScript the page is the theme's.
+  - The search panel. The theme's search sits in an open shadow root that
+    page CSS cannot reach, and shut it is only faded out, so Tab walked into
+    its controls with nothing on screen. This adds one rule inside it: a
+    `visibility: hidden` for the theme's shut-panel classes, delayed past
+    its fade.
+  MiniJinja: no template logic, only the script.
+-#}
+<script>
+  (function () {
+    if (window.ccKeyboard) return;
+    window.ccKeyboard = true;
+    var ATTRS = ["tabindex", "role", "aria-controls", "aria-expanded", "data-cc-armed"];
+    // Each theme toggle, the label that flips it, and the panel it opens.
+    var PANELS = [
+      {
+        toggle: "__drawer",
+        button: '.md-header label.md-header__button[for="__drawer"]',
+        panel: ".md-sidebar--primary",
+        id: "cc-drawer"
+      },
+      {
+        toggle: "__toc",
+        button: '.md-sidebar--secondary label.md-sidebar-button[for="__toc"]',
+        panel: ".md-sidebar--secondary .md-sidebar__inner",
+        id: "cc-toc"
+      }
+    ];
+    function parts(spec) {
+      return {
+        toggle: document.getElementById(spec.toggle),
+        button: document.querySelector(spec.button),
+        panel: document.querySelector(spec.panel)
+      };
+    }
+    // The theme's search is a panel in an open shadow root on a <div> it
+    // appends to <body>. Shut, the panel and its filter pane are only faded
+    // out (opacity 0, pointer-events none), so Tab still walks into them.
+    // The theme's open/shut state lives inside that tree (#__search stays
+    // unchecked), which is why the rule keys off its classes and not the
+    // toggle.
+    var SEARCH_SHUT =
+      ".l.d{visibility:hidden;transition:transform .25s .15s,opacity .15s,visibility 0s .4s}" +
+      ".a.d{visibility:hidden;transition:width .35s cubic-bezier(.16,1,.3,1),opacity .1s,visibility 0s .35s}";
+    var searchWait = null;
+    function searchRoot() {
+      var kids = document.body.children;
+      for (var i = 0; i < kids.length; i++) {
+        var root = kids[i].shadowRoot;
+        var sheet = root && root.querySelector("style");
+        if (sheet && sheet.textContent.indexOf(".l.d{") !== -1) return root;
+      }
+      return null;
+    }
+    function quietSearch() {
+      var root = searchRoot();
+      if (!root) {
+        // The theme may not have mounted search yet: wait for it once.
+        if (!searchWait) {
+          searchWait = new MutationObserver(function () {
+            if (searchRoot()) {
+              searchWait.disconnect();
+              searchWait = null;
+              quietSearch();
+            }
+          });
+          searchWait.observe(document.body, { childList: true });
+        }
+        return;
+      }
+      if (!root.getElementById("cc-search-shut")) {
+        var mine = document.createElement("style");
+        mine.id = "cc-search-shut";
+        mine.textContent = SEARCH_SHUT;
+        root.appendChild(mine);
+      }
+    }
+    function arm(spec) {
+      var p = parts(spec);
+      if (!p.toggle || !p.button) return;
+      if (!p.panel) {
+        ATTRS.forEach(function (name) { p.button.removeAttribute(name); });
+        return;
+      }
+      if (!p.panel.id) p.panel.id = spec.id;
+      p.button.setAttribute("role", "button");
+      p.button.setAttribute("tabindex", "0");
+      p.button.setAttribute("aria-controls", p.panel.id);
+      p.button.setAttribute("aria-expanded", String(p.toggle.checked));
+      p.button.setAttribute("data-cc-armed", "");
+      var nav = p.panel.querySelector("nav[aria-label]");
+      if (!p.button.hasAttribute("aria-label") && nav) {
+        p.button.setAttribute("aria-label", nav.getAttribute("aria-label"));
+      }
+    }
+    function setup() {
+      quietSearch();
+      PANELS.forEach(arm);
+    }
+    document.addEventListener("change", function (event) {
+      PANELS.forEach(function (spec) {
+        var p = parts(spec);
+        if (event.target === p.toggle && p.button && p.button.hasAttribute("data-cc-armed")) {
+          p.button.setAttribute("aria-expanded", String(p.toggle.checked));
+        }
+      });
+    });
+    document.addEventListener("keydown", function (event) {
+      PANELS.forEach(function (spec) {
+        var p = parts(spec);
+        if (!p.toggle || !p.button || !p.panel) return;
+        if (event.target === p.button && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          p.toggle.click();
+          if (p.toggle.checked) {
+            var first = p.panel.querySelector("a[href]");
+            if (first) first.focus();
+          }
+        } else if (event.key === "Escape" && p.toggle.checked) {
+          p.toggle.click();
+          p.button.focus();
+        }
+      });
+    });
+    setup();
+    if (window.document$) window.document$.subscribe(setup);
+  })();
+</script>

@@ -291,7 +291,8 @@ def test_home_drops_the_desktop_sidebars_and_the_footer_nav(home: str):
     # removed outright, which left the burger opening an empty overlay (#9).
     sidebar = re.search(r'<div class="md-sidebar md-sidebar--primary[^"]*"[^>]*>', home)
     assert sidebar and "hidden" in sidebar.group(0)
-    assert "md-sidebar--secondary" not in home  # no "on this page" panel
+    # No "on this page" panel (the keyboard script, on every page, names its class).
+    assert "md-sidebar--secondary" not in home.replace(keyboard_script(home), "")
     assert "md-footer__inner" not in home  # prev/next navigation
     assert "md-footer-meta" in home  # copyright + social strip stays
     assert 'class="md-footer cc-footer"' in home  # its own ground, apart from Start now
@@ -1637,50 +1638,102 @@ def test_the_home_drawer_reaches_every_tab(home: str):
     assert {f"./why/{slug}/" for slug in INTRO_PAGES} <= targets, sorted(targets)  # the Why CodeCrew tab's pages
 
 
-def test_the_shut_home_drawer_is_out_of_the_tab_order(home: str, blog: str, docs_index: str, css: str):
+def built_pages(site: Path) -> dict[str, str]:
+    """Every built page, by its path under the site."""
+    return {str(p.relative_to(site)): p.read_text() for p in site.rglob("*.html")}
+
+
+def theme_stylesheet(site: Path) -> str:
+    bundled = [p for p in (site / "assets/stylesheets/modern").glob("*.css") if "palette" not in p.name]
+    assert len(bundled) == 1, bundled
+    return bundled[0].read_text()
+
+
+def theme_bundle(site: Path) -> str:
+    bundles = list((site / "assets/javascripts").glob("bundle.*.min.js"))
+    assert len(bundles) == 1, bundles
+    return bundles[0].read_text()
+
+
+def keyboard_script(page: str) -> str:
+    """The keyboard partial's script, which main.html's scripts block adds after the theme's bundle."""
+    match = re.search(r'bundle\.[0-9a-f]+\.min\.js"></script>\s*<script>(.*?)</script>', page, re.S)
+    assert match, "no script straight after the theme's bundle"
+    return match.group(1)
+
+
+def css_tokens(declaration: str) -> str:
+    """A declaration's value as the theme's minifier writes it: no space after commas, no leading 0."""
+    return re.sub(r"\b0\.(\d)", r".\1", declaration.strip()).replace(", ", ",")
+
+
+# The shut drawer's rule (M24-R2): the sidebar, and the nested navs the theme sets visible.
+DRAWER_SHUT = '[data-md-toggle="drawer"]:not(:checked) ~ .md-container .md-sidebar--primary'
+# The shut "On this page" pop-up's rule, below the theme's 60em contents breakpoint (M24-R2).
+TOC_QUERY = "screen and (max-width: 59.984375em)"
+TOC_SHUT = '  .md-sidebar--secondary [type="checkbox"]:not(:checked) ~ .md-sidebar__inner'
+
+
+def test_the_shut_drawer_is_out_of_the_tab_order_on_every_page(site: Path, css: str):
     """Below the breakpoint the theme parks the shut drawer off-canvas but leaves its links
-    in the tab order, focus rings off-screen. On the home page it is hidden until the
-    drawer toggle is checked (M19-R7); the other pages keep the theme's drawer (#58)."""
-    sidebar = re.search(r'<div class="(md-sidebar md-sidebar--primary[^"]*)"', home).group(1)
-    assert sidebar.split() == ["md-sidebar", "md-sidebar--primary", "cc-drawer"]
-    for page in (blog, docs_index):
-        assert "cc-drawer" not in page
+    in the tab order, focus rings off-screen: 17 stops on the CLI reference at 375px. On
+    every page it is hidden until the drawer toggle is checked (M19-R7 on the home page,
+    M24-R2 everywhere, #58), along with the nested navs the theme sets visible itself."""
+    for name, page in built_pages(site).items():
+        assert re.search(r'<div class="md-sidebar md-sidebar--primary"', page), name
+        assert '<input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer"' in page, name
+        assert "cc-drawer" not in page.replace(keyboard_script(page), ""), name  # no page marked apart
     block = media_block(css, "screen and (max-width: 76.234375em)")  # the theme's drawer breakpoint
-    shut = rule(block, '  [data-md-toggle="drawer"]:not(:checked) ~ .md-container .md-sidebar--primary.cc-drawer')
+    match = re.search(
+        r"^  " + re.escape(DRAWER_SHUT) + r",\n  " + re.escape(DRAWER_SHUT + " .md-nav") + r" \{([^}]*)\}", block, re.M
+    )
+    assert match, "the shut-drawer rule names the sidebar and its navs, with no page scope"
+    assert "visibility: hidden" in match.group(1)
+    assert "visibility 0s 0.2s" in match.group(1)  # hidden only once it has slid out
+    assert ".cc-drawer" not in css
+
+
+def test_the_drawer_rule_names_the_navs_the_theme_makes_visible(site: Path):
+    """An inherited `visibility: hidden` loses to the theme's own `visibility: visible` on an
+    open nested nav (the section a page sits in), so the rule names `.md-nav` too. If the
+    theme stops setting it, this says the second selector can go."""
+    theme_css = theme_stylesheet(site)
+    match = re.search(r"\.md-nav__toggle:checked~\.md-nav\{([^}]*)\}", theme_css)
+    assert match and "visibility:visible" in match.group(1)
+
+
+def test_the_shut_contents_pop_up_is_out_of_the_tab_order(css: str, docs_index: str, post: Post):
+    """Below 60em the theme's table of contents is a floating button over a pop-up that,
+    shut, is only faded out, so Tab walked through its links with nothing on screen: 23
+    stops on the CLI reference at 375px. It is hidden while its toggle is unchecked, with
+    the theme's fade kept and the hiding held back until it ends (M24-R2)."""
+    shut = rule(media_block(css, TOC_QUERY), TOC_SHUT)
     assert "visibility: hidden" in shut
-    assert "visibility 0s 0.2s" in shut  # hidden only once it has slid out
+    assert "visibility 0s 0.25s" in shut
+    # The markup the rule rests on: the toggle, then the button's wrapper, then the pop-up.
+    for name, page in (("docs", docs_index), ("post", post.page)):
+        assert re.search(
+            r'<input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">\s*'
+            r'<div class="md-sidebar-button__wrapper">\s*<label class="md-sidebar-button" for="__toc"></label>\s*</div>\s*'
+            r'<div class="md-sidebar__inner">\s*<nav class="md-nav md-nav--secondary" aria-label="([^"]+)">',
+            page,
+        ), name
 
 
-def test_the_home_burger_is_a_keyboard_control(home: str, blog: str, docs_index: str):
-    """Below the breakpoint the theme's burger is a <label for="__drawer"> with no Tab stop,
-    so a keyboard could not open the drawer. On the home page a script makes it a button
-    that controls the drawer and keeps its expanded state (M19-R7); the other pages keep
-    the theme's burger (#58). Without JavaScript the markup is the theme's, unchanged."""
-    assert 'id="cc-drawer"' in re.search(r'<div class="md-sidebar md-sidebar--primary[^>]*>', home).group(0)
-    burger = re.search(r'<label class="md-header__button md-icon" for="__drawer"[^>]*>', home).group(0)
-    assert 'aria-label="' in burger  # the theme's accessible name stays
-    assert "tabindex" not in burger and "role=" not in burger  # added at runtime, so no-JS is as before
-    footer = home[home.index('<footer class="md-footer cc-footer">') :]
-    script = re.search(r"<script>(.*?)</script>", footer, re.S).group(1)
-    for hook in (
-        'label.md-header__button[for="__drawer"]',  # the theme's burger
-        'getElementById("__drawer")',  # the theme's toggle
-        'setAttribute("role", "button")',
-        'setAttribute("tabindex", "0")',
-        'setAttribute("aria-controls", "cc-drawer")',
-        '"aria-expanded"',
-        '"change"',  # kept in step however the toggle moves (burger, overlay)
-        'event.key === "Enter" || event.key === " "',
-        'event.key === "Escape"',
-        "p.burger.focus()",  # Escape hands focus back to the burger
-        "window.document$",  # re-run on instant navigation, and undone off the home page
-        "removeAttribute",
-    ):
-        assert hook in script, hook
-    # Inside the container, whose scripts the theme re-runs on instant navigation.
-    assert home.index("<script>", home.index('class="md-footer cc-footer"')) < home.index('<div class="md-dialog"')
-    for page in (blog, docs_index):
-        assert "cc-drawer" not in page and 'aria-controls="cc-drawer"' not in page
+def test_the_contents_rule_follows_the_theme_it_keys_off(site: Path, css: str):
+    """The pop-up's shut state is the theme's (opacity 0 and its fade, below 60em), and its
+    open state lists no visibility transition, so the pop-up shows at once. If an upgrade
+    moves the breakpoint or changes the fade, this fails rather than letting the rule drift."""
+    theme_css = theme_stylesheet(site)
+    start = theme_css.index(".md-sidebar--secondary .md-sidebar__inner{")
+    query = theme_css[theme_css.rindex("@media", 0, start) :].split("{", 1)[0]
+    assert query == "@media " + TOC_QUERY.replace(": ", ":"), query
+    shut = dict(d.split(":", 1) for d in theme_css[start : theme_css.index("}", start)].split("{", 1)[1].split(";"))
+    assert shut["opacity"] == "0" and shut["pointer-events"] == "none"
+    ours = dict(d.strip().split(": ", 1) for d in rule(media_block(css, TOC_QUERY), TOC_SHUT).strip().rstrip(";").split(";\n"))
+    assert css_tokens(ours["transition"]) == shut["transition"] + ",visibility 0s .25s"
+    opened = re.search(r"\.md-sidebar--secondary \[type=checkbox\]:checked~\.md-sidebar__inner\{([^}]*)\}", theme_css)
+    assert opened and "visibility" not in opened.group(1)
 
 
 def test_no_page_offers_a_burger_with_nothing_behind_it(home: str, blog: str, docs_index: str):
@@ -1695,9 +1748,7 @@ def test_the_hidden_drawer_rests_on_a_stylesheet_rule_that_still_exists(site: Pa
     # `hidden` only means "desktop only" because the theme overrides it below
     # the breakpoint. If an upgrade drops that, the home page loses its drawer
     # silently on phones — so assert the rule rather than trust it.
-    bundled = [p for p in (site / "assets/stylesheets/modern").glob("*.css") if "palette" not in p.name]
-    assert len(bundled) == 1, bundled
-    css = bundled[0].read_text()
+    css = theme_stylesheet(site)
     start = css.index(".md-sidebar--primary{position:fixed")
     rule = css[start : css.index("}", start)]
     assert "display:block" in rule
@@ -1705,27 +1756,59 @@ def test_the_hidden_drawer_rests_on_a_stylesheet_rule_that_still_exists(site: Pa
     assert query == "@media screen and (max-width:76.234375em)", query
 
 
+def test_every_page_makes_the_burger_and_the_contents_button_keyboard_controls(site: Path, home: str):
+    """The theme opens the drawer and the phone's contents pop-up with a <label> that takes
+    no Tab stop, so with both panels hidden while shut a keyboard could not open either.
+    On every page a script after the theme's bundle makes each label a button that names
+    and controls its panel and keeps its expanded state (M19-R7 on the home page, M24-R2
+    everywhere). Without JavaScript the markup is the theme's, unchanged."""
+    for name, page in built_pages(site).items():
+        script = keyboard_script(page)
+        assert page.count("window.ccKeyboard = true") == 1, name  # one copy, run once per load
+        # Outside the container, so instant navigation never re-runs it: it follows document$.
+        assert page.index('id="__config"') < page.index("window.ccKeyboard"), name
+        burger = re.search(r'<label class="md-header__button md-icon" for="__drawer"[^>]*>', page).group(0)
+        assert 'aria-label="' in burger, name  # the theme's accessible name stays
+        assert "tabindex" not in burger and "role=" not in burger, name  # added at runtime
+    script = keyboard_script(home)
+    for hook in (
+        '\'.md-header label.md-header__button[for="__drawer"]\'',  # the theme's burger
+        'toggle: "__drawer"',  # the theme's drawer toggle
+        'panel: ".md-sidebar--primary"',
+        '\'.md-sidebar--secondary label.md-sidebar-button[for="__toc"]\'',  # the contents button
+        'toggle: "__toc"',
+        'panel: ".md-sidebar--secondary .md-sidebar__inner"',
+        "if (!p.panel.id) p.panel.id = spec.id;",  # the theme's panels carry no id
+        'setAttribute("role", "button")',
+        'setAttribute("tabindex", "0")',
+        'setAttribute("aria-controls", p.panel.id)',
+        '"aria-expanded"',
+        'nav.getAttribute("aria-label")',  # the contents button's name, from its own nav
+        '"change"',  # kept in step however the toggle moves (button, overlay)
+        'event.key === "Enter" || event.key === " "',
+        'event.key === "Escape"',
+        "p.button.focus()",  # Escape hands focus back to the button
+        "window.document$.subscribe(setup)",  # re-armed on instant navigation
+    ):
+        assert hook in script, hook
+
+
 # The theme's search panel classes, shut: the panel and its filter pane (M19-R7).
 SEARCH_SHUT_CLASSES = (".l.d", ".a.d")
 
 
-def home_script(home: str) -> str:
-    footer = home[home.index('<footer class="md-footer cc-footer">') :]
-    return re.search(r"<script>(.*?)</script>", footer, re.S).group(1)
-
-
 def shut_search_rules(script: str) -> dict[str, str]:
-    """The rules the home page's script adds inside the search's shadow root, by selector."""
+    """The rules the keyboard script adds inside the search's shadow root, by selector."""
     sheet = "".join(re.findall(r'"([^"]*)"', re.search(r"var SEARCH_SHUT =(.*?);\n", script, re.S).group(1)))
     return dict(re.findall(r"([^{}]+)\{([^}]*)\}", sheet))
 
 
-def test_the_shut_search_panel_is_out_of_the_tab_order(home: str, blog: str, docs_index: str):
+def test_the_shut_search_panel_is_out_of_the_tab_order(site: Path, home: str):
     """The theme's search is a shadow-root panel that, shut, is only faded out, so Tab
-    walked through three of its controls at 1280px and four at 375px. On the home page a
-    script puts a rule in that shadow root hiding the shut panel and filter pane once
-    their fade is over (M19-R7); off the home page it takes the rule out again."""
-    script = home_script(home)
+    walked through three of its controls at 1280px and four at 375px. On every page the
+    keyboard script puts a rule in that shadow root hiding the shut panel and filter pane
+    once their fade is over (M19-R7 on the home page, M24-R2 everywhere)."""
+    script = keyboard_script(home)
     rules = shut_search_rules(script)
     assert tuple(rules) == SEARCH_SHUT_CLASSES
     for selector, body in rules.items():
@@ -1735,23 +1818,19 @@ def test_the_shut_search_panel_is_out_of_the_tab_order(home: str, blog: str, doc
         ".shadowRoot",  # the theme's search host
         'mine.id = "cc-search-shut"',
         "root.appendChild(mine)",
-        "mine.remove()",  # undone on a page reached by instant navigation
-        "quietSearch(!!p.drawer)",  # the drawer's id marks the home page
         "new MutationObserver",  # the theme may mount search after this runs
     ):
         assert hook in script, hook
-    for page in (blog, docs_index):
-        assert "cc-search-shut" not in page
+    for name, page in built_pages(site).items():
+        assert keyboard_script(page) == script, name  # the same script on every page
 
 
 def test_the_shut_search_rules_follow_the_theme_they_key_off(site: Path, home: str):
     """The rules name the theme's minified class names and repeat its transitions, with a
     delayed visibility change added. If a theme upgrade renames the classes or changes the
     fade, this fails rather than letting the invisible Tab stops quietly come back."""
-    bundles = list((site / "assets/javascripts").glob("bundle.*.min.js"))
-    assert len(bundles) == 1, bundles
-    theme = bundles[0].read_text()
-    for selector, ours in shut_search_rules(home_script(home)).items():
+    theme = theme_bundle(site)
+    for selector, ours in shut_search_rules(keyboard_script(home)).items():
         match = re.search(re.escape(selector) + r"\{([^}]*)\}", theme)
         assert match, f"the theme no longer ships {selector}"
         declared = dict(d.split(":", 1) for d in match.group(1).split(";"))
@@ -1801,17 +1880,13 @@ def test_the_palette_ring_follows_the_theme_it_keys_off(site: Path, css: str):
     """The ring is the theme's own, and the theme still shows the palette by un-hiding the
     label after the chosen radio rather than checking it. If an upgrade changes either,
     this fails rather than letting the rule drift from what it mends."""
-    bundled = [p for p in (site / "assets/stylesheets/modern").glob("*.css") if "palette" not in p.name]
-    assert len(bundled) == 1, bundled
-    theme_css = bundled[0].read_text()
+    theme_css = theme_stylesheet(site)
     assert ".md-option{position:absolute;width:0;height:0;opacity:0}" in theme_css  # the radios are invisible
     start = theme_css.index(THEME_OPTION_RING) + len(THEME_OPTION_RING)
     theirs = theme_css[start : theme_css.index("}", start)].split(";")
     ours = [d.strip().rstrip(";").replace(": ", ":") for d in rule(css, PALETTE_RING).strip().splitlines()]
     assert ours == theirs, (ours, theirs)
-    bundles = list((site / "assets/javascripts").glob("bundle.*.min.js"))
-    assert len(bundles) == 1, bundles
-    theme = bundles[0].read_text()
+    theme = theme_bundle(site)
     assert re.search(r"nextElementSibling;(\w+) instanceof HTMLElement&&\(\1\.hidden=", theme)
     assert 'b(e,"keydown").pipe(O(a=>a.key==="Enter")' in theme  # Enter toggles and refocuses
 

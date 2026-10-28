@@ -16,33 +16,16 @@
      drawer M8-R1's retained tabs turn into — and emitting it hidden gets
      both. Removing it instead (this block was once empty) left the burger
      opening an empty overlay on every phone: #9.
-     It carries cc-drawer so extra.css can take the drawer out of the
-     keyboard's reach while it is shut (M19-R7).
+     Shut, it is out of the keyboard's reach as on every page: extra.css
+     hides it, and main.html's keyboard partial makes the burger a button
+     (M24-R2).
    - container: full-bleed. No breadcrumbs (partials/path.html), no
      partials/content.html (so the "published on" override and the actions
      strip never apply), no md-content__inner reading column. The sections
      come straight from the Markdown body.
    - footer: the meta strip only (copyright + social), no prev/next
      navigation. Carries cc-footer so extra.css can give it a ground of
-     its own, apart from the Start now band above it. Then the burger
-     script (M19-R7): below the drawer breakpoint the theme's burger is a
-     <label for="__drawer">, with no Tab stop, so a keyboard could not
-     open the drawer. The script makes it a button (tabindex, role,
-     aria-controls="cc-drawer", aria-expanded kept in step with
-     #__drawer); Enter or Space toggles it and moves focus to the
-     drawer's first link when it opens; Escape shuts an open drawer and
-     puts focus back on the burger. It sits in the footer block because
-     that is inside the container, whose scripts the theme re-runs on
-     instant navigation; the header is not replaced, so it follows the
-     theme's document$ and, on a page with no #cc-drawer, strips the
-     attributes again. Without
-     JavaScript the page is as before. Above the breakpoint the theme
-     hides the burger, so desktop is unchanged.
-     The same script keeps the shut search panel out of the tab order
-     (M19-R7): the theme's search sits in a shadow root this page's CSS
-     cannot reach, so the script adds a `visibility: hidden` rule for the
-     theme's shut-panel classes inside it, and takes it out again on any
-     other page reached by instant navigation.
+     its own, apart from the Start now band above it.
    - htmltitle, extrahead: main.html's markup, rendered with the page's
      own `tagline` front matter in place of the site-wide one, so the
      title, og:title and twitter:title carry the home page's pitch
@@ -70,7 +53,7 @@
 {% block site_nav %}
   {% if nav %}
     {#- Hidden above the breakpoint, the drawer below it. Never the toc. -#}
-    <div class="md-sidebar md-sidebar--primary cc-drawer" id="cc-drawer" data-md-component="sidebar" data-md-type="navigation" hidden>
+    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
       <div class="md-sidebar__scrollwrap">
         <div class="md-sidebar__inner">
           {% include "partials/nav.html" %}
@@ -99,111 +82,4 @@
       </div>
     </div>
   </footer>
-  <script>
-    (function () {
-      var ATTRS = ["tabindex", "role", "aria-controls", "aria-expanded", "data-cc-burger"];
-      function parts() {
-        return {
-          toggle: document.getElementById("__drawer"),
-          burger: document.querySelector('.md-header label.md-header__button[for="__drawer"]'),
-          drawer: document.getElementById("cc-drawer")
-        };
-      }
-      // The theme's search is a panel in an open shadow root on a <div> it
-      // appends to <body>. Shut, the panel and its filter pane are only
-      // faded out (opacity 0, pointer-events none), so Tab still walks
-      // into them. Page CSS cannot reach into a shadow root, so this adds
-      // one rule there: visibility hidden on the theme's own shut classes,
-      // delayed past its fade. The theme's open/shut state lives inside
-      // that tree (#__search stays unchecked), which is why the rule keys
-      // off its classes and not the toggle.
-      var SEARCH_SHUT =
-        ".l.d{visibility:hidden;transition:transform .25s .15s,opacity .15s,visibility 0s .4s}" +
-        ".a.d{visibility:hidden;transition:width .35s cubic-bezier(.16,1,.3,1),opacity .1s,visibility 0s .35s}";
-      var searchWait = null;
-      function searchRoot() {
-        var kids = document.body.children;
-        for (var i = 0; i < kids.length; i++) {
-          var root = kids[i].shadowRoot;
-          var sheet = root && root.querySelector("style");
-          if (sheet && sheet.textContent.indexOf(".l.d{") !== -1) return root;
-        }
-        return null;
-      }
-      function quietSearch(home) {
-        var root = searchRoot();
-        if (!root) {
-          // The theme may not have mounted search yet: wait for it once.
-          if (home && !searchWait) {
-            searchWait = new MutationObserver(function () {
-              if (searchRoot()) {
-                searchWait.disconnect();
-                searchWait = null;
-                quietSearch(!!document.getElementById("cc-drawer"));
-              }
-            });
-            searchWait.observe(document.body, { childList: true });
-          }
-          return;
-        }
-        var mine = root.getElementById("cc-search-shut");
-        if (home && !mine) {
-          mine = document.createElement("style");
-          mine.id = "cc-search-shut";
-          mine.textContent = SEARCH_SHUT;
-          root.appendChild(mine);
-        } else if (!home && mine) {
-          mine.remove();
-        }
-      }
-      function setup() {
-        var p = parts();
-        quietSearch(!!p.drawer);
-        if (!p.toggle || !p.burger) return;
-        if (!p.drawer) {
-          ATTRS.forEach(function (name) { p.burger.removeAttribute(name); });
-          return;
-        }
-        p.burger.setAttribute("role", "button");
-        p.burger.setAttribute("tabindex", "0");
-        p.burger.setAttribute("aria-controls", "cc-drawer");
-        p.burger.setAttribute("aria-expanded", String(p.toggle.checked));
-        p.burger.setAttribute("data-cc-burger", "");
-      }
-      if (window.ccHomeBurger) {
-        window.ccHomeBurger();
-        return;
-      }
-      window.ccHomeBurger = setup;
-      document.addEventListener("change", function (event) {
-        var p = parts();
-        if (event.target === p.toggle && p.burger && p.burger.hasAttribute("data-cc-burger")) {
-          p.burger.setAttribute("aria-expanded", String(p.toggle.checked));
-        }
-      });
-      document.addEventListener("keydown", function (event) {
-        var p = parts();
-        if (!p.toggle || !p.burger || !p.drawer) return;
-        if (event.target === p.burger && (event.key === "Enter" || event.key === " ")) {
-          event.preventDefault();
-          p.toggle.click();
-          if (p.toggle.checked) {
-            var first = p.drawer.querySelector("a[href]");
-            if (first) first.focus();
-          }
-        } else if (event.key === "Escape" && p.toggle.checked) {
-          p.toggle.click();
-          p.burger.focus();
-        }
-      });
-      setup();
-      // The theme's bundle loads after this block; subscribe once it has,
-      // so every page change (instant navigation included) re-runs setup.
-      function follow() {
-        if (window.document$) window.document$.subscribe(setup);
-      }
-      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", follow);
-      else follow();
-    })();
-  </script>
 {% endblock %}
