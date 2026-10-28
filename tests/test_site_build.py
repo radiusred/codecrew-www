@@ -666,6 +666,66 @@ def test_the_hero_logo_is_the_transparent_export_with_no_frame(home: str, css: s
     assert (site / "assets" / "images" / "codecrew-logo.webp").exists()
 
 
+def rules(css: str, selector: str) -> str:
+    """The declarations of every rule whose selector line is exactly `selector`, joined."""
+    found = re.findall(r"^" + re.escape(selector) + r"\s*\{([^}]*)\}", css, re.M)
+    assert found, selector
+    return "\n".join(found)
+
+
+def test_the_hero_glows_along_its_top_edge(css: str):
+    """www#85, M24-R4: the operator's mock. A wide gradient drifts side to side behind the
+    hero under a radial mask that fades to the hero's ink, so the colour shows near the
+    top edge only. The cyan in it is the brand cyan lifted 20% towards the pink, never the
+    brand cyan itself: at sRGB's gamut edge the drift swept a visible line across the
+    hero. The cyan holds over a broad plateau, so no stop is a narrow peak."""
+    hero = rules(css, ".cc-hero")
+    assert "position: relative" in hero and "isolation: isolate" in hero
+    assert "--cc-glow-strength: 0.55" in hero
+    both = re.search(r"^\.cc-hero::before,\n\.cc-hero::after\s*\{([^}]*)\}", css, re.M).group(1)
+    for declaration in ('content: ""', "position: absolute", "inset: 0", "z-index: -1", "pointer-events: none"):
+        assert declaration in both, declaration
+    glow = rule(css, ".cc-hero::before")
+    assert "--cc-glow-cyan: color-mix(in srgb, var(--cc-cyan) 80%, var(--cc-pink))" in glow
+    assert glow.count("var(--cc-cyan)") == 1  # only in the lift: no stop is the brand cyan
+    assert "background-image: linear-gradient(96deg in oklab," in glow
+    assert "var(--cc-glow-cyan) 58%," in glow and "var(--cc-glow-cyan) 80%," in glow
+    assert "background-size: 400% 400%" in glow
+    assert "opacity: var(--cc-glow-strength)" in glow
+    assert "animation: cc-glow-drift 12s ease infinite" in glow
+    mask = rules(css, ".cc-hero::after")  # the shared rule above, then its own
+    assert "radial-gradient(100% 140% at 60% -10%, transparent 0%, var(--cc-ink) 75%)" in mask
+    drift = re.search(r"@keyframes cc-glow-drift \{(.*?)\n\}", css, re.S).group(1)
+    assert "background-position: 0% 50%" in drift and "background-position: 100% 50%" in drift
+
+
+def test_the_hero_glow_holds_still_under_reduced_motion(css: str):
+    """M24-R4: no animation under prefers-reduced-motion. The rule that stops it comes
+    after the one that starts it, at the same specificity, so it wins the cascade."""
+    still = media_block(css, "(prefers-reduced-motion: reduce)")
+    assert re.search(r"\.cc-hero::before \{\s*animation: none;\s*\}", still)
+    assert css.index("@media (prefers-reduced-motion: reduce)") > css.index(".cc-hero::before {")
+
+
+def test_the_hero_stands_on_plain_ink_without_the_glow(css: str):
+    """M24-R4: the old purple-to-ink gradient is gone, and the hero's own ground is the
+    plain ink. A browser without oklab gradients or color-mix() drops the glow's
+    background-image and nothing else, so it shows the hero on ink with no glow; the mask
+    needs neither. The ground must be opaque: the glow is translucent, and with no ground
+    the light scheme's off-white showed through it behind the headline."""
+    hero = rules(css, ".cc-hero")
+    assert "background: var(--cc-ink);" in hero
+    assert "linear-gradient" not in hero and "var(--cc-purple)" not in hero
+    mask = rules(css, ".cc-hero::after")
+    assert "color-mix" not in mask and "oklab" not in mask
+    # In the glow, only the one declaration a browser drops and a custom property (whose
+    # value is never validated) need either.
+    glow = rule(css, ".cc-hero::before")
+    rest = re.sub(r"background-image: linear-gradient\(.*?\);", "", glow, flags=re.S)
+    rest = re.sub(r"--cc-glow-cyan: [^;]*;", "", rest)
+    assert "background-image" in glow and "oklab" not in rest and "color-mix" not in rest
+
+
 def test_hero_leads_with_the_crew(home: str):
     """M19-R2: the hero's visible text names GitHub App identities and says that
     different harnesses and models build and review, before any section below it."""
