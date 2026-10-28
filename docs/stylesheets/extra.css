@@ -20,9 +20,9 @@ h1,h2,h3 {
   --cc-cyan-tint: #00d0f833;
   /* Second accent, sampled from the "docs" text in the docs icon: the
      colour of links on the home page in slate (6:1 on the page ground,
-     5.5:1 on the hero). Its deeper companion carries the light scheme,
-     where the sampled pink reads at 3.1:1 (6.2:1 on the page, 5.2:1 on
-     the darker bands). */
+     4.8:1 on the hero's glow at its brightest). Its deeper companion
+     carries the light scheme, where the sampled pink reads at 3.1:1 (6.2:1
+     on the page, 5.2:1 on the darker bands). */
   --cc-pink: #ce5ae9;
   --cc-pink-deep: #9327ae;
 }
@@ -230,7 +230,8 @@ h1,h2,h3 {
 
 /* Hero. The section carries the slate scheme attributes in the Markdown so
    the type, links and buttons take the dark palette whichever scheme the
-   visitor chose; the ground is the logo's purple-to-ink gradient.
+   visitor chose; the ground is the logo's ink, which the hero glow (at the
+   end of this file) lights along the top edge.
 
    Layout is a grid: stacked and centred on narrow viewports; from 60em
    (Zensical's own breakpoint) two columns, the logo on the left and the
@@ -238,7 +239,7 @@ h1,h2,h3 {
 .cc-hero {
   padding: 2.4rem 1rem 3rem;
   text-align: center;
-  background: linear-gradient(180deg, var(--cc-purple) 0%, var(--cc-ink) 100%);
+  background: var(--cc-ink);
   color: var(--md-primary-bg-color);
 }
 
@@ -376,8 +377,9 @@ h1,h2,h3 {
 /* Plain links inside the hero take the pink whichever scheme is on: the
    section carries the slate attributes, whose selector sets the link
    colour at specificity (0,2,0); two classes match it, and this rule is
-   later. The pink reads at 5.5:1 on the hero's purple, so it needs no
-   lightening there. There are no such links today; this is the policy. */
+   later. The pink reads at 4.8:1 or more on the hero's glow (Hero glow,
+   below), so it needs no lightening there. The commodity line's link is the
+   one such link today. */
 .cc-section.cc-hero {
   --md-typeset-a-color: var(--cc-pink);
 }
@@ -1293,4 +1295,89 @@ h1,h2,h3 {
 body:has(.cc-home) .md-header__option:has(> .md-option:is(:focus-visible, .focus-visible)) > label:not([hidden]) {
   outline-style: auto;
   outline-color: var(--md-accent-fg-color);
+}
+
+/* Hero glow (www#85): a wide pink/purple/cyan gradient drifts side to side
+   under a radial mask that fades to the hero's own ink, so the colour shows
+   only near the top edge. --cc-glow-strength sets the intensity; the mask's
+   75% stop sets how far down the glow reaches.
+
+   Contrast at the brightest point of the 12s cycle, measured in Chromium
+   behind each run of type (the lowest from 320px to 1920px wide): the white
+   headline 7.7:1, the 70% white sub-headline 6.3:1, its cyan bold 6.2:1,
+   the pink link 4.8:1, the button labels 10.5:1 or more. The type never
+   reaches the top edge, where the mask is clear: there the lifted cyan at
+   55% over ink would leave white at 6.3:1 but the sub-headline at 4.0:1 and
+   the cyan bold at 3.4:1, so the strength and the mask's reach are tuned
+   together with where the type sits.
+
+   A browser without oklab gradients or color-mix() (before Chrome/Edge 111,
+   Safari 16.2, Firefox 127) drops the ::before's background-image, and the
+   hero is plain ink, where every colour above reads at 6:1 or more. Under
+   prefers-reduced-motion the glow holds still. */
+.cc-hero {
+  position: relative;
+  isolation: isolate;
+  --cc-glow-strength: 0.55;
+}
+
+.cc-hero::before,
+.cc-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* The cyan is lifted 20% toward the pink: the brand cyan has a red
+   channel of 0, the sRGB gamut's edge, and any blend away from it bends
+   sharply there, which the drift sweeps across the hero as a visible line.
+   Each pair of stops eases in and out (smoothstep, eight steps) and the
+   cyan holds over a broad plateau, so no stop is a narrow peak. */
+.cc-hero::before {
+  --cc-glow-cyan: color-mix(in srgb, var(--cc-cyan) 80%, var(--cc-pink));
+  background-image: linear-gradient(96deg in oklab,
+    var(--cc-pink) 0%,
+    color-mix(in oklab, var(--cc-purple-light) 4.3%, var(--cc-pink)) 3.75%,
+    color-mix(in oklab, var(--cc-purple-light) 15.6%, var(--cc-pink)) 7.50%,
+    color-mix(in oklab, var(--cc-purple-light) 31.6%, var(--cc-pink)) 11.25%,
+    color-mix(in oklab, var(--cc-purple-light) 50.0%, var(--cc-pink)) 15.00%,
+    color-mix(in oklab, var(--cc-purple-light) 68.4%, var(--cc-pink)) 18.75%,
+    color-mix(in oklab, var(--cc-purple-light) 84.4%, var(--cc-pink)) 22.50%,
+    color-mix(in oklab, var(--cc-purple-light) 95.7%, var(--cc-pink)) 26.25%,
+    var(--cc-purple-light) 30%,
+    color-mix(in oklab, var(--cc-glow-cyan) 4.3%, var(--cc-purple-light)) 33.50%,
+    color-mix(in oklab, var(--cc-glow-cyan) 15.6%, var(--cc-purple-light)) 37.00%,
+    color-mix(in oklab, var(--cc-glow-cyan) 31.6%, var(--cc-purple-light)) 40.50%,
+    color-mix(in oklab, var(--cc-glow-cyan) 50.0%, var(--cc-purple-light)) 44.00%,
+    color-mix(in oklab, var(--cc-glow-cyan) 68.4%, var(--cc-purple-light)) 47.50%,
+    color-mix(in oklab, var(--cc-glow-cyan) 84.4%, var(--cc-purple-light)) 51.00%,
+    color-mix(in oklab, var(--cc-glow-cyan) 95.7%, var(--cc-purple-light)) 54.50%,
+    var(--cc-glow-cyan) 58%,
+    var(--cc-glow-cyan) 80%,
+    color-mix(in oklab, var(--cc-pink) 4.3%, var(--cc-glow-cyan)) 82.50%,
+    color-mix(in oklab, var(--cc-pink) 15.6%, var(--cc-glow-cyan)) 85.00%,
+    color-mix(in oklab, var(--cc-pink) 31.6%, var(--cc-glow-cyan)) 87.50%,
+    color-mix(in oklab, var(--cc-pink) 50.0%, var(--cc-glow-cyan)) 90.00%,
+    color-mix(in oklab, var(--cc-pink) 68.4%, var(--cc-glow-cyan)) 92.50%,
+    color-mix(in oklab, var(--cc-pink) 84.4%, var(--cc-glow-cyan)) 95.00%,
+    color-mix(in oklab, var(--cc-pink) 95.7%, var(--cc-glow-cyan)) 97.50%,
+    var(--cc-pink) 100%);
+  background-size: 400% 400%;
+  opacity: var(--cc-glow-strength);
+  animation: cc-glow-drift 12s ease infinite;
+}
+
+.cc-hero::after {
+  background: radial-gradient(100% 140% at 60% -10%, transparent 0%, var(--cc-ink) 75%);
+}
+
+@keyframes cc-glow-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-hero::before { animation: none; }
 }
