@@ -23,6 +23,10 @@
   ended its og:title attribute early.
   A template with no page behind it (404.html) sets `page_title`,
   `page_description` and `page_canonical` at its top level instead.
+
+  Extends the scripts block with partials/keyboard.html, after the theme's
+  bundle: the burger made a keyboard control and the shut search panel kept
+  out of the tab order, on every page (M24-R2).
   MiniJinja: built-in filters only, no Python.
 -#}
 {% set tagline = "Your coding agents, working as a crew on GitHub" %}
@@ -147,4 +151,9 @@
 
 {% block htmltitle %}
   <title>{{ head_title(page, tagline, page_title) | e }}</title>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% include "partials/keyboard.html" %}
 {% endblock %}
